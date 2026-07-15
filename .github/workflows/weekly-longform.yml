@@ -1,0 +1,21 @@
+name: Weekly Long-form (true crime)
+
+on:
+  schedule:
+    # Domingo 08:00 UTC = 10:00 CEST. Genera long-form + atomiza 5 clips derivados.
+    - cron: "0 8 * * 0"
+  workflow_dispatch: {}
+
+concurrency:
+  group: videogen-generation
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  longgen:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: longgen-once
+    secrets: inherit

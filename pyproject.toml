@@ -1,0 +1,31 @@
+[project]
+name = "videogen"
+version = "0.1.0"
+description = "Pipeline para generar videos automatizados con IA (YouTube Shorts + TikTok, ES/EN)"
+requires-python = ">=3.11"
+dependencies = [
+    "elevenlabs>=1.50.0",
+    "requests>=2.32.0",
+    "python-dotenv>=1.0.0",
+    "click>=8.1.0",
+    "rich>=13.9.0",
+    "google-api-python-client>=2.149.0",
+    "google-auth-httplib2>=0.2.0",
+    "google-auth-oauthlib>=1.2.0",
+    "pillow>=11.0.0",
+    "pydantic>=2.9.0",
+    "google-genai>=0.8.0",
+    "flask>=3.0.0",
+    "python-telegram-bot[job-queue]>=21.0",
+    "matplotlib>=3.9.0",
+]
+
+[project.scripts]
+videogen = "videogen.cli:cli"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]

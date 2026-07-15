@@ -1,0 +1,9 @@
+{
+  "name": "videogen-telegram-webhook",
+  "version": "1.0.0",
+  "description": "Webhook Telegram → GitHub Actions dispatch para videogen",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  }
+}

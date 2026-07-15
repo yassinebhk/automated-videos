@@ -1,0 +1,21 @@
+name: Hourly catchup (short)
+
+on:
+  schedule:
+    # Cada hora entre 06:00 y 20:00 UTC (=08-22 CEST verano). Ajustar en invierno.
+    - cron: "0 6-20 * * *"
+  workflow_dispatch: {}
+
+concurrency:
+  group: videogen-generation
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  catchup:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: hourly-catchup
+    secrets: inherit

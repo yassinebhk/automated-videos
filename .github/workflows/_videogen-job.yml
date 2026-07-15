@@ -1,0 +1,115 @@
+# Reusable workflow — llamado por los cron y dispatch workflows.
+# Encapsula setup Python + ffmpeg + secrets + ejecución del comando + commit stats.
+name: videogen job (reusable)
+
+on:
+  workflow_call:
+    inputs:
+      command:
+        description: "Subcomando videogen a ejecutar (autogen-once|longgen-once|hourly-catchup|weekly-catchup|daily-summary|dispatch)"
+        required: true
+        type: string
+      dispatch_cmd:
+        description: "Si command=dispatch, el /comando del bot"
+        required: false
+        type: string
+        default: ""
+      dispatch_args:
+        description: "Args del dispatch"
+        required: false
+        type: string
+        default: ""
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: "pip"
+
+      - name: Install ffmpeg + fonts
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends ffmpeg fonts-noto-color-emoji
+
+      - name: Install videogen (editable)
+        run: pip install -e .
+
+      - name: Reconstruir secrets/.env desde GitHub Secrets
+        env:
+          TELEGRAM_BOT_TOKEN:    ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID:      ${{ secrets.TELEGRAM_CHAT_ID }}
+          GEMINI_API_KEY:        ${{ secrets.GEMINI_API_KEY }}
+          PEXELS_API_KEY:        ${{ secrets.PEXELS_API_KEY }}
+          YOUTUBE_CHANNEL_ID_ES: ${{ secrets.YOUTUBE_CHANNEL_ID_ES }}
+          YOUTUBE_CHANNEL_ID_EN: ${{ secrets.YOUTUBE_CHANNEL_ID_EN }}
+          # Token YT: solo persistimos refresh_token + client_id/secret.
+          # El access_token se regenera en cada run (google-auth lo hace solo
+          # cuando toca refresh). Simplifica MUCHO la persistencia.
+          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+          YT_CLIENT_ID:     ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+        run: |
+          mkdir -p secrets
+          # Genera un token JSON mínimo que google-auth OAuth2 acepta.
+          # Al primer uso hace refresh automático y rellena access_token.
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          Path("secrets/youtube_token.json").write_text(json.dumps({
+              "refresh_token": os.environ["YT_REFRESH_TOKEN"],
+              "client_id":     os.environ["YT_CLIENT_ID"],
+              "client_secret": os.environ["YT_CLIENT_SECRET"],
+              "token_uri":     "https://oauth2.googleapis.com/token",
+              "scopes":        ["https://www.googleapis.com/auth/youtube.upload",
+                                "https://www.googleapis.com/auth/youtube.readonly"],
+          }))
+          PY
+          {
+            printf 'TELEGRAM_BOT_TOKEN=%s\n'    "$TELEGRAM_BOT_TOKEN"
+            printf 'TELEGRAM_CHAT_ID=%s\n'      "$TELEGRAM_CHAT_ID"
+            printf 'GEMINI_API_KEY=%s\n'        "$GEMINI_API_KEY"
+            printf 'PEXELS_API_KEY=%s\n'        "$PEXELS_API_KEY"
+            printf 'YOUTUBE_CHANNEL_ID_ES=%s\n' "$YOUTUBE_CHANNEL_ID_ES"
+            printf 'YOUTUBE_CHANNEL_ID_EN=%s\n' "$YOUTUBE_CHANNEL_ID_EN"
+          } > .env
+
+      - name: Ejecutar comando videogen
+        run: |
+          case "${{ inputs.command }}" in
+            dispatch)
+              videogen dispatch --cmd "${{ inputs.dispatch_cmd }}" --args "${{ inputs.dispatch_args }}"
+              ;;
+            *)
+              videogen ${{ inputs.command }}
+              ;;
+          esac
+
+      - name: Commit + push stats_history si cambió
+        if: always()
+        run: |
+          # Solo commiteamos el snapshot analytics (append-only).
+          # NO commiteamos secrets/ (siempre gitignored) ni output/uploaded/*
+          # (videos pesados que no queremos en el repo).
+          if [ -n "$(git status --porcelain output/stats_history.jsonl 2>/dev/null)" ]; then
+            git config user.name "videogen-bot"
+            git config user.email "bot@videogen.local"
+            git add output/stats_history.jsonl
+            git commit -m "stats: snapshot $(date -u +%FT%H:%MZ) [skip ci]" || true
+            # Rebase para tolerar race con otro workflow que también commiteó.
+            for i in 1 2 3; do
+              git pull --rebase origin main && git push origin HEAD:main && break
+              echo "push retry $i falló, reintentando en 3s..."
+              sleep 3
+            done
+          fi

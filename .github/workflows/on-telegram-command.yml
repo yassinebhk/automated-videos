@@ -1,0 +1,39 @@
+name: Telegram command (dispatch)
+
+# Disparado por la función Vercel cuando recibe un mensaje de Telegram con
+# formato `/comando args`. La función hace POST a
+# https://api.github.com/repos/OWNER/REPO/dispatches
+# con event_type=telegram-command y payload={cmd, args}.
+on:
+  repository_dispatch:
+    types: [telegram-command]
+  workflow_dispatch:
+    inputs:
+      cmd:
+        description: "Comando (autogen|longgen|snapshot|atomize|send|ideas|stats|help)"
+        required: true
+        type: string
+      args:
+        description: "Args"
+        required: false
+        type: string
+        default: ""
+
+concurrency:
+  # Comandos que TAMBIÉN generan video (autogen, longgen, atomize) comparten
+  # el group global. `snapshot`, `stats`, `ideas`, `help`, `send` no compiten
+  # por recursos de generación pero por simplicidad los metemos en el mismo.
+  group: videogen-generation
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  dispatch:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: dispatch
+      dispatch_cmd:  ${{ github.event.client_payload.cmd || inputs.cmd }}
+      dispatch_args: ${{ github.event.client_payload.args || inputs.args }}
+    secrets: inherit

@@ -1,0 +1,17 @@
+name: Daily summary (stats + charts + ideas)
+
+on:
+  schedule:
+    # 07:00 UTC = 09:00 CEST. Manda snapshot + charts + ideas a Telegram.
+    - cron: "0 7 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  summary:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: daily-summary
+    secrets: inherit

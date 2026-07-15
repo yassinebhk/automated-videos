@@ -1,0 +1,22 @@
+name: Weekly long-form catchup
+
+on:
+  schedule:
+    # Domingo 10-22 UTC + lunes 10-14 UTC — buffer si el domingo 08:00 UTC falló.
+    - cron: "0 10-22 * * 0"
+    - cron: "0 10-14 * * 1"
+  workflow_dispatch: {}
+
+concurrency:
+  group: videogen-generation
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  catchup:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: weekly-catchup
+    secrets: inherit

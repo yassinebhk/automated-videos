@@ -1,0 +1,22 @@
+name: Daily Short (true crime)
+
+on:
+  schedule:
+    # 06:00 UTC = 08:00 CEST (verano). Ajustar a 07:00 UTC en invierno si molesta.
+    - cron: "0 6 * * *"
+  workflow_dispatch: {}  # permite disparar manual desde la UI de GH
+
+# Un solo job de generación a la vez — reemplaza el .generation.lock del bot.
+concurrency:
+  group: videogen-generation
+  cancel-in-progress: false
+
+permissions:
+  contents: write  # commit + push del stats_history
+
+jobs:
+  autogen:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: autogen-once
+    secrets: inherit

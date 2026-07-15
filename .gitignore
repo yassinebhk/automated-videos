@@ -1,0 +1,20 @@
+.env
+secrets/
+# output/ contiene videos generados (no queremos en el repo), pero SÍ persistimos
+# el snapshot analytics como append-only para tener historial en Actions.
+output/**
+!output/stats_history.jsonl
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+.DS_Store
+music/*.mp3
+!music/.gitkeep
+# Logs locales del bot Mac (no van al repo)
+/tmp/videogen_bot.log
+*.log

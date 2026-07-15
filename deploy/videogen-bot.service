@@ -1,0 +1,16 @@
+[Unit]
+Description=videogen Telegram bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/automated-videos
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/home/ubuntu/automated-videos/.venv/bin/videogen bot
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
