@@ -85,7 +85,12 @@ jobs:
           } > .env
 
       - name: Ejecutar comando videogen
+        env:
+          # Sin buffering → los prints aparecen en el log en tiempo real
+          # (no como bloque al final del step, que oculta dónde abortó el pipeline).
+          PYTHONUNBUFFERED: "1"
         run: |
+          set -x  # traza cada línea shell para ver dónde muere si aborta
           case "${{ inputs.command }}" in
             dispatch)
               videogen dispatch --cmd "${{ inputs.dispatch_cmd }}" --args "${{ inputs.dispatch_args }}"
