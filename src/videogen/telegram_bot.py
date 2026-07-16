@@ -1298,45 +1298,72 @@ async def _run_autogen_daily(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> No
         await ctx.bot.send_message(chat_id, "❌ Gemini no devolvió ideas tras 3 intentos. Salto la generación de hoy.")
         return
 
-    # 2. Deduplicar contra historial. Dos capas:
-    #    (a) substring del topic completo (dedup exacto)
-    #    (b) intersección de nombres propios con los últimos 10 videos — evita
-    #        que si ya subimos "Mario Conde: fraude 8.000M" el siguiente día
-    #        salga "Mario Conde: cómo estafó Banesto" (mismo caso, título distinto).
+    # 2. Deduplicar contra historial. Fuente de verdad = YouTube API, NO
+    #    `service.list_history()` (lee filesystem local, que en GitHub Actions
+    #    es efímero → dedup ciego → repite casos ya subidos).
+    #    Capas:
+    #    (a) substring del título completo (dedup exacto)
+    #    (b) intersección de nombres propios con los últimos 20 uploads reales
     import re as _re
+    import logging as _logging
     def _proper_nouns(s: str) -> set[str]:
         return {w.lower() for w in _re.findall(r"\b[A-ZÁÉÍÓÚÑ][a-záéíóúñ]{3,}\b", s)}
 
-    existing = service.list_history()
-    seen_topics = {(it.get("topic") or "").lower() for it in existing}
-    recent = existing[:10]  # últimos 10 (list_history ordena por mtime desc)
+    recent_titles: list[str] = []
+    try:
+        yt_recent = await _run_blocking(lambda: stats.fetch_channel_stats().get("recent", []))
+        recent_titles = [v.get("title", "") for v in yt_recent[:20]]
+        print(f"  dedup: {len(recent_titles)} títulos recientes desde YT API")
+    except Exception as e:
+        print(f"  dedup: fallo YT API ({e}) — fallback a filesystem local")
+        # Fallback al filesystem local (funciona en Mac, no en Actions)
+        for it in service.list_history()[:20]:
+            for f in ("topic", "title_es", "title_en"):
+                v = str(it.get(f) or "")
+                if v:
+                    recent_titles.append(v)
+
+    seen_titles = {t.lower() for t in recent_titles if t}
     recent_nouns: set[str] = set()
-    for it in recent:
-        for f in ("topic", "title_es", "title_en"):
-            recent_nouns |= _proper_nouns(str(it.get(f) or ""))
+    for t in recent_titles:
+        recent_nouns |= _proper_nouns(t)
     # Stopwords que no cuentan como nombre propio útil para dedup
     recent_nouns -= {"como", "cómo", "españa", "españoles", "españolas", "millones",
-                     "banco", "bolsa", "estafa", "fraude", "caso", "sentencia"}
+                     "banco", "bolsa", "estafa", "fraude", "caso", "sentencia",
+                     "billones", "euros", "año", "años"}
+    print(f"  dedup: nombres propios recientes = {sorted(recent_nouns)[:15]}…")
 
     fresh = []
     for idea in ideas_list:
         t = idea.lower().strip()
-        if any(t in s or s in t for s in seen_topics if s):
+        if any(t in s or s in t for s in seen_titles if s):
+            print(f"  dedup: SKIP substring match — «{idea[:60]}»")
             continue
-        if _proper_nouns(idea) & recent_nouns:
-            continue  # comparte nombre propio con los últimos 10 → mismo caso
+        overlap = _proper_nouns(idea) & recent_nouns
+        if overlap:
+            print(f"  dedup: SKIP nombres propios {overlap} — «{idea[:60]}»")
+            continue
         fresh.append(idea)
     if not fresh:
-        await ctx.bot.send_message(chat_id, "⚠️ Todas las ideas ya generadas o repiten casos recientes. Pasa /ideas para más.")
+        msg = "⚠️ Todas las ideas ya generadas o repiten casos recientes. Pasa /ideas para más."
+        print(msg)
+        await ctx.bot.send_message(chat_id, msg)
         return
     topic = fresh[0]
+    print(f"  dedup: elegido «{topic[:80]}»")
     await ctx.bot.send_message(chat_id, f"📝 Topic elegido: «{topic[:80]}»\n⚙️ Generando…")
 
     # 3. Generar el Short
     try:
         slug = await _run_blocking(lambda: service.generate(topic, ("es",), lambda m: None, ai_hero=True))
+        print(f"  autogen: Short generado slug={slug}")
     except Exception as e:
-        await ctx.bot.send_message(chat_id, f"❌ Generación falló: {e}")
+        # Log a stdout + traceback para que aparezca en logs de Actions,
+        # además del mensaje a Telegram.
+        import traceback as _tb
+        _tb.print_exc()
+        print(f"  autogen: ❌ generación falló → {type(e).__name__}: {e}")
+        await ctx.bot.send_message(chat_id, f"❌ Generación falló: {type(e).__name__}: {str(e)[:300]}")
         return
 
     # 4. Programar a YT para esa noche 21:00 CEST
@@ -1352,13 +1379,17 @@ async def _run_autogen_daily(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> No
             lambda: service.publish(slug, ("es",), "public", lambda m: None,
                                     notify=False, publish_at=publish_at)
         )
+        print(f"  autogen: YT publicado → {links.get('es','')}")
         await ctx.bot.send_message(
             chat_id,
             f"🗓 YT programado <b>{label_local}</b>\n{links.get('es','')}",
             parse_mode="HTML",
         )
     except Exception as e:
-        await ctx.bot.send_message(chat_id, f"⚠️ Schedule YT falló: {e}")
+        import traceback as _tb
+        _tb.print_exc()
+        print(f"  autogen: ❌ schedule YT falló → {type(e).__name__}: {e}")
+        await ctx.bot.send_message(chat_id, f"⚠️ Schedule YT falló: {type(e).__name__}: {str(e)[:300]}")
         return
 
     # 5. Versión sin subs + caption → móvil para TT/IG
