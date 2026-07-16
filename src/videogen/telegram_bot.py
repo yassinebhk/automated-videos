@@ -1311,8 +1311,7 @@ async def _run_autogen_daily(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> No
 
     recent_titles: list[str] = []
     try:
-        yt_recent = await _run_blocking(lambda: stats.fetch_channel_stats().get("recent", []))
-        recent_titles = [v.get("title", "") for v in yt_recent[:20]]
+        recent_titles = await _run_blocking(lambda: stats.fetch_recent_titles(20))
         print(f"  dedup: {len(recent_titles)} títulos recientes desde YT API")
     except Exception as e:
         print(f"  dedup: fallo YT API ({e}) — fallback a filesystem local")

@@ -74,6 +74,36 @@ def fetch_channel_stats() -> dict | None:
     }
 
 
+def fetch_recent_titles(n: int = 20) -> list[str]:
+    """Devuelve los títulos de los últimos N videos subidos al canal.
+
+    Usado por el dedup del autogen para saber qué casos ya se han cubierto
+    (Mario Conde, Gescartera, Fórum Filatélico…) y evitar repetirlos. Es la
+    única fuente de verdad persistente cuando el pipeline corre en GitHub
+    Actions (cuyos runners son efímeros y no comparten filesystem entre runs).
+    """
+    from googleapiclient.discovery import build
+    from google.oauth2.credentials import Credentials
+
+    from .upload_youtube import SCOPES, TOKEN_FILE
+
+    if not TOKEN_FILE.exists():
+        return []
+    creds = Credentials.from_authorized_user_file(str(TOKEN_FILE), SCOPES)
+    yt = build("youtube", "v3", credentials=creds)
+    # 1) uploads playlist ID
+    ch = yt.channels().list(part="contentDetails", mine=True).execute()
+    items = ch.get("items", [])
+    if not items:
+        return []
+    upl = items[0]["contentDetails"]["relatedPlaylists"]["uploads"]
+    # 2) últimos N items de la playlist (más nuevos primero)
+    resp = yt.playlistItems().list(part="snippet", playlistId=upl,
+                                   maxResults=min(n, 50)).execute()
+    return [it["snippet"]["title"] for it in resp.get("items", [])
+            if it.get("snippet", {}).get("title")]
+
+
 def fetch_youtube_stats() -> list[dict]:
     """Stats por video subido: views, likes, comments. [] si no hay nada."""
     from googleapiclient.discovery import build
