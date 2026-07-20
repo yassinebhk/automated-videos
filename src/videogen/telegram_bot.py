@@ -1042,21 +1042,54 @@ async def _run_longgen_weekly(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> N
         await ctx.bot.send_message(chat_id, "❌ Gemini sin respuesta para ideas, abort.")
         return
 
-    long_topics_seen = set()
-    for it in service.list_history():
-        d = None
-        for base in (PENDING_DIR, UPLOADED_DIR):
-            if (base / it["slug"]).exists():
-                d = base / it["slug"]
-                break
-        if d and (d / "long_scripts.json").exists():
-            long_topics_seen.add((it.get("topic") or "").lower())
-    fresh = [i for i in ideas_list
-             if not any((i.lower() in s or s in i.lower()) for s in long_topics_seen if s)]
+    # Dedup vs long-forms + shorts ya subidos, usando la MISMA fuente de verdad
+    # que autogen: los títulos reales de YouTube API (persistente entre Actions
+    # runs, a diferencia de `service.list_history()` que lee el filesystem
+    # local — efímero en GitHub Actions, causa por la que el 19/07 se repitió
+    # Mario Conde en el weekly aunque ya se había subido el 13/07).
+    import re as _re
+    def _proper_nouns(s: str) -> set[str]:
+        return {w.lower() for w in _re.findall(r"\b(?:[A-ZÁÉÍÓÚÑ][a-záéíóúñ]{3,}|[A-ZÁÉÍÓÚÑ]{4,})\b", s)}
+
+    recent_titles: list[str] = []
+    try:
+        recent_titles = await _run_blocking(lambda: stats.fetch_recent_titles(30))
+        print(f"  longgen dedup: {len(recent_titles)} títulos recientes desde YT API")
+    except Exception as e:
+        print(f"  longgen dedup: fallo YT API ({e}) — fallback local")
+        for it in service.list_history()[:30]:
+            for f in ("topic", "title_es", "title_en"):
+                v = str(it.get(f) or "")
+                if v:
+                    recent_titles.append(v)
+
+    seen_titles = {t.lower() for t in recent_titles if t}
+    recent_nouns: set[str] = set()
+    for t in recent_titles:
+        recent_nouns |= _proper_nouns(t)
+    recent_nouns -= {"como", "cómo", "españa", "españoles", "españolas", "millones",
+                     "banco", "bolsa", "estafa", "fraude", "caso", "sentencia",
+                     "billones", "euros", "año", "años"}
+    print(f"  longgen dedup: nombres propios recientes = {sorted(recent_nouns)[:20]}…")
+
+    fresh = []
+    for idea in ideas_list:
+        t = idea.lower().strip()
+        if any(t in s or s in t for s in seen_titles if s):
+            print(f"  longgen: SKIP substring — «{idea[:60]}»")
+            continue
+        overlap = _proper_nouns(idea) & recent_nouns
+        if overlap:
+            print(f"  longgen: SKIP nombres propios {overlap} — «{idea[:60]}»")
+            continue
+        fresh.append(idea)
     if not fresh:
-        await ctx.bot.send_message(chat_id, "⚠️ Todas las ideas ya tienen long-form. Abort.")
+        msg = "⚠️ Todas las ideas ya cubiertas en YT (por nombre propio). Abort."
+        print(msg)
+        await ctx.bot.send_message(chat_id, msg)
         return
     topic = fresh[0]
+    print(f"  longgen: topic elegido «{topic[:80]}»")
     await ctx.bot.send_message(chat_id, f"📝 Topic long-form: «{topic[:80]}»\n⚙️ Generando (~10-15 min)…")
 
     # 2. Genera long-form
@@ -1064,8 +1097,12 @@ async def _run_longgen_weekly(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> N
         slug = await _run_blocking(
             lambda: service.generate_long(topic, target_minutes=8, langs=("es",), progress=lambda m: None)
         )
+        print(f"  longgen: long-form generado slug={slug}")
     except Exception as e:
-        await ctx.bot.send_message(chat_id, f"❌ Generación long falló: {e}")
+        import traceback as _tb
+        _tb.print_exc()
+        print(f"  longgen: ❌ generate_long falló → {type(e).__name__}: {e}")
+        await ctx.bot.send_message(chat_id, f"❌ Generación long falló: {type(e).__name__}: {str(e)[:300]}")
         return
 
     # 3. Programa long-form para HOY 20:00 CEST (si tarde, mañana)
@@ -1307,7 +1344,7 @@ async def _run_autogen_daily(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> No
     import re as _re
     import logging as _logging
     def _proper_nouns(s: str) -> set[str]:
-        return {w.lower() for w in _re.findall(r"\b[A-ZÁÉÍÓÚÑ][a-záéíóúñ]{3,}\b", s)}
+        return {w.lower() for w in _re.findall(r"\b(?:[A-ZÁÉÍÓÚÑ][a-záéíóúñ]{3,}|[A-ZÁÉÍÓÚÑ]{4,})\b", s)}
 
     recent_titles: list[str] = []
     try:
