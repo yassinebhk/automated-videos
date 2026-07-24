@@ -762,6 +762,13 @@ def daily_summary_cmd():
     runner.run_daily_summary()
 
 
+@cli.command(name="bluesky-growth")
+def bluesky_growth_cmd():
+    """Ejecuta el growth loop de Bluesky (follows + likes + reposts)."""
+    from . import bluesky_growth
+    bluesky_growth.run_growth_loop(dry_run=False)
+
+
 @cli.command(name="dispatch")
 @click.option("--cmd", required=True, help="Comando (autogen|longgen|snapshot|atomize|send|ideas|stats|help|start)")
 @click.option("--args", "args_text", default="", help="Argumentos textuales del comando")
