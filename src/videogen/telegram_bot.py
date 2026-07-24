@@ -1613,6 +1613,70 @@ async def _run_autogen_daily(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> No
         await ctx.bot.send_message(chat_id, f"⚠️ TT/IG falló: {e}")
 
 
+async def _send_social_stats(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> None:
+    """Reporta stats de Bluesky + Mastodon (followers + engagement 24h)."""
+    import os
+    lines = ["🦋🐘 <b>Redes sociales — últimas 24h</b>"]
+
+    # Bluesky
+    bh = os.environ.get("BLUESKY_HANDLE")
+    bp = os.environ.get("BLUESKY_APP_PASSWORD")
+    if bh and bp:
+        try:
+            from atproto import Client
+            c = Client()
+            profile = c.login(bh, bp)
+            # Contar likes/reposts/replies en los últimos 5 posts propios
+            feed = c.get_author_feed(profile.did, limit=10)
+            recent_stats = []
+            for item in feed.feed[:5]:
+                p = item.post
+                if p.author.did != profile.did:
+                    continue
+                recent_stats.append({
+                    "likes": p.like_count or 0,
+                    "reposts": p.repost_count or 0,
+                    "replies": p.reply_count or 0,
+                })
+            total_likes = sum(x["likes"] for x in recent_stats)
+            total_reposts = sum(x["reposts"] for x in recent_stats)
+            lines.append(
+                f"🦋 Bluesky @{bh}\n"
+                f"  Followers: {profile.followers_count} · Following: {profile.follows_count}\n"
+                f"  Últimos {len(recent_stats)} posts: {total_likes}❤ · {total_reposts}🔁"
+            )
+        except Exception as e:
+            lines.append(f"🦋 Bluesky: fallo lectura ({type(e).__name__})")
+    else:
+        lines.append("🦋 Bluesky: no configurado")
+
+    # Mastodon
+    mi = os.environ.get("MASTODON_INSTANCE", "https://mastodon.social").rstrip("/")
+    mt = os.environ.get("MASTODON_ACCESS_TOKEN")
+    if mt:
+        try:
+            import requests as _req
+            H = {"Authorization": f"Bearer {mt}"}
+            me = _req.get(f"{mi}/api/v1/accounts/verify_credentials",
+                          headers=H, timeout=15).json()
+            # Últimos 5 toots + engagement
+            toots = _req.get(f"{mi}/api/v1/accounts/{me['id']}/statuses",
+                             headers=H, params={"limit": 5}, timeout=15).json()
+            tf = sum(int(t.get("favourites_count", 0)) for t in toots)
+            tr = sum(int(t.get("reblogs_count", 0)) for t in toots)
+            lines.append(
+                f"🐘 Mastodon @{me['username']}@{mi.replace('https://','')}\n"
+                f"  Followers: {me.get('followers_count',0)} · Following: {me.get('following_count',0)}\n"
+                f"  Últimos {len(toots)} toots: {tf}❤ · {tr}🔁"
+            )
+        except Exception as e:
+            lines.append(f"🐘 Mastodon: fallo lectura ({type(e).__name__})")
+    else:
+        lines.append("🐘 Mastodon: no configurado")
+
+    await ctx.bot.send_message(chat_id, "\n\n".join(lines), parse_mode="HTML")
+
+
 async def daily_summary(ctx: ContextTypes.DEFAULT_TYPE):
     chat_id = ctx.job.chat_id
     # Health check token: si caducado, alerta visible primero
@@ -1629,6 +1693,7 @@ async def daily_summary(ctx: ContextTypes.DEFAULT_TYPE):
     )
     await _send_stats(chat_id, ctx)
     await _send_charts(chat_id, ctx)
+    await _send_social_stats(chat_id, ctx)
     await _send_ideas(chat_id, ctx, n=6)
 
 
