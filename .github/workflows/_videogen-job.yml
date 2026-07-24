@@ -65,6 +65,8 @@ jobs:
           REDDIT_PASSWORD:      ${{ secrets.REDDIT_PASSWORD }}
           BLUESKY_HANDLE:       ${{ secrets.BLUESKY_HANDLE }}
           BLUESKY_APP_PASSWORD: ${{ secrets.BLUESKY_APP_PASSWORD }}
+          MASTODON_INSTANCE:     ${{ secrets.MASTODON_INSTANCE }}
+          MASTODON_ACCESS_TOKEN: ${{ secrets.MASTODON_ACCESS_TOKEN }}
         run: |
           mkdir -p secrets
           # Genera un token JSON mínimo que google-auth OAuth2 acepta.
@@ -94,6 +96,8 @@ jobs:
             [ -n "$REDDIT_PASSWORD"      ] && printf 'REDDIT_PASSWORD=%s\n' "$REDDIT_PASSWORD"
             [ -n "$BLUESKY_HANDLE"       ] && printf 'BLUESKY_HANDLE=%s\n' "$BLUESKY_HANDLE"
             [ -n "$BLUESKY_APP_PASSWORD" ] && printf 'BLUESKY_APP_PASSWORD=%s\n' "$BLUESKY_APP_PASSWORD"
+            [ -n "$MASTODON_INSTANCE"     ] && printf 'MASTODON_INSTANCE=%s\n' "$MASTODON_INSTANCE"
+            [ -n "$MASTODON_ACCESS_TOKEN" ] && printf 'MASTODON_ACCESS_TOKEN=%s\n' "$MASTODON_ACCESS_TOKEN"
           } > .env
 
       - name: Ejecutar comando videogen

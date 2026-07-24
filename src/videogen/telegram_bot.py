@@ -1540,6 +1540,19 @@ async def _run_autogen_daily(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> No
     except Exception as e:
         print(f"  autogen: bluesky skip ({type(e).__name__}: {e})")
 
+    # 4b2. Mastodon auto-post — comunidad hispanohablante política/periodismo.
+    try:
+        from . import mastodon_poster
+        masto_res = await _run_blocking(
+            lambda: mastodon_poster.post_short_to_mastodon(title_bsky, yt_url)
+        )
+        if masto_res and not masto_res.get("dry_run"):
+            await ctx.bot.send_message(
+                chat_id, f"🐘 Mastodon: {masto_res.get('url','')}"
+            )
+    except Exception as e:
+        print(f"  autogen: mastodon skip ({type(e).__name__}: {e})")
+
     # 4c. Reddit auto-post (palanca D — tráfico externo español gratis).
     # Se hace en cuanto el vídeo está en YT (aunque scheduled a 21:00 CEST,
     # el URL ya es válido y Reddit acepta URLs de shorts privados) — pero
