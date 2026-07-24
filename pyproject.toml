@@ -19,6 +19,7 @@ dependencies = [
     "python-telegram-bot[job-queue]>=21.0",
     "matplotlib>=3.9.0",
     "edge-tts>=6.1.0",
+    "praw>=7.7.0",
 ]
 
 [project.scripts]

@@ -1503,10 +1503,11 @@ async def _run_autogen_daily(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> No
             lambda: service.publish(slug, ("es",), "public", lambda m: None,
                                     notify=False, publish_at=publish_at)
         )
-        print(f"  autogen: YT publicado → {links.get('es','')}")
+        yt_url = links.get('es', '')
+        print(f"  autogen: YT publicado → {yt_url}")
         await ctx.bot.send_message(
             chat_id,
-            f"🗓 YT programado <b>{label_local}</b>\n{links.get('es','')}",
+            f"🗓 YT programado <b>{label_local}</b>\n{yt_url}",
             parse_mode="HTML",
         )
     except Exception as e:
@@ -1515,6 +1516,38 @@ async def _run_autogen_daily(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> No
         print(f"  autogen: ❌ schedule YT falló → {type(e).__name__}: {e}")
         await ctx.bot.send_message(chat_id, f"⚠️ Schedule YT falló: {type(e).__name__}: {str(e)[:300]}")
         return
+
+    # 4b. Reddit auto-post (palanca D — tráfico externo español gratis).
+    # Se hace en cuanto el vídeo está en YT (aunque scheduled a 21:00 CEST,
+    # el URL ya es válido y Reddit acepta URLs de shorts privados) — pero
+    # esto NO es óptimo. Mejor: postear tras publicación real. Por simplicidad,
+    # posteamos ya con URL (redditors que hagan clic verán "video privado" si
+    # llegan antes de las 21h). Si el video es SCHEDULED, mejor hacer la
+    # publicación Reddit en horario cercano al scheduled.
+    try:
+        from . import reddit_poster
+        # Cargar el título real que subimos (viene del script generado)
+        from .service import script as _script_mod
+        from .config import UPLOADED_DIR
+        slug_dir = UPLOADED_DIR / slug
+        title_real = topic  # fallback
+        if slug_dir.exists():
+            try:
+                loc = _script_mod.load_scripts(slug_dir).es
+                title_real = loc.title
+            except Exception:
+                pass
+        result = await _run_blocking(
+            lambda: reddit_poster.post_short_to_reddit(title_real, yt_url)
+        )
+        if result and not result.get("dry_run"):
+            await ctx.bot.send_message(
+                chat_id,
+                f"🔴 Reddit posted: r/{result['subreddit']}\n{result.get('url','')}",
+            )
+    except Exception as e:
+        # Reddit falla → NO bloquea el pipeline (auxiliar)
+        print(f"  autogen: reddit skip ({type(e).__name__}: {e})")
 
     # 5. Versión sin subs + caption → móvil para TT/IG
     try:
