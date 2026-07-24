@@ -1,0 +1,27 @@
+name: Mastodon growth loop
+
+# Cada día a 10:00 UTC (=12:00 CEST) — 30 min después del bluesky-growth
+# para escalonar carga y evitar rate-limits simultáneos.
+# Ejecuta el growth loop:
+# - follow por hashtag (max 15/día)
+# - favourite (max 20/día)
+# - reblog a posts con tracción (max 3/día)
+
+on:
+  schedule:
+    - cron: "0 10 * * *"
+  workflow_dispatch: {}
+
+concurrency:
+  group: mastodon-growth
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  growth:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: mastodon-growth
+    secrets: inherit

@@ -769,6 +769,13 @@ def bluesky_growth_cmd():
     bluesky_growth.run_growth_loop(dry_run=False)
 
 
+@cli.command(name="mastodon-growth")
+def mastodon_growth_cmd():
+    """Ejecuta el growth loop de Mastodon (follows + favs + reblogs)."""
+    from . import mastodon_growth
+    mastodon_growth.run_growth_loop(dry_run=False)
+
+
 @cli.command(name="dispatch")
 @click.option("--cmd", required=True, help="Comando (autogen|longgen|snapshot|atomize|send|ideas|stats|help|start)")
 @click.option("--args", "args_text", default="", help="Argumentos textuales del comando")
