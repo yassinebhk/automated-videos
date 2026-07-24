@@ -63,6 +63,8 @@ jobs:
           REDDIT_CLIENT_SECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}
           REDDIT_USERNAME:      ${{ secrets.REDDIT_USERNAME }}
           REDDIT_PASSWORD:      ${{ secrets.REDDIT_PASSWORD }}
+          BLUESKY_HANDLE:       ${{ secrets.BLUESKY_HANDLE }}
+          BLUESKY_APP_PASSWORD: ${{ secrets.BLUESKY_APP_PASSWORD }}
         run: |
           mkdir -p secrets
           # Genera un token JSON mínimo que google-auth OAuth2 acepta.
@@ -90,6 +92,8 @@ jobs:
             [ -n "$REDDIT_CLIENT_SECRET" ] && printf 'REDDIT_CLIENT_SECRET=%s\n' "$REDDIT_CLIENT_SECRET"
             [ -n "$REDDIT_USERNAME"      ] && printf 'REDDIT_USERNAME=%s\n' "$REDDIT_USERNAME"
             [ -n "$REDDIT_PASSWORD"      ] && printf 'REDDIT_PASSWORD=%s\n' "$REDDIT_PASSWORD"
+            [ -n "$BLUESKY_HANDLE"       ] && printf 'BLUESKY_HANDLE=%s\n' "$BLUESKY_HANDLE"
+            [ -n "$BLUESKY_APP_PASSWORD" ] && printf 'BLUESKY_APP_PASSWORD=%s\n' "$BLUESKY_APP_PASSWORD"
           } > .env
 
       - name: Ejecutar comando videogen

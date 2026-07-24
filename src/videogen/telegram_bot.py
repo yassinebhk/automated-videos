@@ -1517,7 +1517,30 @@ async def _run_autogen_daily(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> No
         await ctx.bot.send_message(chat_id, f"⚠️ Schedule YT falló: {type(e).__name__}: {str(e)[:300]}")
         return
 
-    # 4b. Reddit auto-post (palanca D — tráfico externo español gratis).
+    # 4b. Bluesky auto-post — tráfico externo gratis via AT Protocol.
+    try:
+        from . import bluesky_poster
+        from .service import script as _script_mod
+        from .config import UPLOADED_DIR
+        slug_dir = UPLOADED_DIR / slug
+        title_bsky = topic  # fallback
+        if slug_dir.exists():
+            try:
+                loc = _script_mod.load_scripts(slug_dir).es
+                title_bsky = loc.title
+            except Exception:
+                pass
+        bsky_res = await _run_blocking(
+            lambda: bluesky_poster.post_short_to_bluesky(title_bsky, yt_url)
+        )
+        if bsky_res and not bsky_res.get("dry_run"):
+            await ctx.bot.send_message(
+                chat_id, f"🦋 Bluesky: {bsky_res.get('url','')}"
+            )
+    except Exception as e:
+        print(f"  autogen: bluesky skip ({type(e).__name__}: {e})")
+
+    # 4c. Reddit auto-post (palanca D — tráfico externo español gratis).
     # Se hace en cuanto el vídeo está en YT (aunque scheduled a 21:00 CEST,
     # el URL ya es válido y Reddit acepta URLs de shorts privados) — pero
     # esto NO es óptimo. Mejor: postear tras publicación real. Por simplicidad,
