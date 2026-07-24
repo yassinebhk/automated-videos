@@ -1400,7 +1400,7 @@ async def _run_autogen_daily(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> No
 
     recent_titles: list[str] = []
     try:
-        recent_titles = await _run_blocking(lambda: stats.fetch_recent_titles(20))
+        recent_titles = await _run_blocking(lambda: stats.fetch_recent_titles(50))
         print(f"  dedup: {len(recent_titles)} títulos recientes desde YT API")
     except Exception as e:
         print(f"  dedup: fallo YT API ({e}) — fallback a filesystem local")
@@ -1419,6 +1419,24 @@ async def _run_autogen_daily(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> No
     recent_nouns -= {"como", "cómo", "españa", "españoles", "españolas", "millones",
                      "banco", "bolsa", "estafa", "fraude", "caso", "sentencia",
                      "billones", "euros", "año", "años"}
+
+    # Lista negra manual de casos ya cubiertos — red de seguridad cuando el fetch
+    # de 50 títulos no basta (2 shorts/día + 5 clips/semana atomizados de long-forms
+    # empujan videos importantes fuera del top-50 rápidamente). Los tokens se
+    # buscan en minúsculas contra el `topic` de la idea.
+    KEYWORDS_ALREADY_COVERED = {
+        "colza", "aceite",            # Aceite de Colza (1981)
+        "mario conde", "banesto",     # Banesto
+        "fórum", "forum", "filatélico", "afinsa", "nummers",
+        "rumasa", "ruiz-mateos", "ruiz mateos",
+        "gescartera", "camacho",
+        "bankia", "rato",
+        "preferentes",
+        "bárcenas", "barcenas", "gürtel", "gurtel", "correa",
+        "ere andalucía", "ere andalucia",
+        "idental",
+        "filesa",
+    }
     print(f"  dedup: nombres propios recientes = {sorted(recent_nouns)[:15]}…")
 
     fresh = []
@@ -1430,6 +1448,10 @@ async def _run_autogen_daily(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> No
         overlap = _proper_nouns(idea) & recent_nouns
         if overlap:
             print(f"  dedup: SKIP nombres propios {overlap} — «{idea[:60]}»")
+            continue
+        kw_hit = {kw for kw in KEYWORDS_ALREADY_COVERED if kw in t}
+        if kw_hit:
+            print(f"  dedup: SKIP keywords {kw_hit} — «{idea[:60]}»")
             continue
         fresh.append(idea)
     if not fresh:
