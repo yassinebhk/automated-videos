@@ -110,6 +110,16 @@ REGLA DE ORO: **datos verificables, ángulo polarizante**. NUNCA mentir sobre lo
 
 6. **Title**: 50-60 chars max. Curiosity-driven. Avoid clickbait clichés ("YOU WON'T BELIEVE"). Format: question or surprising claim. Examples: "¿Por qué los pulpos tienen 3 corazones?", "The Real Reason Octopuses Have 3 Hearts".
 
+   **SERIE NUMERADA — OBLIGATORIO cuando el topic empieza con "[Episodio #N ...]"**:
+   - `title` (ES) DEBE empezar EXACTAMENTE con "Estafas Españolas #N: " seguido del hook (~40 chars). Total 50-60 chars.
+     - BIEN: "Estafas Españolas #47: Bárcenas ocultó 40M€"
+     - MAL: "Bárcenas ocultó 40M€ en Suiza" (falta el prefix de serie)
+   - `title` (EN): "Spanish Scams #N: <hook>" con la misma estructura.
+   - `thumbnail_text` DEBE incluir "#N" bien visible junto a la cifra clave del caso. Formato pegajoso 2 líneas:
+     - Línea 1: "#47" (grande)
+     - Línea 2: "40M€ ROBADOS" (o similar cifra impactante)
+   - YouTube premia SERIES con binge-watching. Sin el "#N" el algoritmo no sabe que es serie y no boostea. NO omitir bajo ninguna circunstancia si el topic trae el marcador.
+
 7. **Description**: 1-2 sentence summary + hashtags inline at the end.
 
 8. **Hashtags**: 5-8. Mix broad (#curiosities, #curiosidades) + specific to the topic.

@@ -928,18 +928,70 @@ def _upload_atomized_clip_as_short(
     )
 
 
-def _autogen_already_today() -> bool:
-    """¿Hay algún vídeo generado hoy? (mira mtime de carpetas en history)."""
-    from datetime import datetime
-    today = datetime.now().astimezone().date()
-    for it in service.list_history():
-        try:
-            mt = datetime.fromtimestamp(it.get("mtime", 0)).astimezone().date()
-            if mt == today:
-                return True
-        except Exception:
-            continue
-    return False
+def _shorts_published_today_count() -> int:
+    """Cuenta shorts publicados hoy en YouTube (fuente de verdad persistente,
+    a diferencia de list_history() local que es efímero en Actions).
+
+    Falla → 0 para no bloquear autogen si YT API cae momentáneamente.
+    """
+    from datetime import datetime, timezone
+    try:
+        import json, requests
+        from pathlib import Path
+        tok_path = Path(__file__).parent.parent.parent / "secrets" / "youtube_token.json"
+        tok = json.loads(tok_path.read_text())
+        r = requests.post("https://oauth2.googleapis.com/token", data={
+            "client_id": tok["client_id"], "client_secret": tok["client_secret"],
+            "refresh_token": tok["refresh_token"], "grant_type": "refresh_token",
+        }, timeout=15).json()
+        H = {"Authorization": f"Bearer {r['access_token']}"}
+        ch = requests.get("https://www.googleapis.com/youtube/v3/channels",
+                          params={"part": "contentDetails", "mine": "true"},
+                          headers=H, timeout=15).json()
+        upl = ch["items"][0]["contentDetails"]["relatedPlaylists"]["uploads"]
+        r = requests.get("https://www.googleapis.com/youtube/v3/playlistItems",
+                         params={"part": "contentDetails,snippet",
+                                 "playlistId": upl, "maxResults": 10},
+                         headers=H, timeout=15).json()
+        today = datetime.now(timezone.utc).date()
+        n = 0
+        for it in r.get("items", []):
+            pub = it.get("snippet", {}).get("publishedAt", "")[:10]
+            if pub and datetime.fromisoformat(pub).date() == today:
+                n += 1
+        return n
+    except Exception as e:
+        print(f"  _shorts_published_today_count: error {e}, devuelvo 0")
+        return 0
+
+
+def _autogen_already_today(max_per_day: int = 2) -> bool:
+    """¿Ya se alcanzó el tope diario de shorts? (default: 2/día).
+
+    Reemplaza al chequeo local basado en filesystem (roto en Actions) por un
+    conteo real de uploads YT del día. `max_per_day=2` es la palanca C
+    (2 shorts/día) para acelerar el ritmo de subida sin duplicar en el mismo
+    slot.
+    """
+    return _shorts_published_today_count() >= max_per_day
+
+
+def _next_episode_num(recent_titles: list[str]) -> int:
+    """Devuelve el próximo #N para la serie "Estafas Españolas #N: ...".
+
+    Extrae N de los títulos existentes vía regex "#(\\d+):" y devuelve max+1.
+    Si no hay ninguno, arranca en #1. Es idempotente entre runs (fuente de
+    verdad = YT API)."""
+    import re as _re
+    ns = []
+    for t in recent_titles:
+        m = _re.search(r"#(\d+)[:\s]", t)
+        if m:
+            try:
+                ns.append(int(m.group(1)))
+            except ValueError:
+                pass
+    return (max(ns) + 1) if ns else 1
 
 
 def _longform_generated_this_week() -> bool:
@@ -1386,12 +1438,26 @@ async def _run_autogen_daily(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> No
         await ctx.bot.send_message(chat_id, msg)
         return
     topic = fresh[0]
-    print(f"  dedup: elegido «{topic[:80]}»")
-    await ctx.bot.send_message(chat_id, f"📝 Topic elegido: «{topic[:80]}»\n⚙️ Generando…")
+
+    # Palanca B — SERIE numerada: prefijar topic con "[Episodio #N ...]" para
+    # que el prompt genere titles del tipo "Estafas Españolas #47: <hook>"
+    # + thumbnail_text con "#47" grande. YT premia binge-watching de series.
+    episode_num = _next_episode_num(recent_titles)
+    topic_with_ep = (
+        f"[Episodio #{episode_num} de la serie 'Estafas Españolas'. "
+        f"El title DEBE empezar con 'Estafas Españolas #{episode_num}:' y "
+        f"el thumbnail_text DEBE incluir '#{episode_num}' bien visible.] "
+        f"{topic}"
+    )
+    print(f"  dedup: elegido «{topic[:80]}» — episodio #{episode_num}")
+    await ctx.bot.send_message(
+        chat_id,
+        f"📝 Topic elegido (#Episodio {episode_num}): «{topic[:80]}»\n⚙️ Generando…"
+    )
 
     # 3. Generar el Short
     try:
-        slug = await _run_blocking(lambda: service.generate(topic, ("es",), lambda m: None, ai_hero=True))
+        slug = await _run_blocking(lambda: service.generate(topic_with_ep, ("es",), lambda m: None, ai_hero=True))
         print(f"  autogen: Short generado slug={slug}")
     except Exception as e:
         # Log a stdout + traceback para que aparezca en logs de Actions,

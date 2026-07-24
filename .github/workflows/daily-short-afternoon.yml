@@ -1,0 +1,25 @@
+name: Daily Short — segunda tanda (13:00 CEST)
+
+# Palanca C: segundo Short del día para acelerar el crecimiento.
+# El primer daily-short.yml corre 06:00 UTC (=08:00 CEST); este corre 11:00 UTC
+# (=13:00 CEST, franja pre-comida en España, alto tráfico móvil).
+# `_autogen_already_today()` chequea vía YT API si ya hay 2 shorts hoy → skip.
+
+on:
+  schedule:
+    - cron: "0 11 * * *"
+  workflow_dispatch: {}
+
+concurrency:
+  group: videogen-generation
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  autogen:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: autogen-once
+    secrets: inherit
