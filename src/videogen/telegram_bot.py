@@ -995,30 +995,60 @@ def _next_episode_num(recent_titles: list[str]) -> int:
 
 
 def _longform_generated_this_week() -> bool:
-    """¿Hay un long-form creado en los últimos 6 días? (dedup del catchup semanal).
+    """¿Hay un long-form subido a YT en los últimos 6 días?
 
-    Itera directamente sobre PENDING/UPLOADED buscando `long_scripts.json` — no
-    puede pasar por `list_history()` porque éste filtra por `scripts.json`
-    (Shorts) y los long-forms no lo tienen, con lo que se perdía la señal y el
-    catchup podía disparar 2 veces el mismo domingo (bug real 13/07/26)."""
-    from datetime import datetime, timedelta
-    cutoff = datetime.now().astimezone() - timedelta(days=6)
-    for base in (UPLOADED_DIR, PENDING_DIR):
-        if not base.exists():
-            continue
-        for d in base.iterdir():
-            if not d.is_dir():
+    IMPORTANTE: fuente de verdad = YouTube API (duración >150s). El filesystem
+    local es efímero en GitHub Actions y devolvía siempre False, causando que
+    el weekly-longform-catchup disparara 13× cada domingo (bug catastrófico
+    26/07: 24 videos duplicados subidos en un día).
+    """
+    from datetime import datetime, timedelta, timezone
+    try:
+        import json, requests, re
+        from pathlib import Path
+        tok_path = Path(__file__).parent.parent.parent / "secrets" / "youtube_token.json"
+        tok = json.loads(tok_path.read_text())
+        r = requests.post("https://oauth2.googleapis.com/token", data={
+            "client_id": tok["client_id"], "client_secret": tok["client_secret"],
+            "refresh_token": tok["refresh_token"], "grant_type": "refresh_token",
+        }, timeout=15).json()
+        H = {"Authorization": f"Bearer {r['access_token']}"}
+        ch = requests.get("https://www.googleapis.com/youtube/v3/channels",
+                          params={"part": "contentDetails", "mine": "true"},
+                          headers=H, timeout=15).json()
+        upl = ch["items"][0]["contentDetails"]["relatedPlaylists"]["uploads"]
+        pl = requests.get("https://www.googleapis.com/youtube/v3/playlistItems",
+                          params={"part": "contentDetails,snippet",
+                                  "playlistId": upl, "maxResults": 30},
+                          headers=H, timeout=15).json()
+        vids = [i["contentDetails"]["videoId"] for i in pl.get("items", [])]
+        vres = requests.get("https://www.googleapis.com/youtube/v3/videos",
+                            params={"part": "contentDetails,snippet",
+                                    "id": ",".join(vids)},
+                            headers=H, timeout=15).json()
+        cutoff = datetime.now(timezone.utc) - timedelta(days=6)
+        for v in vres.get("items", []):
+            pub = v["snippet"].get("publishedAt")
+            if not pub:
                 continue
-            f = d / "long_scripts.json"
-            if not f.exists():
+            dt = datetime.fromisoformat(pub.replace("Z", "+00:00"))
+            if dt < cutoff:
                 continue
-            try:
-                mt = datetime.fromtimestamp(f.stat().st_mtime).astimezone()
-                if mt >= cutoff:
-                    return True
-            except Exception:
+            # Duración ISO 8601 (PT#M#S) — long-form si >= 3 min
+            dur = v["contentDetails"].get("duration", "")
+            m = re.match(r"PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?", dur)
+            if not m:
                 continue
-    return False
+            secs = (int(m.group(1) or 0) * 3600 + int(m.group(2) or 0) * 60
+                    + int(m.group(3) or 0))
+            if secs >= 150:  # >= 2:30 → seguro es long-form, no Short
+                print(f"  _longform_generated_this_week: FOUND {v['snippet']['title'][:50]} "
+                      f"({secs}s, {pub[:10]})")
+                return True
+        return False
+    except Exception as e:
+        print(f"  _longform_generated_this_week: YT API fail ({e}) — devolvió False")
+        return False
 
 
 async def _weekly_longgen_catchup(ctx: ContextTypes.DEFAULT_TYPE) -> None:
@@ -1094,18 +1124,17 @@ async def _run_longgen_weekly(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> N
         await ctx.bot.send_message(chat_id, "❌ Gemini sin respuesta para ideas, abort.")
         return
 
-    # Dedup vs long-forms + shorts ya subidos, usando la MISMA fuente de verdad
-    # que autogen: los títulos reales de YouTube API (persistente entre Actions
-    # runs, a diferencia de `service.list_history()` que lee el filesystem
-    # local — efímero en GitHub Actions, causa por la que el 19/07 se repitió
-    # Mario Conde en el weekly aunque ya se había subido el 13/07).
-    import re as _re
-    def _proper_nouns(s: str) -> set[str]:
-        return {w.lower() for w in _re.findall(r"\b(?:[A-ZÁÉÍÓÚÑ][a-záéíóúñ]{3,}|[A-ZÁÉÍÓÚÑ]{4,})\b", s)}
-
+    # Dedup vs long-forms + shorts ya subidos. Fuente de verdad: YouTube API
+    # (persistente entre Actions runs, filesystem local es efímero). Usa el
+    # módulo `dedup_common` compartido con autogen para 3 capas:
+    #   - substring del topic completo
+    #   - intersección de nombres propios (regex MixedCase + ALLCAPS)
+    #   - KEYWORDS_ALREADY_COVERED (blacklist manual — CRÍTICO: sin esto el
+    #     26/07 se generaron 4 longforms duplicados de Colza/Fórum/RUMASA)
+    from . import dedup_common
     recent_titles: list[str] = []
     try:
-        recent_titles = await _run_blocking(lambda: stats.fetch_recent_titles(30))
+        recent_titles = await _run_blocking(lambda: stats.fetch_recent_titles(50))
         print(f"  longgen dedup: {len(recent_titles)} títulos recientes desde YT API")
     except Exception as e:
         print(f"  longgen dedup: fallo YT API ({e}) — fallback local")
@@ -1118,25 +1147,12 @@ async def _run_longgen_weekly(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> N
     seen_titles = {t.lower() for t in recent_titles if t}
     recent_nouns: set[str] = set()
     for t in recent_titles:
-        recent_nouns |= _proper_nouns(t)
-    recent_nouns -= {"como", "cómo", "españa", "españoles", "españolas", "millones",
-                     "banco", "bolsa", "estafa", "fraude", "caso", "sentencia",
-                     "billones", "euros", "año", "años"}
-    print(f"  longgen dedup: nombres propios recientes = {sorted(recent_nouns)[:20]}…")
-
-    fresh = []
-    for idea in ideas_list:
-        t = idea.lower().strip()
-        if any(t in s or s in t for s in seen_titles if s):
-            print(f"  longgen: SKIP substring — «{idea[:60]}»")
-            continue
-        overlap = _proper_nouns(idea) & recent_nouns
-        if overlap:
-            print(f"  longgen: SKIP nombres propios {overlap} — «{idea[:60]}»")
-            continue
-        fresh.append(idea)
+        recent_nouns |= dedup_common.proper_nouns(t)
+    fresh, skipped = dedup_common.dedup_ideas(ideas_list, seen_titles, recent_nouns)
+    for idea, reason in skipped:
+        print(f"  longgen: SKIP {reason} — «{idea[:60]}»")
     if not fresh:
-        msg = "⚠️ Todas las ideas ya cubiertas en YT (por nombre propio). Abort."
+        msg = "⚠️ Todas las ideas ya cubiertas en YT (título/propn/keyword). Abort."
         print(msg)
         await ctx.bot.send_message(chat_id, msg)
         return

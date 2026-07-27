@@ -2,9 +2,12 @@ name: Weekly long-form catchup
 
 on:
   schedule:
-    # Domingo 10-22 UTC + lunes 10-14 UTC — buffer si el domingo 08:00 UTC falló.
-    - cron: "0 10-22 * * 0"
-    - cron: "0 10-14 * * 1"
+    # 2 chequeos únicos (dom 13 UTC = 15 CEST y lun 10 UTC = 12 CEST). El dedup
+    # vía YT API (`_longform_generated_this_week`) evita disparos duplicados si
+    # ya hay long-form esta semana. ANTES (`0 10-22 * * 0`) generaba 13 chequeos
+    # diarios que causaron 24 videos duplicados el 26/07.
+    - cron: "0 13 * * 0"
+    - cron: "0 10 * * 1"
   workflow_dispatch: {}
 
 concurrency:
