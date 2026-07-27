@@ -18,36 +18,30 @@ import re
 from typing import Any
 
 
-def _build_status(video_title: str, video_url: str) -> str:
-    """Compone el toot (500 chars max en Mastodon)."""
-    m = re.search(r"#(\d+):\s*(.+)", video_title)
-    if m:
-        num = m.group(1)
-        case = m.group(2).strip()
-        hook = f"📺 Estafas Españolas #{num}\n\n{case}"
-    else:
-        hook = video_title[:250]
-
-    tags = "#TrueCrime #España #Estafas #Historia #Corrupción"
-    text = f"{hook[:280]}\n\n{video_url}\n\n{tags}"
-    return text[:499]
-
-
 def post_short_to_mastodon(video_title: str, video_url: str,
-                            dry_run: bool = False) -> dict[str, Any] | None:
-    """Postea un toot a Mastodon con enlace al Short."""
+                            teaser: str = "", dry_run: bool = False) -> dict[str, Any] | None:
+    """Postea un toot a Mastodon + reply thread con contexto extra."""
     instance = os.environ.get("MASTODON_INSTANCE", "https://mastodon.social").rstrip("/")
     token = os.environ.get("MASTODON_ACCESS_TOKEN")
     if not token:
         print("  mastodon: skip — falta MASTODON_ACCESS_TOKEN")
         return None
 
-    status = _build_status(video_title, video_url)
+    from . import social_post
+    # Cross-mention: apuntar a Bluesky si está configurado
+    bsky = os.environ.get("BLUESKY_HANDLE", "")
+    cross = f"@{bsky} en Bluesky" if bsky else ""
+    main_text, reply_text = social_post.build_viral_post(
+        video_title, video_url, teaser=teaser, cross_platform=cross
+    )
+    # Mastodon acepta hasta 500 chars — usamos el build_viral pero ampliamos
+    main_text = main_text[:499]
 
     if dry_run:
         print(f"  mastodon DRY-RUN — {instance}")
-        print(f"    ({len(status)} chars):\n{status}")
-        return {"dry_run": True, "text": status, "instance": instance}
+        print(f"    MAIN ({len(main_text)} chars):\n{main_text}")
+        print(f"    REPLY ({len(reply_text)} chars):\n{reply_text}")
+        return {"dry_run": True, "main": main_text, "reply": reply_text, "instance": instance}
 
     try:
         import requests
@@ -56,17 +50,30 @@ def post_short_to_mastodon(video_title: str, video_url: str,
         return None
 
     try:
-        r = requests.post(
-            f"{instance}/api/v1/statuses",
-            headers={"Authorization": f"Bearer {token}"},
-            data={"status": status, "visibility": "public"},
-            timeout=15,
-        )
+        H = {"Authorization": f"Bearer {token}"}
+        # Main post
+        r = requests.post(f"{instance}/api/v1/statuses", headers=H,
+                          data={"status": main_text, "visibility": "public"},
+                          timeout=15)
         r.raise_for_status()
         data = r.json()
         post_url = data.get("url") or data.get("uri")
-        print(f"  mastodon: ✅ posted → {post_url}")
-        return {"url": post_url, "id": data.get("id"), "instance": instance}
+        main_id = data.get("id")
+        print(f"  mastodon: ✅ main → {post_url}")
+
+        # Reply thread — contexto extra
+        try:
+            rr = requests.post(f"{instance}/api/v1/statuses", headers=H,
+                               data={"status": reply_text,
+                                     "in_reply_to_id": main_id,
+                                     "visibility": "public"},
+                               timeout=15)
+            rr.raise_for_status()
+            print(f"  mastodon: ✅ reply thread posted")
+        except Exception as e:
+            print(f"  mastodon: ⚠ reply thread falló ({e}) — main OK igual")
+
+        return {"url": post_url, "id": main_id, "instance": instance}
     except Exception as e:
         print(f"  mastodon: ❌ post falló ({type(e).__name__}: {str(e)[:200]})")
         return None

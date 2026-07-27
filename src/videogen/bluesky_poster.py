@@ -19,32 +19,8 @@ import os
 from typing import Any
 
 
-def _build_post_text(video_title: str, video_url: str) -> str:
-    """Compone el texto del post (max 300 chars incluyendo URL y hashtags).
-
-    Bluesky da mucho valor a hashtags temáticos y hooks emocionales cortos —
-    el algoritmo prioriza engagement inmediato.
-    """
-    # Extraer caso del title "Estafas Españolas #47: X"
-    import re
-    m = re.search(r"#(\d+):\s*(.+)", video_title)
-    if m:
-        num = m.group(1)
-        case = m.group(2).strip()
-        hook = f"📺 Estafas Españolas #{num}\n\n{case}"
-    else:
-        hook = video_title[:180]
-
-    # Hashtags cortos y temáticos
-    tags = "#truecrime #España #estafas #historia"
-    # URL cuenta como ~30 chars, hashtags ~40. Deja ~230 para el hook.
-    text = f"{hook[:200]}\n\n{video_url}\n\n{tags}"
-    # Bluesky limit = 300 grapheme clusters (aprox 300 chars)
-    return text[:299]
-
-
 def post_short_to_bluesky(video_title: str, video_url: str,
-                          dry_run: bool = False) -> dict[str, Any] | None:
+                          teaser: str = "", dry_run: bool = False) -> dict[str, Any] | None:
     """Postea un enlace al Short en Bluesky. Devuelve dict con detalles o None."""
     handle = os.environ.get("BLUESKY_HANDLE")
     password = os.environ.get("BLUESKY_APP_PASSWORD")
@@ -52,15 +28,24 @@ def post_short_to_bluesky(video_title: str, video_url: str,
         print("  bluesky: skip — faltan credenciales (BLUESKY_HANDLE/APP_PASSWORD)")
         return None
 
-    text = _build_post_text(video_title, video_url)
+    from . import social_post
+    # Cross-mention: apuntar a Mastodon si está configurado
+    masto = os.environ.get("MASTODON_INSTANCE", "").rstrip("/")
+    cross = ""
+    if masto and os.environ.get("MASTODON_ACCESS_TOKEN"):
+        cross = f"@automated_videos@{masto.replace('https://','')}"
+    main_text, reply_text = social_post.build_viral_post(
+        video_title, video_url, teaser=teaser, cross_platform=cross
+    )
 
     if dry_run:
         print(f"  bluesky DRY-RUN — {handle}")
-        print(f"    Text ({len(text)} chars):\n{text}")
-        return {"dry_run": True, "text": text, "handle": handle}
+        print(f"    MAIN ({len(main_text)} chars):\n{main_text}")
+        print(f"    REPLY ({len(reply_text)} chars):\n{reply_text}")
+        return {"dry_run": True, "main": main_text, "reply": reply_text, "handle": handle}
 
     try:
-        from atproto import Client, client_utils
+        from atproto import Client, client_utils, models
     except ImportError:
         print("  bluesky: atproto no instalado, skip")
         return None
@@ -69,27 +54,50 @@ def post_short_to_bluesky(video_title: str, video_url: str,
         c = Client()
         c.login(handle, password)
 
-        # Build rich text con facets (link clickeable + hashtags como facets)
+        # Main post: rich text con hashtags como facets + link clickable
         tb = client_utils.TextBuilder()
-        # Extraer partes: pre-URL, URL, post-URL con hashtags
-        lines = text.split("\n\n")
-        # lines: [hook, url, hashtags]
-        if len(lines) >= 3:
-            tb.text(lines[0] + "\n\n")
-            tb.link(video_url, video_url)
-            tb.text("\n\n")
-            for tag in lines[2].split():
-                tb.tag(tag, tag.lstrip("#"))
-                tb.text(" ")
-        else:
-            tb.text(text)
+        for chunk in _tokenize_for_facets(main_text, video_url):
+            kind, val = chunk
+            if kind == "url":
+                tb.link(val, val)
+            elif kind == "tag":
+                tb.tag(val, val.lstrip("#"))
+            else:
+                tb.text(val)
+        resp_main = c.send_post(tb)
+        rkey = resp_main.uri.split("/")[-1]
+        main_url = f"https://bsky.app/profile/{handle}/post/{rkey}"
+        print(f"  bluesky: ✅ main → {main_url}")
 
-        resp = c.send_post(tb)
-        # Construir URL del post: https://bsky.app/profile/handle/post/rkey
-        rkey = resp.uri.split("/")[-1]
-        post_url = f"https://bsky.app/profile/{handle}/post/{rkey}"
-        print(f"  bluesky: ✅ posted → {post_url}")
-        return {"handle": handle, "url": post_url, "uri": resp.uri, "cid": resp.cid}
+        # Reply del thread: contexto extra
+        try:
+            parent_ref = models.create_strong_ref(resp_main)
+            reply_ref = models.AppBskyFeedPost.ReplyRef(
+                parent=parent_ref, root=parent_ref
+            )
+            resp_reply = c.send_post(reply_text, reply_to=reply_ref)
+            print(f"  bluesky: ✅ reply thread posted")
+        except Exception as e:
+            print(f"  bluesky: ⚠ reply thread falló ({e}) — main OK igual")
+
+        return {"handle": handle, "url": main_url, "uri": resp_main.uri, "cid": resp_main.cid}
     except Exception as e:
         print(f"  bluesky: ❌ post falló ({type(e).__name__}: {str(e)[:200]})")
         return None
+
+
+def _tokenize_for_facets(text: str, url: str):
+    """Divide el texto en (kind, value) para TextBuilder — reconoce URL y #tags."""
+    import re as _re
+    idx = 0
+    for m in _re.finditer(r"(https?://\S+)|(#[A-Za-zÁÉÍÓÚÑáéíóúñ]+)", text):
+        s, e = m.span()
+        if s > idx:
+            yield ("text", text[idx:s])
+        if m.group(1):
+            yield ("url", m.group(1))
+        else:
+            yield ("tag", m.group(2))
+        idx = e
+    if idx < len(text):
+        yield ("text", text[idx:])

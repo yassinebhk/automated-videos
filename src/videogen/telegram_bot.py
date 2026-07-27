@@ -1533,21 +1533,27 @@ async def _run_autogen_daily(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> No
         await ctx.bot.send_message(chat_id, f"⚠️ Schedule YT falló: {type(e).__name__}: {str(e)[:300]}")
         return
 
-    # 4b. Bluesky auto-post — tráfico externo gratis via AT Protocol.
+    # 4b. Bluesky + Mastodon con formato viral (hook + cifra + reply thread).
+    from . import bluesky_poster, mastodon_poster
+    from .service import script as _script_mod
+    from .config import UPLOADED_DIR
+    slug_dir = UPLOADED_DIR / slug
+    title_social = topic  # fallback
+    teaser_social = ""
+    if slug_dir.exists():
+        try:
+            loc = _script_mod.load_scripts(slug_dir).es
+            title_social = loc.title
+            # Teaser: hook 0-5s del guion, ya optimizado para viralizar
+            if hasattr(loc, "teaser") and getattr(loc.teaser, "text", None):
+                teaser_social = loc.teaser.text
+        except Exception:
+            pass
+
     try:
-        from . import bluesky_poster
-        from .service import script as _script_mod
-        from .config import UPLOADED_DIR
-        slug_dir = UPLOADED_DIR / slug
-        title_bsky = topic  # fallback
-        if slug_dir.exists():
-            try:
-                loc = _script_mod.load_scripts(slug_dir).es
-                title_bsky = loc.title
-            except Exception:
-                pass
         bsky_res = await _run_blocking(
-            lambda: bluesky_poster.post_short_to_bluesky(title_bsky, yt_url)
+            lambda: bluesky_poster.post_short_to_bluesky(title_social, yt_url,
+                                                         teaser=teaser_social)
         )
         if bsky_res and not bsky_res.get("dry_run"):
             await ctx.bot.send_message(
@@ -1556,11 +1562,10 @@ async def _run_autogen_daily(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> No
     except Exception as e:
         print(f"  autogen: bluesky skip ({type(e).__name__}: {e})")
 
-    # 4b2. Mastodon auto-post — comunidad hispanohablante política/periodismo.
     try:
-        from . import mastodon_poster
         masto_res = await _run_blocking(
-            lambda: mastodon_poster.post_short_to_mastodon(title_bsky, yt_url)
+            lambda: mastodon_poster.post_short_to_mastodon(title_social, yt_url,
+                                                           teaser=teaser_social)
         )
         if masto_res and not masto_res.get("dry_run"):
             await ctx.bot.send_message(
