@@ -15,6 +15,10 @@ from .config import SECRETS_DIR
 SCOPES = [
     "https://www.googleapis.com/auth/youtube.upload",
     "https://www.googleapis.com/auth/youtube.readonly",
+    # `youtube.force-ssl` es superset de upload + readonly y permite DELETE
+    # de videos propios (necesario para limpiar zombies duplicados y otras
+    # operaciones de mantenimiento del canal desde el pipeline).
+    "https://www.googleapis.com/auth/youtube.force-ssl",
 ]
 CLIENT_SECRET = SECRETS_DIR / "youtube_client_secret.json"
 TOKEN_FILE = SECRETS_DIR / "youtube_token.json"
