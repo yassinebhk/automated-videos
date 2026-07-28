@@ -1483,8 +1483,9 @@ async def _run_autogen_daily(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> No
     episode_num = _next_episode_num(recent_titles)
     topic_with_ep = (
         f"[Episodio #{episode_num} de la serie 'Estafas Españolas'. "
-        f"El title DEBE empezar con 'Estafas Españolas #{episode_num}:' y "
-        f"el thumbnail_text DEBE incluir '#{episode_num}' bien visible.] "
+        f"El title DEBE seguir el patrón SEO 'Caso [NombreConocido] — [gancho] · #{episode_num}' "
+        f"(o fallback '[Persona] — [dato shock] · #{episode_num}' si el caso no tiene nombre 'Caso X'). "
+        f"El thumbnail_text DEBE mostrar la CIFRA clave del caso en 2 líneas (cifra + verbo emocional).] "
         f"{topic}"
     )
     print(f"  dedup: elegido «{topic[:80]}» — episodio #{episode_num}")
@@ -1521,6 +1522,34 @@ async def _run_autogen_daily(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> No
         )
         yt_url = links.get('es', '')
         print(f"  autogen: YT publicado → {yt_url}")
+
+        # Añadir a la playlist "Estafas Españolas" (boost binge-watching + SEO)
+        try:
+            from .config import SECRETS_DIR
+            pid_file = SECRETS_DIR / "playlist_id.txt"
+            if pid_file.exists() and yt_url:
+                playlist_id = pid_file.read_text().strip()
+                video_id = yt_url.rsplit("/", 1)[-1]
+                import json as _json, requests as _req
+                _tok = _json.loads((SECRETS_DIR / "youtube_token.json").read_text())
+                _tr = _req.post("https://oauth2.googleapis.com/token", data={
+                    "client_id": _tok["client_id"], "client_secret": _tok["client_secret"],
+                    "refresh_token": _tok["refresh_token"], "grant_type": "refresh_token",
+                }, timeout=15).json()
+                _H = {"Authorization": f"Bearer {_tr['access_token']}",
+                      "Content-Type": "application/json"}
+                _payload = {"snippet": {"playlistId": playlist_id,
+                    "resourceId": {"kind": "youtube#video", "videoId": video_id}}}
+                _r = _req.post("https://www.googleapis.com/youtube/v3/playlistItems",
+                               params={"part": "snippet"}, headers=_H,
+                               json=_payload, timeout=15)
+                if _r.status_code == 200:
+                    print(f"  autogen: ✅ añadido a playlist «Estafas Españolas»")
+                else:
+                    print(f"  autogen: ⚠ playlist add falló ({_r.status_code}): {_r.text[:150]}")
+        except Exception as e:
+            print(f"  autogen: ⚠ playlist add error {type(e).__name__}: {e}")
+
         await ctx.bot.send_message(
             chat_id,
             f"🗓 YT programado <b>{label_local}</b>\n{yt_url}",

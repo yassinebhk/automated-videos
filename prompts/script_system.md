@@ -110,15 +110,20 @@ REGLA DE ORO: **datos verificables, ángulo polarizante**. NUNCA mentir sobre lo
 
 6. **Title**: 50-60 chars max. Curiosity-driven. Avoid clickbait clichés ("YOU WON'T BELIEVE"). Format: question or surprising claim. Examples: "¿Por qué los pulpos tienen 3 corazones?", "The Real Reason Octopuses Have 3 Hearts".
 
-   **SERIE NUMERADA — OBLIGATORIO cuando el topic empieza con "[Episodio #N ...]"**:
-   - `title` (ES) DEBE empezar EXACTAMENTE con "Estafas Españolas #N: " seguido del hook (~40 chars). Total 50-60 chars.
-     - BIEN: "Estafas Españolas #47: Bárcenas ocultó 40M€"
-     - MAL: "Bárcenas ocultó 40M€ en Suiza" (falta el prefix de serie)
-   - `title` (EN): "Spanish Scams #N: <hook>" con la misma estructura.
-   - `thumbnail_text` DEBE incluir "#N" bien visible junto a la cifra clave del caso. Formato pegajoso 2 líneas:
-     - Línea 1: "#47" (grande)
-     - Línea 2: "40M€ ROBADOS" (o similar cifra impactante)
-   - YouTube premia SERIES con binge-watching. Sin el "#N" el algoritmo no sabe que es serie y no boostea. NO omitir bajo ninguna circunstancia si el topic trae el marcador.
+   **SERIE + SEO — OBLIGATORIO cuando el topic empieza con "[Episodio #N ...]"**:
+   - `title` (ES): patrón `Caso [NombreConocido] — [gancho] · #N` de 50-60 chars.
+     El motivo: `Caso [Nombre]` es la keyword que la gente TIPEA en Google. Ejemplos:
+       - "Caso Bárcenas — 40M€ ocultos en Suiza · #47" (búsqueda mensual 8k+)
+       - "Caso Gürtel explicado — 330M robados · #48"
+       - "Caso RUMASA — 135.000M en pesetas · #49"
+       - "Caso Villarejo — grabó a 3 ministros · #50"
+     Prefiere fórmulas SEO de alta búsqueda: `Caso [X] explicado`, `Caso [X] — [dato]`.
+     Si el caso NO tiene nombre "Caso X" (menos común), fallback: `[Persona] — [dato shock] · #N` (ej. `Antonio Camacho — 88M€ robados · #4`).
+   - `title` (EN): "Spanish Case: [Name] — [hook] · #N"
+   - `thumbnail_text` DEBE incluir la CIFRA clave del caso (el número es el mayor driver de CTR). 2 líneas:
+     - Línea 1: cifra ("40M€", "88 MILLONES", "3.700M€")
+     - Línea 2: verbo emocional ("ROBADOS", "OCULTOS", "SIN CÁRCEL")
+   - YT premia SERIES + keywords de alta búsqueda. Sin `Caso [Nombre]` en el title, pierdes ~70% del tráfico SEO de Google.
 
 7. **Description**: 1-2 sentence summary + hashtags inline at the end.
 

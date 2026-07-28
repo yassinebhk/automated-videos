@@ -67,6 +67,8 @@ jobs:
           BLUESKY_APP_PASSWORD: ${{ secrets.BLUESKY_APP_PASSWORD }}
           MASTODON_INSTANCE:     ${{ secrets.MASTODON_INSTANCE }}
           MASTODON_ACCESS_TOKEN: ${{ secrets.MASTODON_ACCESS_TOKEN }}
+          VOICE_ENGINE:          ${{ vars.VOICE_ENGINE || 'edge' }}
+          KOKORO_VOICE_ES:       ${{ vars.KOKORO_VOICE_ES }}
         run: |
           mkdir -p secrets
           # Genera un token JSON mínimo que google-auth OAuth2 acepta.
@@ -98,6 +100,8 @@ jobs:
             [ -n "$BLUESKY_APP_PASSWORD" ] && printf 'BLUESKY_APP_PASSWORD=%s\n' "$BLUESKY_APP_PASSWORD"
             [ -n "$MASTODON_INSTANCE"     ] && printf 'MASTODON_INSTANCE=%s\n' "$MASTODON_INSTANCE"
             [ -n "$MASTODON_ACCESS_TOKEN" ] && printf 'MASTODON_ACCESS_TOKEN=%s\n' "$MASTODON_ACCESS_TOKEN"
+            printf 'VOICE_ENGINE=%s\n' "${VOICE_ENGINE:-edge}"
+            [ -n "$KOKORO_VOICE_ES" ] && printf 'KOKORO_VOICE_ES=%s\n' "$KOKORO_VOICE_ES"
           } > .env
 
       - name: Ejecutar comando videogen
