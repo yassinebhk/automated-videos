@@ -44,10 +44,14 @@ class _HttpTelegramBot:
         return await asyncio.to_thread(_call)
 
     async def send_message(self, chat_id: int | str, text: str, *,
-                           parse_mode: str | None = None, **_kw) -> dict:
+                           parse_mode: str | None = None,
+                           disable_web_page_preview: bool | None = None,
+                           **_kw) -> dict:
         payload: dict[str, Any] = {"chat_id": chat_id, "text": text}
         if parse_mode:
             payload["parse_mode"] = parse_mode
+        if disable_web_page_preview is not None:
+            payload["disable_web_page_preview"] = disable_web_page_preview
         return await self._post("sendMessage", json=payload)
 
     async def send_photo(self, chat_id: int | str, photo, *,
@@ -80,6 +84,26 @@ class _HttpTelegramBot:
             data["caption"] = caption
         files = {"document": self._to_file(document)}
         return await self._post("sendDocument", data=data, files=files, timeout=300)
+
+    async def send_photo(self, chat_id: int | str, photo, *,
+                         caption: str | None = None, **_kw) -> dict:
+        data: dict[str, Any] = {"chat_id": str(chat_id)}
+        if caption:
+            data["caption"] = caption
+        files = {"photo": self._to_file(photo)}
+        return await self._post("sendPhoto", data=data, files=files, timeout=180)
+
+    async def pin_chat_message(self, chat_id: int | str, message_id: int,
+                                disable_notification: bool = True, **_kw) -> dict:
+        return await self._post("pinChatMessage", json={
+            "chat_id": chat_id, "message_id": message_id,
+            "disable_notification": disable_notification,
+        })
+
+    async def unpin_chat_message(self, chat_id: int | str, message_id: int, **_kw) -> dict:
+        return await self._post("unpinChatMessage", json={
+            "chat_id": chat_id, "message_id": message_id,
+        })
 
     @staticmethod
     def _to_file(x):

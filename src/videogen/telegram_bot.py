@@ -1771,24 +1771,259 @@ async def _send_social_stats(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> No
     await ctx.bot.send_message(chat_id, "\n\n".join(lines), parse_mode="HTML")
 
 
+def _fetch_youtube_totals() -> dict:
+    """Devuelve totales del canal + top 3 videos del día + comentarios."""
+    import json as _json, requests as _req
+    from pathlib import Path
+    tok_path = Path(__file__).parent.parent.parent / "secrets" / "youtube_token.json"
+    tok = _json.loads(tok_path.read_text())
+    r = _req.post("https://oauth2.googleapis.com/token", data={
+        "client_id": tok["client_id"], "client_secret": tok["client_secret"],
+        "refresh_token": tok["refresh_token"], "grant_type": "refresh_token",
+    }, timeout=15).json()
+    H = {"Authorization": f"Bearer {r['access_token']}"}
+    ch = _req.get("https://www.googleapis.com/youtube/v3/channels",
+                  params={"part": "statistics,contentDetails", "mine": "true"},
+                  headers=H, timeout=15).json()
+    st = ch["items"][0]["statistics"]
+    upl = ch["items"][0]["contentDetails"]["relatedPlaylists"]["uploads"]
+    r = _req.get("https://www.googleapis.com/youtube/v3/playlistItems",
+                 params={"part": "contentDetails,snippet",
+                         "playlistId": upl, "maxResults": 15},
+                 headers=H, timeout=15).json()
+    vids_recent = [(i["contentDetails"]["videoId"],
+                    i["snippet"]["publishedAt"],
+                    i["snippet"]["title"]) for i in r.get("items", [])]
+    ids = [v[0] for v in vids_recent]
+    vres = _req.get("https://www.googleapis.com/youtube/v3/videos",
+                    params={"part": "statistics,snippet", "id": ",".join(ids)},
+                    headers=H, timeout=15).json()
+    videos = []
+    for v in vres.get("items", []):
+        vst = v.get("statistics", {})
+        videos.append({
+            "id": v["id"],
+            "title": v["snippet"]["title"],
+            "pub": v["snippet"]["publishedAt"],
+            "views": int(vst.get("viewCount", 0)),
+            "likes": int(vst.get("likeCount", 0)),
+            "comments": int(vst.get("commentCount", 0)),
+        })
+    return {
+        "subs": int(st.get("subscriberCount", 0)),
+        "views": int(st.get("viewCount", 0)),
+        "videos": int(st.get("videoCount", 0)),
+        "recent": videos,
+    }
+
+
+def _prev_snapshot_from_history() -> dict:
+    """Última snapshot canal registrada en stats_history.jsonl (24h atrás típico)."""
+    import json as _json
+    from pathlib import Path
+    hp = Path(__file__).parent.parent.parent / "output" / "stats_history.jsonl"
+    if not hp.exists():
+        return {}
+    last_channel = {}
+    for line in hp.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        try:
+            row = _json.loads(line)
+            if row.get("kind") == "channel":
+                last_channel = row
+        except Exception:
+            pass
+    return last_channel
+
+
+def _save_snapshot(subs: int, views: int, videos_n: int) -> None:
+    """Añade fila 'channel' a stats_history para tracking futuro."""
+    import json as _json, time
+    from datetime import datetime
+    from pathlib import Path
+    hp = Path(__file__).parent.parent.parent / "output" / "stats_history.jsonl"
+    hp.parent.mkdir(parents=True, exist_ok=True)
+    row = {"platform": "youtube", "kind": "channel",
+           "subs": subs, "views": views, "videos": videos_n,
+           "source": "daily_summary", "ts": int(time.time()),
+           "date": datetime.now().strftime("%Y-%m-%d")}
+    with hp.open("a", encoding="utf-8") as f:
+        f.write(_json.dumps(row) + "\n")
+
+
+def _read_pinned_id() -> int | None:
+    from pathlib import Path
+    p = Path(__file__).parent.parent.parent / "output" / "pinned_summary_id.txt"
+    if p.exists():
+        try:
+            return int(p.read_text().strip())
+        except Exception:
+            return None
+    return None
+
+
+def _write_pinned_id(msg_id: int) -> None:
+    from pathlib import Path
+    p = Path(__file__).parent.parent.parent / "output" / "pinned_summary_id.txt"
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(str(msg_id))
+
+
+def _fmt_delta(cur: int, prev: int) -> str:
+    d = cur - prev
+    if d == 0:
+        return "±0"
+    return f"{d:+d}"
+
+
+async def _build_daily_report(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> int | None:
+    """Compone el mensaje ÚNICO del reporte diario y lo envía. Devuelve
+    message_id para poder fijarlo."""
+    from datetime import datetime, timedelta, timezone
+    import os as _os
+
+    # --- 1) YouTube global + delta 24h ---
+    try:
+        yt = await _run_blocking(_fetch_youtube_totals)
+    except Exception as e:
+        await ctx.bot.send_message(chat_id, f"⚠️ Fallo YT API: {e}")
+        return None
+    prev = _prev_snapshot_from_history()
+    d_subs = _fmt_delta(yt["subs"], int(prev.get("subs", yt["subs"])))
+    d_views = _fmt_delta(yt["views"], int(prev.get("views", yt["views"])))
+    d_videos = _fmt_delta(yt["videos"], int(prev.get("videos", yt["videos"])))
+    _save_snapshot(yt["subs"], yt["views"], yt["videos"])
+
+    # Top 3 videos del último día
+    now = datetime.now(timezone.utc)
+    day_ago = now - timedelta(hours=30)
+    recent_day = [v for v in yt["recent"]
+                  if datetime.fromisoformat(v["pub"].replace("Z", "+00:00")) >= day_ago]
+    recent_day.sort(key=lambda v: -v["views"])
+    top3 = recent_day[:3]
+
+    # Suma engagement 24h
+    total_likes_24h = sum(v["likes"] for v in recent_day)
+    total_comments_24h = sum(v["comments"] for v in recent_day)
+
+    # --- 2) Bluesky ---
+    bsky_line = "🦋 <b>Bluesky</b>: no configurado"
+    try:
+        bh = _os.environ.get("BLUESKY_HANDLE")
+        bp = _os.environ.get("BLUESKY_APP_PASSWORD")
+        if bh and bp:
+            from atproto import Client as _BC
+            c = _BC()
+            p = c.login(bh, bp)
+            feed = c.get_author_feed(p.did, limit=10)
+            mine = [i.post for i in feed.feed if i.post.author.did == p.did][:5]
+            tl = sum(pp.like_count or 0 for pp in mine)
+            tr = sum(pp.repost_count or 0 for pp in mine)
+            tc = sum(pp.reply_count or 0 for pp in mine)
+            bsky_line = (f"🦋 <b>Bluesky</b> @{bh}\n"
+                         f"   👥 {p.followers_count} followers · "
+                         f"últimos {len(mine)} posts: {tl}❤ {tr}🔁 {tc}💬")
+    except Exception:
+        pass
+
+    # --- 3) Mastodon ---
+    masto_line = "🐘 <b>Mastodon</b>: no configurado"
+    try:
+        import requests as _req
+        mi = _os.environ.get("MASTODON_INSTANCE", "https://mastodon.social").rstrip("/")
+        mt = _os.environ.get("MASTODON_ACCESS_TOKEN")
+        if mt:
+            MH = {"Authorization": f"Bearer {mt}"}
+            me = _req.get(f"{mi}/api/v1/accounts/verify_credentials",
+                          headers=MH, timeout=15).json()
+            ts = _req.get(f"{mi}/api/v1/accounts/{me['id']}/statuses",
+                          headers=MH, params={"limit": 5}, timeout=15).json()
+            tf = sum(int(t.get("favourites_count", 0)) for t in ts)
+            tre = sum(int(t.get("reblogs_count", 0)) for t in ts)
+            trp = sum(int(t.get("replies_count", 0)) for t in ts)
+            masto_line = (f"🐘 <b>Mastodon</b> @{me['username']}\n"
+                          f"   👥 {me['followers_count']} followers · "
+                          f"últimos {len(ts)} toots: {tf}❤ {tre}🔁 {trp}💬")
+    except Exception:
+        pass
+
+    # --- 4) Salud sistema: token YT + próximo cron ---
+    token_ok, _ = _check_yt_token()
+    token_line = "✅ activo" if token_ok else "🔴 CADUCADO — hacer /reauth"
+
+    # --- 5) Compose mensaje HTML denso ---
+    today_str = datetime.now().strftime("%d/%m/%Y")
+    lines = [
+        f"🌅 <b>Resumen {today_str}</b>",
+        "",
+        f"📺 <b>YouTube · @waitwhy_ybb</b>",
+        f"   👥 Subs: <b>{yt['subs']}</b> ({d_subs})",
+        f"   👁 Views: <b>{yt['views']:,}</b> ({d_views})",
+        f"   🎬 Videos: <b>{yt['videos']}</b> ({d_videos})",
+        f"   ❤ Likes 24h: <b>{total_likes_24h}</b>",
+        f"   💬 Comentarios 24h: <b>{total_comments_24h}</b>",
+        "",
+    ]
+    if top3:
+        lines.append(f"🏆 <b>Top {len(top3)} de las últimas 24h</b>")
+        for i, v in enumerate(top3, 1):
+            title_short = v["title"][:55]
+            lr = (v["likes"] / v["views"] * 100) if v["views"] > 0 else 0
+            lines.append(
+                f"   {i}. <b>{v['views']}v</b> · {v['likes']}❤ · "
+                f"{v['comments']}💬 · {lr:.1f}%LR\n      <i>{title_short}</i>"
+            )
+        lines.append("")
+    lines += [bsky_line, "", masto_line, "", "🤖 <b>Sistema</b>", f"   Token YT: {token_line}",
+              "   Cron: daily-short 08:00+13:00 CEST · long-form dom 10:00",
+              "",
+              '<a href="https://youtube.com/playlist?list=PLK08iO9LACck">📼 Playlist Estafas Españolas</a>']
+    text = "\n".join(lines)
+
+    # Enviar y devolver message_id (compat PTB Message y HTTP dict runner)
+    resp = await ctx.bot.send_message(chat_id, text, parse_mode="HTML",
+                                       disable_web_page_preview=True)
+    if hasattr(resp, "message_id"):
+        return resp.message_id
+    if isinstance(resp, dict):
+        return resp.get("result", {}).get("message_id") or resp.get("message_id")
+    return None
+
+
 async def daily_summary(ctx: ContextTypes.DEFAULT_TYPE):
     chat_id = ctx.job.chat_id
-    # Health check token: si caducado, alerta visible primero
+
+    # Health check token PRIMERO (si expirado, alerta visible antes)
     ok, reason = _check_yt_token()
     if not ok:
         await _send_yt_token_alert(chat_id, ctx, reason)
-    await ctx.bot.send_message(
-        chat_id,
-        f"☀️ *Buenos días* — resumen diario\n\n"
-        f"⏰ Sube hoy en:\n"
-        f"▶️ YouTube: {stats.OPTIMAL_TIMES['youtube']}\n"
-        f"🎵 TikTok: {stats.OPTIMAL_TIMES['tiktok']}",
-        parse_mode="Markdown",
-    )
-    await _send_stats(chat_id, ctx)
-    await _send_charts(chat_id, ctx)
-    await _send_social_stats(chat_id, ctx)
-    await _send_ideas(chat_id, ctx, n=6)
+
+    # 1) Resumen ÚNICO como mensaje fijable
+    new_msg_id = await _build_daily_report(chat_id, ctx)
+    if new_msg_id:
+        try:
+            prev_id = _read_pinned_id()
+            if prev_id and prev_id != new_msg_id:
+                try:
+                    await ctx.bot.unpin_chat_message(chat_id, prev_id)
+                except Exception:
+                    pass  # ya despinneado o eliminado
+            await ctx.bot.pin_chat_message(chat_id, new_msg_id,
+                                            disable_notification=True)
+            _write_pinned_id(new_msg_id)
+        except Exception as e:
+            print(f"  daily_summary: pin fail ({e})")
+
+    # 2) Gráficas + ideas (mensajes adicionales, no pineados)
+    try:
+        await _send_charts(chat_id, ctx)
+    except Exception as e:
+        print(f"  daily_summary: charts fail ({e})")
+    try:
+        await _send_ideas(chat_id, ctx, n=6)
+    except Exception as e:
+        print(f"  daily_summary: ideas fail ({e})")
 
 
 def run():

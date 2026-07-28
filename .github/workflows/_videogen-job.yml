@@ -126,10 +126,10 @@ jobs:
           # Solo commiteamos el snapshot analytics (append-only).
           # NO commiteamos secrets/ (siempre gitignored) ni output/uploaded/*
           # (videos pesados que no queremos en el repo).
-          if [ -n "$(git status --porcelain output/stats_history.jsonl output/reddit_history.json 2>/dev/null)" ]; then
+          if [ -n "$(git status --porcelain output/stats_history.jsonl output/reddit_history.json output/pinned_summary_id.txt 2>/dev/null)" ]; then
             git config user.name "videogen-bot"
             git config user.email "bot@videogen.local"
-            git add output/stats_history.jsonl output/reddit_history.json 2>/dev/null || true
+            git add output/stats_history.jsonl output/reddit_history.json output/pinned_summary_id.txt 2>/dev/null || true
             git commit -m "stats: snapshot $(date -u +%FT%H:%MZ) [skip ci]" || true
             # Rebase para tolerar race con otro workflow que también commiteó.
             for i in 1 2 3; do

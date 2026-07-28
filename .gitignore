@@ -5,6 +5,7 @@ secrets/
 output/**
 !output/stats_history.jsonl
 !output/reddit_history.json
+!output/pinned_summary_id.txt
 __pycache__/
 *.pyc
 .venv/
