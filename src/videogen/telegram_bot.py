@@ -928,6 +928,31 @@ def _upload_atomized_clip_as_short(
     )
 
 
+def _extract_case_names(titles: list[str]) -> list[str]:
+    """Extrae nombres de casos de los títulos YT para pasarlos como
+    exclusión a Gemini. Mira los patrones "Caso [X] —", "X: cómo Y", etc.
+    """
+    import re
+    cases: set[str] = set()
+    # Casos que sabemos que están (aunque el título no los liste explícito)
+    KNOWN = [
+        "Aceite de Colza", "Mario Conde / Banesto", "Fórum Filatélico / AFINSA",
+        "RUMASA / Ruiz-Mateos", "Gescartera / Antonio Camacho",
+        "Bankia / Rato", "Preferentes bancarias",
+        "Bárcenas / Gürtel / Correa", "ERE Andalucía", "Idental",
+        "Filesa", "Nóos / Urdangarin", "Malaya / Roca / Marbella",
+        "Arbistar / Kuailian", "Popular vendido 1€",
+    ]
+    # Buscar heurística: si el keyword aparece en algún título, dar por cubierto
+    lower_titles = " ".join(t.lower() for t in titles)
+    for k in KNOWN:
+        # Primera palabra del caso como keyword
+        key = k.split(" ")[0].lower().rstrip(",")
+        if key in lower_titles:
+            cases.add(k)
+    return sorted(cases)
+
+
 def _shorts_published_today_count() -> int:
     """Cuenta shorts publicados hoy en YouTube (fuente de verdad persistente,
     a diferencia de list_history() local que es efímero en Actions).
@@ -1110,10 +1135,18 @@ async def _run_longgen_weekly(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> N
         return
 
     # 1. Ideas frescas + dedup vs long-forms ya generados
+    # Casos ya cubiertos → pasar como exclusión a Gemini (mismo fix que autogen)
+    try:
+        recent_pre = await _run_blocking(lambda: stats.fetch_recent_titles(50))
+        exclude_long = _extract_case_names(recent_pre)
+    except Exception:
+        exclude_long = []
     ideas_list = []
     for attempt in range(3):
         try:
-            ideas_list = await _run_blocking(lambda: ideas.generate_ideas(10))
+            ideas_list = await _run_blocking(
+                lambda: ideas.generate_ideas(10, exclude_cases=exclude_long)
+            )
             if ideas_list:
                 break
         except Exception:
@@ -1389,10 +1422,21 @@ async def _run_autogen_daily(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> No
         await _send_yt_token_alert(chat_id, ctx, reason)
         return
 
+    # Casos ya cubiertos → pasarlos a Gemini como exclusión explícita.
+    # Sin esto Gemini insiste con los mismos 8 casos del inicio del brief
+    # y el dedup bloquea TODO (bug 28/07).
+    try:
+        recent_titles_pre = await _run_blocking(lambda: stats.fetch_recent_titles(50))
+        exclude = _extract_case_names(recent_titles_pre)
+    except Exception:
+        exclude = []
+
     ideas_list = []
     for attempt in range(3):
         try:
-            ideas_list = await _run_blocking(lambda: ideas.generate_ideas(8))
+            ideas_list = await _run_blocking(
+                lambda: ideas.generate_ideas(8, exclude_cases=exclude)
+            )
             if ideas_list:
                 break
         except Exception as e:

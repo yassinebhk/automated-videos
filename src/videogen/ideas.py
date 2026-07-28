@@ -53,8 +53,13 @@ Te paso el BRIEF del nicho. Genera ideas con nombres CONCRETOS de casos, persona
 Devuelve SOLO JSON: {"ideas": ["idea 1", "idea 2", ...]}"""
 
 
-def generate_ideas(n: int = 5) -> list[str]:
-    """Genera ideas vía Gemini. Robusto frente a 503 spikes y fences markdown."""
+def generate_ideas(n: int = 5, exclude_cases: list[str] | None = None) -> list[str]:
+    """Genera ideas vía Gemini. Robusto frente a 503 spikes y fences markdown.
+
+    exclude_cases: nombres de casos YA cubiertos → Gemini debe evitarlos.
+    Sin esto, Gemini insiste con los casos del inicio del brief y siempre
+    devuelve duplicados (bug 28/07: dedup bloqueaba todo, autogen abortaba).
+    """
     import re as _re
     api_key = gemini_key()
     if not api_key:
@@ -64,10 +69,25 @@ def generate_ideas(n: int = 5) -> list[str]:
     cfg = types.GenerateContentConfig(
         system_instruction=IDEAS_SYSTEM,
         response_mime_type="application/json",
-        temperature=0.9,
-        max_output_tokens=2048,  # brief true-crime largo → +buffer para JSON completo
+        temperature=1.0,  # subido de 0.9 → 1.0 para más diversidad
+        max_output_tokens=2048,
     )
-    contents = f"BRIEF DEL NICHO:\n{niche}\n\nGenera {n} ideas de video específicas."
+    exclusion_block = ""
+    if exclude_cases:
+        exclusion_block = (
+            "\n\n⚠️ CASOS YA CUBIERTOS — PROHIBIDO PROPONERLOS OTRA VEZ:\n"
+            + "\n".join(f"- {c}" for c in exclude_cases)
+            + "\n\nDEBES proponer casos DIFERENTES. Prioriza: Villarejo, Púnica, "
+            "Palma Arena, Pescanova, Marta Domínguez / AVE, MATESA (1969), "
+            "Ibercorp / Mariano Rubio, Airtel, Terra Networks, Estraperlo, "
+            "Cripto Kuailian (si Arbistar ya cubierto), Coach Toni Kamo, "
+            "Panama Papers españoles. Si el caso NO tiene nombre propio conocido, "
+            "usa el nombre de la persona/empresa protagonista."
+        )
+    contents = (
+        f"BRIEF DEL NICHO:\n{niche}{exclusion_block}\n\n"
+        f"Genera {n} ideas de video específicas — CASOS NUEVOS, no repitas."
+    )
     last_err = None
     for model in MODELS:
         # 4 intentos con backoff 5/10/20/40 s — los picos de 503 duran minutos
