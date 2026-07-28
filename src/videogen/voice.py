@@ -119,7 +119,12 @@ def _synthesize_kokoro(script: LocalizedScript, dest_dir: Path) -> VoiceTrack:
         words.append(WordTimestamp(word=w, start=t, end=t + w_dur))
         t += w_dur
 
-    return VoiceTrack(audio_path=audio_path, duration=total_dur, words=words)
+    return VoiceTrack(
+        lang=script.lang,
+        audio_path=str(audio_path),
+        duration_seconds=total_dur,
+        words=words,
+    )
 
 
 # ---------------------------------------------------------------- Edge TTS
