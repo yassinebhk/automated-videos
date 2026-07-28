@@ -1385,15 +1385,48 @@ def _check_yt_token() -> tuple[bool, str]:
 
 
 async def _send_yt_token_alert(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE, reason: str) -> None:
-    await ctx.bot.send_message(
-        chat_id,
-        f"🚨 *TOKEN YT CADUCADO* — autogen no puede subir hoy.\n\n"
-        f"Causa: {reason}\n\n"
-        f"*Fix (30 seg, en tu Mac)*:\n"
-        f"```\ncd ~/automated-videos\n.venv/bin/videogen reauth\n```\n"
-        f"→ se abre el navegador → elige cuenta → acepta → listo.",
-        parse_mode="Markdown",
+    """Alerta de token YT caducado con botón inline para reauth desde móvil.
+
+    Si WEBHOOK_URL está configurado, muestra botón que abre el flow OAuth en
+    Safari/Chrome del móvil → 30s → done. Fallback: instrucciones CLI para
+    hacer en el Mac.
+    """
+    import os
+    webhook_base = os.environ.get("WEBHOOK_URL", "").rstrip("/")
+
+    text = (
+        f"🚨 <b>TOKEN YT CADUCADO</b>\n"
+        f"El autogen no puede subir videos hasta que renueves.\n\n"
+        f"<i>Causa: {reason[:200]}</i>"
     )
+
+    reply_markup = None
+    if webhook_base:
+        # Botón inline con URL — abre en el navegador del móvil
+        auth_url = f"{webhook_base}/api/yt-auth?t={chat_id}"
+        reply_markup = {
+            "inline_keyboard": [[
+                {"text": "🔐 Renovar token YT (30s)", "url": auth_url}
+            ]]
+        }
+        text += (
+            "\n\n<b>Tap el botón</b> → autoriza en Google → "
+            "el token se actualiza solo. Volveras a este chat con la "
+            "confirmación."
+        )
+    else:
+        # Fallback CLI si WEBHOOK_URL no configurado
+        text += (
+            "\n\n<b>Fix (30 seg en el Mac):</b>\n"
+            "<pre>cd ~/automated-videos\n.venv/bin/videogen reauth</pre>"
+        )
+
+    # ctx.bot.send_message acepta reply_markup en PTB; en HTTP runner
+    # necesitamos pasarlo como kwarg (nuestro _post lo acepta como json extra).
+    kwargs = {"parse_mode": "HTML"}
+    if reply_markup:
+        kwargs["reply_markup"] = reply_markup
+    await ctx.bot.send_message(chat_id, text, **kwargs)
 
 
 async def _auto_generate_daily_short(ctx: ContextTypes.DEFAULT_TYPE) -> None:

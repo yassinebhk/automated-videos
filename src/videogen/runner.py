@@ -46,12 +46,15 @@ class _HttpTelegramBot:
     async def send_message(self, chat_id: int | str, text: str, *,
                            parse_mode: str | None = None,
                            disable_web_page_preview: bool | None = None,
+                           reply_markup: dict | None = None,
                            **_kw) -> dict:
         payload: dict[str, Any] = {"chat_id": chat_id, "text": text}
         if parse_mode:
             payload["parse_mode"] = parse_mode
         if disable_web_page_preview is not None:
             payload["disable_web_page_preview"] = disable_web_page_preview
+        if reply_markup is not None:
+            payload["reply_markup"] = reply_markup
         return await self._post("sendMessage", json=payload)
 
     async def send_photo(self, chat_id: int | str, photo, *,

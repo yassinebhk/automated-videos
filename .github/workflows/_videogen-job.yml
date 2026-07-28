@@ -69,6 +69,7 @@ jobs:
           MASTODON_ACCESS_TOKEN: ${{ secrets.MASTODON_ACCESS_TOKEN }}
           VOICE_ENGINE:          ${{ vars.VOICE_ENGINE || 'edge' }}
           KOKORO_VOICE_ES:       ${{ vars.KOKORO_VOICE_ES }}
+          WEBHOOK_URL:           ${{ vars.WEBHOOK_URL }}
         run: |
           mkdir -p secrets
           # Genera un token JSON mínimo que google-auth OAuth2 acepta.
