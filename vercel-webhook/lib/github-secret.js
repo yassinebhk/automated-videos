@@ -1,23 +1,56 @@
 // Helper para actualizar un GitHub Secret vía API.
-// Requiere cifrar el valor con libsodium sealed_box usando la public key del repo.
+// GitHub cifra los secrets con sealed_box de libsodium (X25519 + XSalsa20-Poly1305).
+// libsodium-wrappers ESM está roto en Vercel (module not found libsodium.mjs), así que
+// implementamos sealed_box manualmente con tweetnacl + @noble/hashes/blake2b —
+// ambos JS puros, sin deps nativas, funcionan en cualquier entorno serverless.
+//
 // PAT del env GITHUB_DISPATCH_TOKEN debe tener scope `secrets:write` (fine-grained)
 // o `repo` completo (classic).
 
-import sodium from "libsodium-wrappers";
+import nacl from "tweetnacl";
+import { blake2b } from "@noble/hashes/blake2b";
+
+/**
+ * sealed_box(m, pk) implementación conforme a libsodium.
+ *
+ *   ephemeral_pk || box(m, nonce=blake2b(ephemeral_pk||pk, 24), pk, ephemeral_sk)
+ *
+ * Devuelve Uint8Array de longitud 32 + len(m) + 16.
+ */
+function sealedBox(message, recipientPubKey) {
+  const ek = nacl.box.keyPair(); // ephemeral X25519 keypair
+  const nonceInput = new Uint8Array(64);
+  nonceInput.set(ek.publicKey, 0);
+  nonceInput.set(recipientPubKey, 32);
+  const nonce = blake2b(nonceInput, { dkLen: 24 });
+
+  const ciphertext = nacl.box(message, nonce, recipientPubKey, ek.secretKey);
+
+  const sealed = new Uint8Array(32 + ciphertext.length);
+  sealed.set(ek.publicKey, 0);
+  sealed.set(ciphertext, 32);
+  return sealed;
+}
+
+function b64encode(bytes) {
+  return Buffer.from(bytes).toString("base64");
+}
+
+function b64decode(str) {
+  return new Uint8Array(Buffer.from(str, "base64"));
+}
 
 /**
  * Actualiza un secret del repo.
  * @param {object} opts
- * @param {string} opts.owner   - dueño del repo (yassinebhk)
- * @param {string} opts.repo    - nombre del repo (automated-videos)
- * @param {string} opts.secretName - nombre del secret (YT_REFRESH_TOKEN)
- * @param {string} opts.value   - valor plano a cifrar
- * @param {string} opts.token   - GitHub PAT con scope secrets:write
+ * @param {string} opts.owner
+ * @param {string} opts.repo
+ * @param {string} opts.secretName
+ * @param {string} opts.value
+ * @param {string} opts.token   - PAT GitHub con scope secrets:write
  */
 export async function updateRepoSecret({ owner, repo, secretName, value, token }) {
-  await sodium.ready;
-
-  // 1) Fetch public key del repo (para cifrar el secret)
+  // 1) Public key del repo
   const pkResp = await fetch(
     `https://api.github.com/repos/${owner}/${repo}/actions/secrets/public-key`,
     {
@@ -34,13 +67,13 @@ export async function updateRepoSecret({ owner, repo, secretName, value, token }
   }
   const { key, key_id } = await pkResp.json();
 
-  // 2) Cifrar con sealed_box
-  const publicKeyBytes = sodium.from_base64(key, sodium.base64_variants.ORIGINAL);
-  const valueBytes = sodium.from_string(value);
-  const encryptedBytes = sodium.crypto_box_seal(valueBytes, publicKeyBytes);
-  const encryptedB64 = sodium.to_base64(encryptedBytes, sodium.base64_variants.ORIGINAL);
+  // 2) Cifrar
+  const publicKeyBytes = b64decode(key);
+  const valueBytes = new TextEncoder().encode(value);
+  const sealed = sealedBox(valueBytes, publicKeyBytes);
+  const encryptedB64 = b64encode(sealed);
 
-  // 3) PUT del secret
+  // 3) PUT
   const putResp = await fetch(
     `https://api.github.com/repos/${owner}/${repo}/actions/secrets/${secretName}`,
     {
