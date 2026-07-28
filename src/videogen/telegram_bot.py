@@ -1818,23 +1818,46 @@ def _fetch_youtube_totals() -> dict:
 
 
 def _prev_snapshot_from_history() -> dict:
-    """Última snapshot canal registrada en stats_history.jsonl (24h atrás típico)."""
-    import json as _json
+    """Snapshot 'channel' más cercana a hace 20-30h para calcular Δ 24h.
+
+    Antes usaba la última fila cualquiera → si el histórico tenía saltos
+    largos, el delta se comparaba contra hace semanas y salían números
+    inflados. Ahora prioriza filas con ts entre 20-30h atrás; si no hay,
+    coge la más reciente que NO sea de hoy; fallback último.
+    """
+    import json as _json, time
     from pathlib import Path
     hp = Path(__file__).parent.parent.parent / "output" / "stats_history.jsonl"
     if not hp.exists():
         return {}
-    last_channel = {}
+    now = time.time()
+    channels = []
     for line in hp.read_text(encoding="utf-8").splitlines():
         if not line.strip():
             continue
         try:
             row = _json.loads(line)
-            if row.get("kind") == "channel":
-                last_channel = row
         except Exception:
-            pass
-    return last_channel
+            continue
+        if row.get("kind") != "channel":
+            continue
+        ts = row.get("ts", 0)
+        channels.append((ts, row))
+    if not channels:
+        return {}
+    channels.sort(key=lambda x: x[0])
+
+    # 1) Ideal: hace 20-30h
+    ideal = [r for ts, r in channels if 20*3600 <= (now - ts) <= 30*3600]
+    if ideal:
+        return ideal[-1]
+    # 2) La más reciente que sea de AYER (no de hoy) o antes
+    today_ts = now - (now % 86400)  # 00:00 hoy UTC aprox
+    older = [r for ts, r in channels if ts < today_ts]
+    if older:
+        return older[-1]
+    # 3) Fallback: primera del día si solo hay filas de hoy
+    return channels[0][1]
 
 
 def _save_snapshot(subs: int, views: int, videos_n: int) -> None:
