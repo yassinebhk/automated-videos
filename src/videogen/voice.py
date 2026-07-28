@@ -71,11 +71,14 @@ def _synthesize_kokoro(script: LocalizedScript, dest_dir: Path) -> VoiceTrack:
     """
     from kokoro_onnx import Kokoro
     import soundfile as sf
+    import subprocess
 
     dest_dir.mkdir(parents=True, exist_ok=True)
     voice = KOKORO_VOICES.get(script.lang, KOKORO_VOICES["en"])
     text = _clean_for_tts(script.full_text())
-    audio_path = dest_dir / f"voice_{script.lang}.wav"
+    # Salida final SIEMPRE .mp3 para compat con atomize/service (asumen .mp3)
+    wav_path = dest_dir / f"voice_{script.lang}.wav"
+    audio_path = dest_dir / f"voice_{script.lang}.mp3"
 
     # Descarga cacheada del modelo si aún no existe
     model_dir = Path.home() / ".kokoro"
@@ -94,8 +97,16 @@ def _synthesize_kokoro(script: LocalizedScript, dest_dir: Path) -> VoiceTrack:
     k = Kokoro(str(model_path), str(voices_path))
     speed = float(os.environ.get("KOKORO_SPEED", "1.05"))
     audio, sr = k.create(text, voice=voice, speed=speed, lang=script.lang)
-    sf.write(str(audio_path), audio, sr)
+    sf.write(str(wav_path), audio, sr)
     total_dur = len(audio) / sr
+
+    # Convertir WAV → MP3 (compat con resto pipeline). ffmpeg está en Actions.
+    subprocess.run(
+        ["ffmpeg", "-y", "-loglevel", "error", "-i", str(wav_path),
+         "-codec:a", "libmp3lame", "-b:a", "128k", str(audio_path)],
+        check=True,
+    )
+    wav_path.unlink(missing_ok=True)  # limpiamos intermedio
 
     # Timestamps por palabra: distribución proporcional al número de caracteres
     # de cada palabra respecto al total. Simple pero funciona para subs ASS.
