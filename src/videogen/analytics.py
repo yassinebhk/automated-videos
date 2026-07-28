@@ -190,7 +190,12 @@ def render_platform_chart(platform: str, dest: Path, days: int = 30) -> Path | N
     rows = load_history(days=days, platform=platform)
     if not rows:
         return None
-    fig, axes = plt.subplots(3, 1, figsize=(9, 11), constrained_layout=True)
+    # 3 filas verticales altas — evita superposición leyenda/líneas.
+    # height_ratios: panel 2 (evolución con leyenda debajo) necesita más aire.
+    fig, axes = plt.subplots(
+        3, 1, figsize=(9, 16),
+        gridspec_kw={"height_ratios": [1, 1.4, 1.4], "hspace": 0.6},
+    )
     fig.patch.set_facecolor(COLORS["bg"])
     color = COLORS.get(platform, COLORS["ink"])
 
@@ -212,59 +217,73 @@ def render_platform_chart(platform: str, dest: Path, days: int = 30) -> Path | N
         for s in ax2.spines.values():
             s.set_color(COLORS["line"])
         ax1.xaxis.set_major_formatter(mdates.DateFormatter("%d/%m"))
+        # Rotar ticks para evitar apretujamiento en 30 días
+        for label in ax1.get_xticklabels():
+            label.set_rotation(30)
+            label.set_ha("right")
     else:
         ax1.text(0.5, 0.5, "(sin datos de canal)", ha="center", va="center",
                  transform=ax1.transAxes, color=COLORS["muted"])
 
-    # Panel 2: views por vídeo en el tiempo
+    # Panel 2: views por vídeo en el tiempo (top 5, no 8 — evita saturar)
     by_vid = _group_by_video(rows)
     ax3 = axes[1]
-    _setup_axes(ax3, "views por vídeo (evolución)")
+    _setup_axes(ax3, "views por vídeo (top 5, evolución)")
     if by_vid:
-        # Top 8 por views actuales para no saturar
-        latest = sorted(by_vid.items(), key=lambda kv: kv[1][-1].get("views", 0), reverse=True)[:8]
+        latest = sorted(by_vid.items(), key=lambda kv: kv[1][-1].get("views", 0), reverse=True)[:5]
         cmap = plt.get_cmap("tab10")
         for i, (key, series) in enumerate(latest):
             xs = [datetime.fromtimestamp(r["ts"]) for r in series]
             ys = [r.get("views", 0) for r in series]
-            label = (series[-1].get("title") or key)[:42]
+            label = (series[-1].get("title") or key)[:32]
             ax3.plot(xs, ys, marker="o", linewidth=1.6, markersize=4,
                      color=cmap(i % 10), label=label)
-        ax3.legend(loc="upper left", fontsize=7, frameon=False, ncol=1)
+        # Leyenda DEBAJO del gráfico — nunca solapa las líneas
+        ax3.legend(loc="upper center", bbox_to_anchor=(0.5, -0.22),
+                   fontsize=8, frameon=False, ncol=1)
         ax3.set_ylabel("views", color=COLORS["body"], fontsize=9)
         ax3.xaxis.set_major_formatter(mdates.DateFormatter("%d/%m"))
+        for label in ax3.get_xticklabels():
+            label.set_rotation(30)
+            label.set_ha("right")
     else:
         ax3.text(0.5, 0.5, "(sin vídeos registrados)", ha="center", va="center",
                  transform=ax3.transAxes, color=COLORS["muted"])
 
-    # Panel 3: like-rate por vídeo (última lectura)
+    # Panel 3: like-rate por vídeo (top 8 con >= 30 views)
     ax4 = axes[2]
-    _setup_axes(ax4, "like-rate por vídeo (última lectura, %)")
+    _setup_axes(ax4, "like-rate por vídeo (top 8, %)")
     if by_vid:
         latest = [(k, v[-1]) for k, v in by_vid.items()]
-        latest = [x for x in latest if x[1].get("views", 0) > 0]
+        # Solo videos con views significativas (evita bar plot con muchos ceros)
+        latest = [x for x in latest if x[1].get("views", 0) >= 30]
         latest.sort(key=lambda x: (x[1].get("likes", 0) / max(x[1].get("views", 1), 1)), reverse=True)
-        latest = latest[:10]
-        labels = [(r.get("title") or k)[:30] for k, r in latest]
+        latest = latest[:8]
+        labels = [(r.get("title") or k)[:24] for k, r in latest]
         rates = [r.get("likes", 0) / max(r.get("views", 1), 1) * 100 for _, r in latest]
-        bars = ax4.barh(labels, rates, color=color, alpha=0.85)
+        bars = ax4.barh(labels, rates, color=color, alpha=0.85, height=0.7)
         ax4.invert_yaxis()
+        ax4.tick_params(axis="y", labelsize=8)
         for bar, rate in zip(bars, rates):
             ax4.text(bar.get_width() + 0.05, bar.get_y() + bar.get_height() / 2,
                      f"{rate:.1f}%", va="center", fontsize=8, color=COLORS["ink"])
         ax4.set_xlabel("like-rate (%)", color=COLORS["body"], fontsize=9)
         ax4.axvline(2.0, color=COLORS["muted"], linewidth=0.8, linestyle="--", alpha=0.6)
-        ax4.text(2.05, len(labels) - 0.5, "objetivo 2%", color=COLORS["muted"], fontsize=8)
+        # Etiqueta objetivo POSICIONADA fuera (no solapa con las barras)
+        if labels:
+            ax4.text(2.05, -0.5, "objetivo 2%", color=COLORS["muted"], fontsize=8)
     else:
-        ax4.text(0.5, 0.5, "(sin vídeos)", ha="center", va="center",
+        ax4.text(0.5, 0.5, "(sin vídeos con ≥30 views)", ha="center", va="center",
                  transform=ax4.transAxes, color=COLORS["muted"])
 
     fig.suptitle(
         f"{platform.upper()} — últimos {days} días",
         fontsize=14, color=COLORS["ink"], fontweight="bold", x=0.02, ha="left",
     )
+    # Ajuste manual con espacios generosos (bottom para leyenda del panel 2)
+    fig.subplots_adjust(left=0.10, right=0.95, top=0.95, bottom=0.06)
     dest.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(dest, dpi=130, facecolor=COLORS["bg"])
+    fig.savefig(dest, dpi=130, facecolor=COLORS["bg"], bbox_inches="tight")
     plt.close(fig)
     return dest
 
