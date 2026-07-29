@@ -902,6 +902,57 @@ async def _send_charts(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> None:
             await ctx.bot.send_message(chat_id, f"⚠️ No pude enviar gráfica {plat}: {e}")
 
 
+# Casos conocidos, orden = prioridad (más específico primero para evitar que
+# "Popular" gane a "Banco Popular" o similar). Cada entry mapea → nombre corto
+# canónico que aparecerá en los títulos de Shorts atomizados.
+_KNOWN_CASES: list[tuple[str, str]] = [
+    ("ruiz-mateos", "Ruiz-Mateos"), ("rumasa", "RUMASA"),
+    ("gürtel", "Gürtel"), ("gurtel", "Gürtel"),
+    ("bárcenas", "Bárcenas"), ("barcenas", "Bárcenas"),
+    ("mario conde", "Mario Conde"), ("banesto", "Banesto"),
+    ("fórum filatélico", "Fórum Filatélico"), ("forum filatelico", "Fórum Filatélico"),
+    ("afinsa", "AFINSA"), ("nummers", "Fórum Filatélico"),
+    ("ere andalucía", "ERE Andalucía"), ("ere andalucia", "ERE Andalucía"),
+    ("aceite de colza", "Colza"), ("colza", "Colza"),
+    ("urdangarin", "Urdangarin"), ("nóos", "Nóos"), ("noos", "Nóos"),
+    ("bankia", "Bankia"), ("preferentes", "Preferentes"),
+    ("villarejo", "Villarejo"), ("púnica", "Púnica"), ("punica", "Púnica"),
+    ("popular", "Banco Popular"),
+    ("arbistar", "Arbistar"), ("kuailian", "Kuailian"),
+    ("idental", "iDental"), ("gescartera", "Gescartera"),
+    ("filesa", "Filesa"), ("matesa", "MATESA"), ("ibercorp", "Ibercorp"),
+    ("palma arena", "Palma Arena"), ("pescanova", "Pescanova"),
+    ("malaya", "Malaya"), ("roca", "Malaya"), ("marbella", "Malaya"),
+    ("terra networks", "Terra"), ("airtel", "Airtel"),
+]
+
+
+def _case_prefix_from(topic: str) -> str:
+    """Extrae un identificador corto del caso desde el topic del long-form
+    para prefijar los títulos de los Shorts atomizados y evitar que colisionen
+    entre casos distintos (bug: "La Intervención y el Escándalo 👀" se subió
+    2× — de Bárcenas y de otro caso, mismo título literal).
+
+    Estrategia:
+    1. Match contra _KNOWN_CASES (nombre canónico corto).
+    2. Fallback: proper noun más largo del topic (mediante dedup_common).
+    3. Fallback final: "Caso".
+    """
+    tl = topic.lower()
+    for needle, name in _KNOWN_CASES:
+        if needle in tl:
+            return name
+    # Fallback proper nouns (extendido para incluir ü/ï que el regex base no
+    # cubre; también evita que "Ruiz-Mateos" se rompa en 2 tokens).
+    import re as _re
+    tokens = _re.findall(r"[A-ZÁÉÍÓÚÜÏÑ][a-záéíóúüïñ]{3,}(?:-[A-ZÁÉÍÓÚÜÏÑ][a-záéíóúüïñ]+)?", topic)
+    from . import dedup_common
+    filtered = [t for t in tokens if t.lower() not in dedup_common.NON_NOUNS_STOP]
+    if filtered:
+        return max(filtered, key=len)
+    return "Caso"
+
+
 def _upload_atomized_clip_as_short(
     clip_path, chapter_name: str, parent_topic: str,
     hashtags: list[str], publish_at_utc: str,
@@ -909,10 +960,13 @@ def _upload_atomized_clip_as_short(
     """Sube un clip atomizado de un long-form como un YT Short independiente,
     programado a publish_at_utc. Devuelve el video_id."""
     from . import upload_youtube
-    # Título corto y polarizante reutilizando el nombre del capítulo
-    title = f"{chapter_name} 👀"[:100]
+    # Título: <Caso>: <capítulo> 👀 — el prefijo del caso evita colisiones
+    # entre Shorts de long-forms distintos (bug 07-22/23: mismos títulos de
+    # capítulos genéricos se solapaban entre casos).
+    case = _case_prefix_from(parent_topic)
+    title = f"{case}: {chapter_name} 👀"[:100]
     desc = (
-        f"{chapter_name} — un fragmento del análisis completo.\n\n"
+        f"{case} — {chapter_name}. Un fragmento del análisis completo.\n\n"
         f"El vídeo completo (~9 min): en mi canal.\n\n"
         f"{' '.join(hashtags)} #shorts"
     )[:5000]
