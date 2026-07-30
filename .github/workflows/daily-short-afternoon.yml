@@ -1,9 +1,10 @@
-name: Daily Short — segunda tanda (13:00 CEST)
+name: Daily Short — segunda tanda (13:00 CEST) → publica 21:00
 
-# Palanca C: segundo Short del día para acelerar el crecimiento.
-# El primer daily-short.yml corre 06:00 UTC (=08:00 CEST); este corre 11:00 UTC
-# (=13:00 CEST, franja pre-comida en España, alto tráfico móvil).
-# `_autogen_already_today()` chequea vía YT API si ya hay 2 shorts hoy → skip.
+# Palanca C: segundo Short del día. Genera a las 13:00 CEST y programa
+# publicación a las 21:00 CEST (prime time noche España).
+# El primer daily-short.yml genera a las 08:00 CEST y ahora publica a las 14:00 CEST
+# — A/B testing: auditoría 30/07 sugiere que 14 CEST rinde 2x más que 21 CEST.
+# Con este split, comparamos ambas franjas con contenido fresco cada día.
 
 on:
   schedule:
@@ -22,4 +23,5 @@ jobs:
     uses: ./.github/workflows/_videogen-job.yml
     with:
       command: autogen-once
+      publish_hour: "21"   # noche prime time
     secrets: inherit

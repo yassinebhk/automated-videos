@@ -296,6 +296,33 @@ def _notify_telegram(text: str) -> None:
         pass
 
 
+CHANNEL_HANDLE = "@waitwhy_ybb"
+CHANNEL_URL = f"https://youtube.com/{CHANNEL_HANDLE}"
+PLAYLIST_URL = "https://youtube.com/playlist?list=PLK08iO9LACck"
+
+
+def _enrich_description_seo(base: str, title: str, hashtags: list[str], is_short: bool = True) -> str:
+    """Envuelve la descripción del guion con SEO-hook (primeras 2 líneas visibles
+    en search) + CTA fuerte al canal + link a playlist. Auditoría 30/07 mostró
+    que la descripción tal cual del script no incluía suscribe-signal y el sub
+    rate era 0.1% (canal sano 0.3-0.5%).
+    """
+    base = (base or "").strip()
+    # SEO first-2-lines: título ampliado + tag temática (aparece en "search" y "up next")
+    seo_head = f"🚨 {title}\n\nUna estafa española real explicada en 60 segundos."
+    cta = (
+        "\n\n━━━━━━━━━━━━━━━\n"
+        f"🎬 1 estafa española NUEVA cada día\n"
+        f"📼 Suscríbete: {CHANNEL_URL}\n"
+        f"📚 Playlist Estafas Españolas: {PLAYLIST_URL}\n"
+        "━━━━━━━━━━━━━━━"
+    )
+    tags_line = "\n\n" + " ".join(hashtags[:15])
+    if is_short and "#shorts" not in tags_line.lower():
+        tags_line += " #Shorts"
+    return (seo_head + "\n\n" + base + cta + tags_line).strip()[:5000]
+
+
 def publish(
     slug: str,
     langs: tuple[str, ...] = ("es", "en"),
@@ -331,7 +358,7 @@ def publish(
         video_id = upload_youtube.upload_video(
             vid,
             title=loc.title,
-            description=loc.description,
+            description=_enrich_description_seo(loc.description, loc.title, loc.hashtags, is_short=True),
             tags=[h.lstrip("#") for h in loc.hashtags],
             privacy=privacy,
             is_short=True,
@@ -460,7 +487,7 @@ def publish_long(
         video_id = upload_youtube.upload_video(
             vid,
             title=loc.title,
-            description=loc.description,  # ya enriquecida con timestamps
+            description=_enrich_description_seo(loc.description, loc.title, loc.hashtags, is_short=False),
             tags=[h.lstrip("#") for h in loc.hashtags],
             privacy=privacy,
             is_short=False,  # ← clave: NO es Short

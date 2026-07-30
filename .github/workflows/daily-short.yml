@@ -19,4 +19,5 @@ jobs:
     uses: ./.github/workflows/_videogen-job.yml
     with:
       command: autogen-once
+      publish_hour: "14"   # A/B: 14 CEST (mediodía) — muestra sugiere 2x rendimiento vs 21 CEST
     secrets: inherit

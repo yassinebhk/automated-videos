@@ -965,11 +965,10 @@ def _upload_atomized_clip_as_short(
     # capítulos genéricos se solapaban entre casos).
     case = _case_prefix_from(parent_topic)
     title = f"{case}: {chapter_name} 👀"[:100]
-    desc = (
-        f"{case} — {chapter_name}. Un fragmento del análisis completo.\n\n"
-        f"El vídeo completo (~9 min): en mi canal.\n\n"
-        f"{' '.join(hashtags)} #shorts"
-    )[:5000]
+    # SEO-boost: primeras 2 líneas visibles + CTA fuerte + playlist
+    from . import service as _svc
+    base_desc = f"{case} — {chapter_name}. Un fragmento del análisis completo (~9 min)."
+    desc = _svc._enrich_description_seo(base_desc, f"{case}: {chapter_name}", hashtags, is_short=True)
     tags = [h.lstrip("#") for h in hashtags][:30]
     return upload_youtube.upload_video(
         clip_path,
@@ -1638,9 +1637,13 @@ async def _run_autogen_daily(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> No
         await ctx.bot.send_message(chat_id, f"❌ Generación falló: {type(e).__name__}: {str(e)[:300]}")
         return
 
-    # 4. Programar a YT para esa noche 21:00 CEST
+    # 4. Programar a YT — hora configurable vía env AUTOGEN_PUBLISH_HOUR (default 21 CEST)
+    # A/B testing horarios: auditoría 30/07 sugiere que 14:00 CEST rinde 2x más que 21:00,
+    # pero muestra pequeña. Los 2 workflows daily-short setean horas distintas para testear.
+    import os as _os
+    publish_hour = int(_os.environ.get("AUTOGEN_PUBLISH_HOUR", "21"))
     now = datetime.now().astimezone()
-    target = now.replace(hour=21, minute=0, second=0, microsecond=0)
+    target = now.replace(hour=publish_hour, minute=0, second=0, microsecond=0)
     if target <= now + timedelta(hours=2):  # menos de 2h → mañana
         target = target + timedelta(days=1)
     publish_at = target.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")

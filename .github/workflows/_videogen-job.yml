@@ -19,6 +19,11 @@ on:
         required: false
         type: string
         default: ""
+      publish_hour:
+        description: "Hora local (CEST) a la que publicar el Short (14, 21…). Default 21."
+        required: false
+        type: string
+        default: "21"
 
 jobs:
   run:
@@ -70,6 +75,7 @@ jobs:
           VOICE_ENGINE:          ${{ vars.VOICE_ENGINE || 'edge' }}
           KOKORO_VOICE_ES:       ${{ vars.KOKORO_VOICE_ES }}
           WEBHOOK_URL:           ${{ vars.WEBHOOK_URL }}
+          AUTOGEN_PUBLISH_HOUR:  ${{ inputs.publish_hour || '21' }}
         run: |
           mkdir -p secrets
           # Genera un token JSON mínimo que google-auth OAuth2 acepta.
@@ -103,6 +109,7 @@ jobs:
             [ -n "$MASTODON_ACCESS_TOKEN" ] && printf 'MASTODON_ACCESS_TOKEN=%s\n' "$MASTODON_ACCESS_TOKEN"
             printf 'VOICE_ENGINE=%s\n' "${VOICE_ENGINE:-edge}"
             [ -n "$KOKORO_VOICE_ES" ] && printf 'KOKORO_VOICE_ES=%s\n' "$KOKORO_VOICE_ES"
+            printf 'AUTOGEN_PUBLISH_HOUR=%s\n' "${AUTOGEN_PUBLISH_HOUR:-21}"
           } > .env
 
       - name: Ejecutar comando videogen
@@ -110,6 +117,7 @@ jobs:
           # Sin buffering → los prints aparecen en el log en tiempo real
           # (no como bloque al final del step, que oculta dónde abortó el pipeline).
           PYTHONUNBUFFERED: "1"
+          AUTOGEN_PUBLISH_HOUR: ${{ inputs.publish_hour || '21' }}
         run: |
           set -x  # traza cada línea shell para ver dónde muere si aborta
           case "${{ inputs.command }}" in
