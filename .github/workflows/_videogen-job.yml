@@ -139,17 +139,17 @@ jobs:
           # Solo commiteamos el snapshot analytics (append-only).
           # NO commiteamos secrets/ (siempre gitignored) ni output/uploaded/*
           # (videos pesados que no queremos en el repo).
-          if [ -n "$(git status --porcelain output/stats_history.jsonl output/reddit_history.json output/pinned_summary_id.txt 2>/dev/null)" ]; then
+          # Commiteamos: analytics snapshots + podcast feed/MP3 (docs/podcasts/).
+          # docs/podcasts/*.mp3 son los audios servidos vía GitHub Pages para Spotify.
+          if [ -n "$(git status --porcelain output/stats_history.jsonl output/reddit_history.json output/pinned_summary_id.txt docs/podcasts/ 2>/dev/null)" ]; then
             git config user.name "videogen-bot"
             git config user.email "bot@videogen.local"
-            # git add aborta TODO si un pathspec no existe (git 2.51+), así
-            # que añadimos cada archivo por separado tras verificar que existe.
-            # reddit_history.json a menudo no existe (Reddit no configurado)
-            # y estaba invalidando el stage completo → se perdían snapshots.
             for f in output/stats_history.jsonl output/reddit_history.json output/pinned_summary_id.txt; do
               [ -f "$f" ] && git add "$f" || true
             done
-            git commit -m "stats: snapshot $(date -u +%FT%H:%MZ) [skip ci]" || true
+            # Podcast feed + MP3s (si existen)
+            [ -d docs/podcasts ] && git add docs/podcasts/ || true
+            git commit -m "stats+podcast: snapshot $(date -u +%FT%H:%MZ) [skip ci]" || true
             # Rebase para tolerar race con otro workflow que también commiteó.
             for i in 1 2 3; do
               git pull --rebase origin main && git push origin HEAD:main && break

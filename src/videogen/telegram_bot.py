@@ -1287,6 +1287,16 @@ async def _run_longgen_weekly(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> N
                 _fc.post_first_comment(long_video_id, is_short=False)
         except Exception as e:
             print(f"  longgen: ⚠ post-publish hooks error {type(e).__name__}: {e}")
+
+        # Regenerar feed de podcast (Spotify/Apple) — cada long-form es un
+        # episodio automático. El feed.xml + los MP3 se commitean en docs/
+        # y GitHub Pages los sirve. new_slug=slug fuerza copia del MP3 recién
+        # generado (que aún vive en output/uploaded/, no en docs/).
+        try:
+            from . import podcast_feed as _pf
+            _pf.rebuild_feed(new_slug=slug)
+        except Exception as e:
+            print(f"  longgen: ⚠ podcast feed error {type(e).__name__}: {e}")
         await ctx.bot.send_message(
             chat_id,
             f"🗓 Long-form programado <b>{long_target.strftime('%d/%m %H:%M %Z')}</b>\n{links.get('es','')}",

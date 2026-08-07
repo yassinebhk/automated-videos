@@ -6,6 +6,9 @@ output/**
 !output/stats_history.jsonl
 !output/reddit_history.json
 !output/pinned_summary_id.txt
+# Podcast feed + episodios se sirven vía GitHub Pages
+!docs/
+!docs/**
 __pycache__/
 *.pyc
 .venv/
