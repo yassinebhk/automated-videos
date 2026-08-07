@@ -110,6 +110,10 @@ jobs:
             printf 'VOICE_ENGINE=%s\n' "${VOICE_ENGINE:-edge}"
             [ -n "$KOKORO_VOICE_ES" ] && printf 'KOKORO_VOICE_ES=%s\n' "$KOKORO_VOICE_ES"
             printf 'AUTOGEN_PUBLISH_HOUR=%s\n' "${AUTOGEN_PUBLISH_HOUR:-21}"
+            # WEBHOOK_URL: crítico para el botón inline de reauth YT en Telegram.
+            # Sin esto, _send_yt_token_alert solo manda texto sin botón → user
+            # no puede hacer reauth desde el móvil sin abrir el Mac.
+            [ -n "$WEBHOOK_URL" ] && printf 'WEBHOOK_URL=%s\n' "$WEBHOOK_URL"
           } > .env
 
       - name: Ejecutar comando videogen
