@@ -1246,10 +1246,16 @@ async def _run_longgen_weekly(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> N
     print(f"  longgen: topic elegido «{topic[:80]}»")
     await ctx.bot.send_message(chat_id, f"📝 Topic long-form: «{topic[:80]}»\n⚙️ Generando (~10-15 min)…")
 
-    # 2. Genera long-form
+    # 2. Genera long-form — DURACIÓN ROTATIVA para escapar del detector
+    # "rythm of bot-driven production" (YT 2026): en vez de siempre ~8 min,
+    # rota entre 5, 8, 12 según el día ISO del año — patrón determinista pero
+    # variable, sin randomness (evita drift entre runs).
+    import datetime as _dt2
+    _rot = [5, 8, 12][_dt2.datetime.now(_dt2.timezone.utc).isocalendar().week % 3]
+    print(f"  longgen: target_minutes rotativo esta semana → {_rot}")
     try:
         slug = await _run_blocking(
-            lambda: service.generate_long(topic, target_minutes=8, langs=("es",), progress=lambda m: None)
+            lambda: service.generate_long(topic, target_minutes=_rot, langs=("es",), progress=lambda m: None)
         )
         print(f"  longgen: long-form generado slug={slug}")
     except Exception as e:

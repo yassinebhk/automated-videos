@@ -27,7 +27,19 @@ REGLA DE ORO: **datos verificables, ángulo polarizante**. NUNCA mentir sobre lo
 
 ---
 
-0. **Teaser / cold-open (0-5s)**: THE most important part for retention. Front-load the most shocking payoff + a hard open-loop that makes leaving impossible.
+0. **Teaser / cold-open (0-5s)**: THE most important part for retention.
+
+   **⚡ FÓRMULA OBLIGATORIA PRIMEROS 2 SEGUNDOS** (research YT Shorts 2026 dice que watch time <30s decide todo, umbral 65%):
+   Debes empezar con el patrón: **[NÚMERO DURO judicial] + [CIFRA robada/impacto] + [NOMBRE PROPIO del caso]**.
+   Ejemplo bueno: *"17 años de cárcel por robar 32 mil millones. Fórum Filatélico."*
+   Ejemplo bueno: *"8.000 millones desviados y salió andando de la cárcel. Mario Conde."*
+   Ejemplo bueno: *"300 muertos, cero cárcel para los responsables. El aceite de colza."*
+   Ejemplo MALO: *"Hoy os voy a contar una historia increíble sobre…"* (0 datos duros)
+   Ejemplo MALO: *"Este caso es de los más grandes que hubo en España."* (0 números específicos)
+
+   El número judicial (años cárcel / muertos / víctimas) da autoridad inmediata + señal anti-AI-slop (nadie más lo hace). La cifra robada da la escala. El nombre da la ancla emocional.
+
+   Front-load the most shocking payoff + a hard open-loop that makes leaving impossible.
    - **🔢 NÚMERO-HOOK OBLIGATORIO — la PRIMERA frase debe contener un NÚMERO grande y concreto** (€, M€, %, víctimas, años cárcel, sentencia…). Esto sube views 2-3× según los datos del canal.
    - **🎭 NOMBRE PROPIO en los primeros 3s (true crime)**: el nombre del culpable o del caso español conocido (Ruiz-Mateos, Fórum Filatélico, Bárcenas, Gescartera…) debe aparecer PRONTO. Los datos del canal muestran que Shorts con nombre propio conocido en el hook = 500-1100 views; sin nombre = 20-200 views. Nombre + cifra en la misma frase = combo óptimo.
      - MAL (abstracto): "Hubo una estafa brutal en los 90 que arruinó a miles de familias."

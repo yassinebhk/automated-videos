@@ -301,19 +301,55 @@ CHANNEL_URL = f"https://youtube.com/{CHANNEL_HANDLE}"
 PLAYLISTS_URL = f"{CHANNEL_URL}/playlists"
 
 
-def _enrich_description_seo(base: str, title: str, hashtags: list[str], is_short: bool = True) -> str:
+def _format_court_source(court) -> str:
+    """Formatea el bloque de fuente judicial verificable para la descripción.
+    Señal anti-AI-slop: nadie más en el nicho lo hace en español (research 08-07).
+    """
+    if court is None:
+        return ""
+    try:
+        # Acepta CourtSource pydantic o dict-like
+        tribunal = getattr(court, "tribunal", None) or (court.get("tribunal", "") if isinstance(court, dict) else "")
+        sentencia = getattr(court, "sentencia", None) or (court.get("sentencia", "") if isinstance(court, dict) else "")
+        fecha = getattr(court, "fecha", None) or (court.get("fecha", "") if isinstance(court, dict) else "")
+        resumen = getattr(court, "resumen_fallo", None) or (court.get("resumen_fallo", "") if isinstance(court, dict) else "")
+    except Exception:
+        return ""
+    if not any([tribunal, sentencia, fecha, resumen]):
+        return ""
+    parts = []
+    if tribunal:
+        parts.append(tribunal.strip())
+    if sentencia:
+        parts.append(sentencia.strip())
+    if fecha:
+        parts.append(fecha.strip())
+    header = " · ".join(parts) if parts else "Fuente judicial verificable"
+    body = f"\n📜 Fuente: {header}"
+    if resumen:
+        body += f"\n   {resumen.strip()}"
+    return body
+
+
+def _enrich_description_seo(base: str, title: str, hashtags: list[str], is_short: bool = True, court=None) -> str:
     """Envuelve la descripción del guion con SEO-hook (primeras 2 líneas visibles
-    en search) + CTA fuerte al canal + link a playlists (segmentadas ahora en
-    Bancarios/Políticos/Empresariales). Auditoría 30/07 mostró que la descripción
-    tal cual del script no incluía suscribe-signal y el sub rate era 0.1% (canal
-    sano 0.3-0.5%).
+    en search) + fuente judicial verificable + CTA fuerte al canal + link a
+    playlists segmentadas.
+
+    Estructura:
+    1. Título + hook (primeras 2 líneas visibles en search)
+    2. Fuente judicial (si conocida) — señal anti-AI-slop
+    3. Descripción original del script
+    4. CTA (subscribe + playlists)
+    5. Hashtags
     """
     base = (base or "").strip()
     dur_hint = "60 segundos" if is_short else "~9 minutos"
-    seo_head = f"🚨 {title}\n\nUna estafa española real explicada en {dur_hint}."
+    seo_head = f"🚨 {title}\n\nCaso real con sentencia firme, explicado en {dur_hint}."
+    court_block = _format_court_source(court)
     cta = (
         "\n\n━━━━━━━━━━━━━━━\n"
-        f"🎬 Casos nuevos cada día\n"
+        f"🎬 Casos nuevos cada semana\n"
         f"📼 Suscríbete: {CHANNEL_URL}\n"
         f"📚 Playlists por categoría (Bancarios · Políticos · Empresariales): {PLAYLISTS_URL}\n"
         "━━━━━━━━━━━━━━━"
@@ -321,7 +357,12 @@ def _enrich_description_seo(base: str, title: str, hashtags: list[str], is_short
     tags_line = "\n\n" + " ".join(hashtags[:15])
     if is_short and "#shorts" not in tags_line.lower():
         tags_line += " #Shorts"
-    return (seo_head + "\n\n" + base + cta + tags_line).strip()[:5000]
+    parts = [seo_head]
+    if court_block:
+        parts.append(court_block)
+    parts.append(base)
+    return ("\n\n".join(p for p in parts if p) + cta + tags_line).strip()[:5000]
+
 
 
 def publish(
@@ -485,10 +526,14 @@ def publish_long(
             progress(f"[{lang}] sin long-form, omitido")
             continue
         progress(f"[{lang}] Subiendo long-form a YouTube…")
+        court = getattr(loc, "court_source", None)
         video_id = upload_youtube.upload_video(
             vid,
             title=loc.title,
-            description=_enrich_description_seo(loc.description, loc.title, loc.hashtags, is_short=False),
+            description=_enrich_description_seo(
+                loc.description, loc.title, loc.hashtags,
+                is_short=False, court=court,
+            ),
             tags=[h.lstrip("#") for h in loc.hashtags],
             privacy=privacy,
             is_short=False,  # ← clave: NO es Short

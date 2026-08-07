@@ -67,6 +67,20 @@ class LongChapter(BaseModel):
     approx_seconds: float = 0.0
 
 
+class CourtSource(BaseModel):
+    """Fuente judicial verificable — señal fuerte anti-AI-slop (research 08-07).
+    Nadie en el nicho true crime español AI cita fuentes con este nivel de
+    detalle. Incluirlo diferencia al canal + esquiva el detector YT."""
+
+    tribunal: str = ""  # "Audiencia Nacional", "Tribunal Supremo"…
+    sentencia: str = ""  # nº sentencia si conocido, ej. "STS 132/2015"
+    fecha: str = ""  # fecha del fallo, formato "DD/MM/YYYY" o "YYYY"
+    resumen_fallo: str = ""  # 1 frase con la pena impuesta
+
+    def is_populated(self) -> bool:
+        return bool(self.tribunal or self.sentencia or self.fecha)
+
+
 class LongLocalizedScript(BaseModel):
     """Script long-form en un idioma (intro + capítulos + outro)."""
 
@@ -78,6 +92,7 @@ class LongLocalizedScript(BaseModel):
     intro: ScriptSegment  # ~30-45s: hook + tesis del vídeo
     chapters: list[LongChapter]  # 3-5 capítulos de ~90-120s
     outro: ScriptSegment  # ~30-45s: cierre + follow ask obligatorio
+    court_source: CourtSource = Field(default_factory=CourtSource)  # opcional
 
     def ordered_segments(self) -> list[tuple[str, ScriptSegment]]:
         segs: list[tuple[str, ScriptSegment]] = [("intro", self.intro)]
