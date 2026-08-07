@@ -298,23 +298,24 @@ def _notify_telegram(text: str) -> None:
 
 CHANNEL_HANDLE = "@waitwhy_ybb"
 CHANNEL_URL = f"https://youtube.com/{CHANNEL_HANDLE}"
-PLAYLIST_URL = "https://youtube.com/playlist?list=PLK08iO9LACck"
+PLAYLISTS_URL = f"{CHANNEL_URL}/playlists"
 
 
 def _enrich_description_seo(base: str, title: str, hashtags: list[str], is_short: bool = True) -> str:
     """Envuelve la descripción del guion con SEO-hook (primeras 2 líneas visibles
-    en search) + CTA fuerte al canal + link a playlist. Auditoría 30/07 mostró
-    que la descripción tal cual del script no incluía suscribe-signal y el sub
-    rate era 0.1% (canal sano 0.3-0.5%).
+    en search) + CTA fuerte al canal + link a playlists (segmentadas ahora en
+    Bancarios/Políticos/Empresariales). Auditoría 30/07 mostró que la descripción
+    tal cual del script no incluía suscribe-signal y el sub rate era 0.1% (canal
+    sano 0.3-0.5%).
     """
     base = (base or "").strip()
-    # SEO first-2-lines: título ampliado + tag temática (aparece en "search" y "up next")
-    seo_head = f"🚨 {title}\n\nUna estafa española real explicada en 60 segundos."
+    dur_hint = "60 segundos" if is_short else "~9 minutos"
+    seo_head = f"🚨 {title}\n\nUna estafa española real explicada en {dur_hint}."
     cta = (
         "\n\n━━━━━━━━━━━━━━━\n"
-        f"🎬 1 estafa española NUEVA cada día\n"
+        f"🎬 Casos nuevos cada día\n"
         f"📼 Suscríbete: {CHANNEL_URL}\n"
-        f"📚 Playlist Estafas Españolas: {PLAYLIST_URL}\n"
+        f"📚 Playlists por categoría (Bancarios · Políticos · Empresariales): {PLAYLISTS_URL}\n"
         "━━━━━━━━━━━━━━━"
     )
     tags_line = "\n\n" + " ".join(hashtags[:15])

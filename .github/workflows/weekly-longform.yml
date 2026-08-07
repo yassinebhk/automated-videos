@@ -1,9 +1,13 @@
-name: Weekly Long-form (true crime)
+name: Bi-Weekly Long-form (true crime)
 
+# Aumentado de 1/semana → 2/semana (auditoría 08-07): CPM long-form 10-100×
+# mayor que Shorts. Aunque Shorts atraen suscriptores, long-form monetiza.
+# Miércoles + Domingo 08:00 UTC (10:00 CEST). Cada uno genera long-form +
+# 5 clips atomizados como Shorts derivados.
 on:
   schedule:
-    # Domingo 08:00 UTC = 10:00 CEST. Genera long-form + atomiza 5 clips derivados.
-    - cron: "0 8 * * 0"
+    - cron: "0 8 * * 0"  # Domingo
+    - cron: "0 8 * * 3"  # Miércoles
   workflow_dispatch: {}
 
 concurrency:

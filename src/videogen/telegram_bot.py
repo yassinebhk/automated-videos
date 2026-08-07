@@ -1271,6 +1271,15 @@ async def _run_longgen_weekly(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> N
                                          progress=lambda m: None, notify=False,
                                          publish_at=publish_at_long)
         )
+        # Añadir long-form a playlist segmentada
+        try:
+            long_url = links.get('es', '')
+            if long_url:
+                long_video_id = long_url.rsplit("/", 1)[-1].split("?")[0]
+                from . import playlists as _pl
+                _pl.add_video_to_category(long_video_id, topic)
+        except Exception as e:
+            print(f"  longgen: ⚠ playlist add error {type(e).__name__}: {e}")
         await ctx.bot.send_message(
             chat_id,
             f"🗓 Long-form programado <b>{long_target.strftime('%d/%m %H:%M %Z')}</b>\n{links.get('es','')}",
@@ -1657,30 +1666,14 @@ async def _run_autogen_daily(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> No
         yt_url = links.get('es', '')
         print(f"  autogen: YT publicado → {yt_url}")
 
-        # Añadir a la playlist "Estafas Españolas" (boost binge-watching + SEO)
+        # Añadir a la playlist SEGMENTADA (Bancarios / Políticos / Empresariales)
+        # Boost binge-watching: al terminar un video, YT recomienda del mismo
+        # playlist → tribu específica encuentra su racha (auditoría 08-07).
         try:
-            from .config import SECRETS_DIR
-            pid_file = SECRETS_DIR / "playlist_id.txt"
-            if pid_file.exists() and yt_url:
-                playlist_id = pid_file.read_text().strip()
+            if yt_url:
                 video_id = yt_url.rsplit("/", 1)[-1]
-                import json as _json, requests as _req
-                _tok = _json.loads((SECRETS_DIR / "youtube_token.json").read_text())
-                _tr = _req.post("https://oauth2.googleapis.com/token", data={
-                    "client_id": _tok["client_id"], "client_secret": _tok["client_secret"],
-                    "refresh_token": _tok["refresh_token"], "grant_type": "refresh_token",
-                }, timeout=15).json()
-                _H = {"Authorization": f"Bearer {_tr['access_token']}",
-                      "Content-Type": "application/json"}
-                _payload = {"snippet": {"playlistId": playlist_id,
-                    "resourceId": {"kind": "youtube#video", "videoId": video_id}}}
-                _r = _req.post("https://www.googleapis.com/youtube/v3/playlistItems",
-                               params={"part": "snippet"}, headers=_H,
-                               json=_payload, timeout=15)
-                if _r.status_code == 200:
-                    print(f"  autogen: ✅ añadido a playlist «Estafas Españolas»")
-                else:
-                    print(f"  autogen: ⚠ playlist add falló ({_r.status_code}): {_r.text[:150]}")
+                from . import playlists as _pl
+                _pl.add_video_to_category(video_id, topic)
         except Exception as e:
             print(f"  autogen: ⚠ playlist add error {type(e).__name__}: {e}")
 
