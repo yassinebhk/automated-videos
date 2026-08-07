@@ -1271,15 +1271,16 @@ async def _run_longgen_weekly(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> N
                                          progress=lambda m: None, notify=False,
                                          publish_at=publish_at_long)
         )
-        # Añadir long-form a playlist segmentada
+        # Playlist segmentada + first-comment strategy para long-form
         try:
             long_url = links.get('es', '')
             if long_url:
                 long_video_id = long_url.rsplit("/", 1)[-1].split("?")[0]
-                from . import playlists as _pl
+                from . import playlists as _pl, first_comment as _fc
                 _pl.add_video_to_category(long_video_id, topic)
+                _fc.post_first_comment(long_video_id, is_short=False)
         except Exception as e:
-            print(f"  longgen: ⚠ playlist add error {type(e).__name__}: {e}")
+            print(f"  longgen: ⚠ post-publish hooks error {type(e).__name__}: {e}")
         await ctx.bot.send_message(
             chat_id,
             f"🗓 Long-form programado <b>{long_target.strftime('%d/%m %H:%M %Z')}</b>\n{links.get('es','')}",
@@ -1328,6 +1329,13 @@ async def _run_longgen_weekly(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> N
             )
             url = f"https://youtube.com/shorts/{vid}"
             short_links.append((clip_target, ch_name, url))
+            # Playlist segmentada + first-comment strategy para el clip atomizado
+            try:
+                from . import playlists as _pl, first_comment as _fc
+                _pl.add_video_to_category(vid, topic)
+                _fc.post_first_comment(vid, is_short=True)
+            except Exception as _e:
+                print(f"  longgen: ⚠ atom post-publish {type(_e).__name__}: {_e}")
             await ctx.bot.send_message(
                 chat_id,
                 f"📅 Clip {i+1}/5 «{ch_name}» → {clip_target.strftime('%a %d/%m %H:%M')} · {url}",
@@ -1666,16 +1674,18 @@ async def _run_autogen_daily(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> No
         yt_url = links.get('es', '')
         print(f"  autogen: YT publicado → {yt_url}")
 
-        # Añadir a la playlist SEGMENTADA (Bancarios / Políticos / Empresariales)
-        # Boost binge-watching: al terminar un video, YT recomienda del mismo
-        # playlist → tribu específica encuentra su racha (auditoría 08-07).
+        # Playlist segmentada + first-comment strategy
         try:
             if yt_url:
                 video_id = yt_url.rsplit("/", 1)[-1]
-                from . import playlists as _pl
+                from . import playlists as _pl, first_comment as _fc
                 _pl.add_video_to_category(video_id, topic)
+                # Author-first-comment con hook polarizante = boost engagement.
+                # El video está scheduled (aún no público) — puede fallar; el
+                # hourly-catchup u otro run lo reintentará luego si hace falta.
+                _fc.post_first_comment(video_id, is_short=True)
         except Exception as e:
-            print(f"  autogen: ⚠ playlist add error {type(e).__name__}: {e}")
+            print(f"  autogen: ⚠ post-publish hooks error {type(e).__name__}: {e}")
 
         await ctx.bot.send_message(
             chat_id,
