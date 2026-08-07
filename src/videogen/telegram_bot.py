@@ -1788,6 +1788,45 @@ async def _run_autogen_daily(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> No
         # Reddit falla → NO bloquea el pipeline (auxiliar)
         print(f"  autogen: reddit skip ({type(e).__name__}: {e})")
 
+    # 4d. X/Twitter — audiencia hispanohablante enorme, tweet con thumbnail
+    try:
+        from . import x_poster
+        xr = await _run_blocking(
+            lambda: x_poster.post_short_to_x(title_social, yt_url, teaser=teaser_social)
+        )
+        if xr and not xr.get("dry_run"):
+            await ctx.bot.send_message(chat_id, f"🐦 X: {xr.get('url','')}")
+    except Exception as e:
+        print(f"  autogen: x skip ({type(e).__name__}: {e})")
+
+    # 4e. Threads (Meta) — 275M usuarios, ES community activa, thread de 2 posts
+    try:
+        from . import threads_poster
+        tr = await _run_blocking(
+            lambda: threads_poster.post_short_to_threads(title_social, yt_url, teaser=teaser_social)
+        )
+        if tr and not tr.get("dry_run"):
+            await ctx.bot.send_message(chat_id, f"🧵 Threads: {tr.get('url','')}")
+    except Exception as e:
+        print(f"  autogen: threads skip ({type(e).__name__}: {e})")
+
+    # 4f. Instagram Reels — requiere que el .mp4 esté generado y copiado a
+    # docs/reels/ (servido por GH Pages para que IG lo descargue).
+    try:
+        from . import instagram_poster
+        from .config import UPLOADED_DIR
+        vertical_mp4 = UPLOADED_DIR / slug / "video_es_vertical.mp4"
+        if vertical_mp4.exists():
+            ir = await _run_blocking(
+                lambda: instagram_poster.post_reel_to_instagram(
+                    title_social, yt_url, vertical_mp4, slug, teaser=teaser_social,
+                )
+            )
+            if ir and not ir.get("dry_run"):
+                await ctx.bot.send_message(chat_id, f"📸 IG Reel: {ir.get('url','')}")
+    except Exception as e:
+        print(f"  autogen: instagram skip ({type(e).__name__}: {e})")
+
     # 5. Versión sin subs + caption → móvil para TT/IG
     try:
         nosubs = await _run_blocking(lambda: service.recompose_no_subs(slug, "es"))

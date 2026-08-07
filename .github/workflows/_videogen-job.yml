@@ -72,6 +72,17 @@ jobs:
           BLUESKY_APP_PASSWORD: ${{ secrets.BLUESKY_APP_PASSWORD }}
           MASTODON_INSTANCE:     ${{ secrets.MASTODON_INSTANCE }}
           MASTODON_ACCESS_TOKEN: ${{ secrets.MASTODON_ACCESS_TOKEN }}
+          # X (Twitter) — OAuth 1.0a, 4 keys (setup 10 min en developer.twitter.com)
+          X_API_KEY:        ${{ secrets.X_API_KEY }}
+          X_API_SECRET:     ${{ secrets.X_API_SECRET }}
+          X_ACCESS_TOKEN:   ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_SECRET:  ${{ secrets.X_ACCESS_SECRET }}
+          # Instagram Reels — Meta Graph API (setup 15 min via IG Business + FB Page)
+          IG_ACCESS_TOKEN:         ${{ secrets.IG_ACCESS_TOKEN }}
+          IG_BUSINESS_ACCOUNT_ID:  ${{ secrets.IG_BUSINESS_ACCOUNT_ID }}
+          # Threads (Meta) — API separada de IG pero mismo app FB (setup 5 min extra)
+          THREADS_ACCESS_TOKEN: ${{ secrets.THREADS_ACCESS_TOKEN }}
+          THREADS_USER_ID:      ${{ secrets.THREADS_USER_ID }}
           VOICE_ENGINE:          ${{ vars.VOICE_ENGINE || 'edge' }}
           KOKORO_VOICE_ES:       ${{ vars.KOKORO_VOICE_ES }}
           WEBHOOK_URL:           ${{ vars.WEBHOOK_URL }}
@@ -107,6 +118,14 @@ jobs:
             [ -n "$BLUESKY_APP_PASSWORD" ] && printf 'BLUESKY_APP_PASSWORD=%s\n' "$BLUESKY_APP_PASSWORD"
             [ -n "$MASTODON_INSTANCE"     ] && printf 'MASTODON_INSTANCE=%s\n' "$MASTODON_INSTANCE"
             [ -n "$MASTODON_ACCESS_TOKEN" ] && printf 'MASTODON_ACCESS_TOKEN=%s\n' "$MASTODON_ACCESS_TOKEN"
+            [ -n "$X_API_KEY"           ] && printf 'X_API_KEY=%s\n' "$X_API_KEY"
+            [ -n "$X_API_SECRET"        ] && printf 'X_API_SECRET=%s\n' "$X_API_SECRET"
+            [ -n "$X_ACCESS_TOKEN"      ] && printf 'X_ACCESS_TOKEN=%s\n' "$X_ACCESS_TOKEN"
+            [ -n "$X_ACCESS_SECRET"     ] && printf 'X_ACCESS_SECRET=%s\n' "$X_ACCESS_SECRET"
+            [ -n "$IG_ACCESS_TOKEN"         ] && printf 'IG_ACCESS_TOKEN=%s\n' "$IG_ACCESS_TOKEN"
+            [ -n "$IG_BUSINESS_ACCOUNT_ID"  ] && printf 'IG_BUSINESS_ACCOUNT_ID=%s\n' "$IG_BUSINESS_ACCOUNT_ID"
+            [ -n "$THREADS_ACCESS_TOKEN" ] && printf 'THREADS_ACCESS_TOKEN=%s\n' "$THREADS_ACCESS_TOKEN"
+            [ -n "$THREADS_USER_ID"      ] && printf 'THREADS_USER_ID=%s\n' "$THREADS_USER_ID"
             printf 'VOICE_ENGINE=%s\n' "${VOICE_ENGINE:-edge}"
             [ -n "$KOKORO_VOICE_ES" ] && printf 'KOKORO_VOICE_ES=%s\n' "$KOKORO_VOICE_ES"
             printf 'AUTOGEN_PUBLISH_HOUR=%s\n' "${AUTOGEN_PUBLISH_HOUR:-21}"
@@ -139,17 +158,18 @@ jobs:
           # Solo commiteamos el snapshot analytics (append-only).
           # NO commiteamos secrets/ (siempre gitignored) ni output/uploaded/*
           # (videos pesados que no queremos en el repo).
-          # Commiteamos: analytics snapshots + podcast feed/MP3 (docs/podcasts/).
-          # docs/podcasts/*.mp3 son los audios servidos vía GitHub Pages para Spotify.
-          if [ -n "$(git status --porcelain output/stats_history.jsonl output/reddit_history.json output/pinned_summary_id.txt docs/podcasts/ 2>/dev/null)" ]; then
+          # Commiteamos: analytics snapshots + docs/ (podcast feed/MP3 + IG reels MP4).
+          # docs/podcasts/*.mp3 = audios para Spotify. docs/reels/*.mp4 = videos para IG.
+          # Ambos servidos vía GitHub Pages.
+          if [ -n "$(git status --porcelain output/stats_history.jsonl output/reddit_history.json output/pinned_summary_id.txt docs/ 2>/dev/null)" ]; then
             git config user.name "videogen-bot"
             git config user.email "bot@videogen.local"
             for f in output/stats_history.jsonl output/reddit_history.json output/pinned_summary_id.txt; do
               [ -f "$f" ] && git add "$f" || true
             done
-            # Podcast feed + MP3s (si existen)
-            [ -d docs/podcasts ] && git add docs/podcasts/ || true
-            git commit -m "stats+podcast: snapshot $(date -u +%FT%H:%MZ) [skip ci]" || true
+            # docs/ completo (podcast + reels + cualquier futuro asset servido)
+            [ -d docs ] && git add docs/ || true
+            git commit -m "stats+docs: snapshot $(date -u +%FT%H:%MZ) [skip ci]" || true
             # Rebase para tolerar race con otro workflow que también commiteó.
             for i in 1 2 3; do
               git pull --rebase origin main && git push origin HEAD:main && break
