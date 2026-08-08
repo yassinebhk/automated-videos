@@ -215,3 +215,5 @@
 {"platform": "youtube", "kind": "channel", "subs": 75, "views": 59672, "likes": 0, "source": "api", "ts": 1785753136, "date": "2026-08-03"}
 {"platform": "youtube", "kind": "channel", "subs": 76, "views": 62261, "videos": 111, "source": "daily_summary", "ts": 1785835990, "date": "2026-08-04"}
 {"platform": "youtube", "kind": "channel", "subs": 76, "views": 62261, "likes": 0, "source": "api", "ts": 1785835995, "date": "2026-08-04"}
+{"platform": "youtube", "kind": "channel", "subs": 76, "views": 64304, "videos": 111, "source": "daily_summary", "ts": 1786174829, "date": "2026-08-08"}
+{"platform": "youtube", "kind": "channel", "subs": 76, "views": 64304, "likes": 0, "source": "api", "ts": 1786174835, "date": "2026-08-08"}
