@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"
+     xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd"
+     xmlns:content="http://purl.org/rss/1.0/modules/content/"
+     xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>WaitWhy — Estafas Españolas con Sentencia</title>
+    <link>https://waitwhy-podcast.yassinebhk.com</link>
+    <description><![CDATA[Los grandes fraudes, timos y escándalos españoles con sentencia firme, explicados en 8-12 minutos. Un caso por episodio. Fuentes: BOE, Audiencia Nacional, Tribunal Supremo. Nada inventado. También en YouTube: youtube.com/@waitwhy_ybb]]></description>
+    <language>es</language>
+    <copyright>© 2026 WaitWhy</copyright>
+    <lastBuildDate>Mon, 10 Aug 2026 11:13:28 +0000</lastBuildDate>
+    <atom:link href="https://yassinebhk.github.io/automated-videos/podcasts/feed.xml" rel="self" type="application/rss+xml"/>
+    <itunes:author>WaitWhy</itunes:author>
+    <itunes:summary><![CDATA[Los grandes fraudes, timos y escándalos españoles con sentencia firme, explicados en 8-12 minutos. Un caso por episodio. Fuentes: BOE, Audiencia Nacional, Tribunal Supremo. Nada inventado. También en YouTube: youtube.com/@waitwhy_ybb]]></itunes:summary>
+    <itunes:owner>
+      <itunes:name>WaitWhy</itunes:name>
+      <itunes:email>waitwhy.podcast@gmail.com</itunes:email>
+    </itunes:owner>
+    <itunes:image href="https://yassinebhk.github.io/automated-videos/podcasts/cover.jpg"/>
+    <itunes:category text="True Crime"/>
+    <itunes:explicit>false</itunes:explicit>
+    <itunes:type>episodic</itunes:type>
+    <item>
+      <title>4.000 Millones Perdidos: La Trampa Inmobiliaria de 'El Pocero'</title>
+      <description><![CDATA[Imagina esto: 4.000 millones de euros. Esa es la cifra estimada de la inversión y el valor de un sueño roto, el de miles de familias españolas que, en el pico de la burbuja inmobiliaria, confiaron sus ahorros a un hombre: Francisco Hernando, 'El Pocero'. Él les prometió una ciudad entera, un paraíso a precios irresistibles en Seseña, a solo 35 kilómetros de Madrid. Pero lo que construyó no fue un hogar, sino una trampa financiera que engulliría miles de ilusiones y una fortuna. Este es el relato de cómo un proyecto inmobiliario se convirtió en el mayor símbolo del delirio y el colapso de una era. Te desvelaremos los cimientos de este imperio de barro, cómo se gestó la venta masiva de ilusiones, las irregularidades que lo sostuvieron, el estallido inevitable y el amargo legado para sus miles de víctimas. Prepárate, porque esta historia no 
+
+📜 Fuente: Tribunal Superior de Justicia de Castilla-La Mancha | Audiencia Nacional · 2007 | 2011
+
+📺 YouTube: https://youtu.be/C2RppnjqNVU]]></description>
+      <pubDate>Mon, 10 Aug 2026 11:05:10 +0000</pubDate>
+      <enclosure url="https://yassinebhk.github.io/automated-videos/podcasts/el-pocero-4000-millones-seseña.mp3" length="5972013" type="audio/mpeg"/>
+      <guid isPermaLink="false">el-pocero-4000-millones-seseña</guid>
+      <itunes:duration>00:03:36</itunes:duration>
+      <itunes:explicit>false</itunes:explicit>
+      <itunes:episodeType>full</itunes:episodeType>
+    </item>
+  </channel>
+</rss>
