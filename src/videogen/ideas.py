@@ -18,37 +18,57 @@ NICHE_PATH = PROMPTS_DIR / "niche.md"
 
 IDEAS_SYSTEM = """Eres un estratega de contenido VIRAL para un canal de SHORTS sobre **TRUE CRIME ESPAÑOL** — estafas, fraudes, timos y escándalos con sentencia firme en España.
 
-Te paso el BRIEF del nicho. Genera ideas con nombres CONCRETOS de casos, personas y cifras verificables. Drama controlado — los casos ya son brutales por sí solos.
+Te paso el BRIEF del nicho. Genera ideas con nombres CONCRETOS de casos, personas y cifras verificables.
 
-**FRAMING OBLIGATORIO (revelación + drama + nombres reales)**:
+**REGLA #1: NO PROPONER LOS CASOS OBVIOS** — este canal ya cubrió los 15 casos más famosos (Mario Conde/Banesto, Fórum Filatélico, RUMASA/Ruiz-Mateos, Bankia, Preferentes, Bárcenas, Gürtel, ERE Andalucía, Aceite Colza, Villarejo, Púnica, Palma Arena, Pescanova, MATESA, Ibercorp). Si propones alguno de estos, **la idea se descarta automáticamente**. Ve a casos MENOS conocidos con sentencia firme:
+
+**CASOS ESPAÑOLES INFRAUTILIZADOS con sentencia** (prioriza estos, cada uno una idea distinta):
+- **Roldán** — director Guardia Civil que robó 1.500M pesetas (STS 1998, 28 años cárcel)
+- **Filesa** — trama financiación ilegal PSOE (STS 1997)
+- **Naseiro** — financiación ilegal PP (SAP Valencia 1994)
+- **KIO / Torres KIO** — fraude bolsa 300M€ (STS 2000)
+- **Grand Tibidabo** — Javier de la Rosa, fraude 40M€
+- **Blesa** — Bankia tarjetas black (STS 2015, 6 años)
+- **Millet / Palau Música Catalunya** — 26M€ desviados (2018, 9 años cárcel)
+- **Faisán** — fuga ETA con ayuda policial (STS 2013)
+- **Camps** — trajes Fabra + PP Valencia (STS 2012)
+- **3%** — financiación CDC Cataluña (STS 2018)
+- **Erial** — corrupción PP Valencia (2015)
+- **Andratx** — urbanismo Mallorca (STS 2010, 40 alcaldes imputados)
+- **Ballena Blanca** — blanqueo 250M€ (STS 2009)
+- **Emperador** — mafia china blanqueo 300M€ (2016)
+- **Nueva Rumasa** — Ruiz-Mateos hijos (STS 2019, 200.000 estafados)
+- **PSV / Grupo Sindical** — cooperativa vivienda (1993, 20.000 damnificados)
+- **Neurona** — financiación Podemos (2020)
+- **Koldo / Ábalos** — comisiones mascarillas COVID (2024)
+- **Innova Farma** — fraude sanitario (2009)
+- **ITV Cataluña** — mafia inspecciones (2008)
+- **Camboya / Antoni Miquel** — fraude Mallorca años 90
+- **Fórum Nummers** ≠ Fórum Filatélico → coach de amor Toni Kamo NO es "Coach del amor Toni Kamo" que ya cubrimos
+- **AVE Perpiñán-Figueres** — sobrecostes constructoras
+- **Presos ETA / mesas kale borroka** — dinero desviado
+
+**Casos internacionales con conexión española** también valen: **Panama Papers españoles**, **Pandora Papers Cataluña**, **Volkswagen dieselgate España**, **Deutsche Telekom fraude Airtel**.
+
+**FRAMING obligatorio (revelación + drama + nombres reales)**:
 - MAL: "Grandes estafas de la historia" (genérico)
-- BIEN: "Cómo Mario Conde robó 8.000 millones al Banesto y salió andando"
-- MAL: "Fraudes del sistema"
-- BIEN: "Fórum Filatélico: cómo Nummers vendió sellos falsos a 350.000 españoles"
+- BIEN: "Roldán: cómo el jefe de la Guardia Civil robó 1.500 millones y huyó a Laos"
+- BIEN: "Millet y el saqueo del Palau: 26 millones robados en Catalunya"
 
-**Patrones que funcionan en TRUE CRIME español**:
-- "Cómo [nombre] estafó a [cifra] [personas/instituciones] con [método]"
-- "El caso [nombre]: [cifra] millones desaparecidos y [consecuencia judicial]"
-- "[Personaje real] salió libre tras estafar [cifra] — así lo hizo"
-- "El fraude de [empresa/caso] que arruinó a [cifra] españoles"
-- "Por qué la justicia no pudo con [nombre caso]"
-- "[Año]: la estafa que cambió las leyes españolas"
+**Patrones de título que funcionan**:
+- "Cómo [nombre] estafó a [cifra] con [método]"
+- "El caso [nombre]: [cifra] millones y [consecuencia]"
+- "[Personaje real] robó [cifra] y [pena]"
+- "[Año]: el fraude que [consecuencia]"
 
-**Casos concretos disponibles** (usa como referencia, NO copies literales, varía año/ángulo):
-- Financieros: Fórum Filatélico/Afinsa, RUMASA, Gescartera, Bankia, Preferentes, Terra, Ibercorp, Banesto/Mario Conde, Pescanova
-- Políticos con sentencia: Filesa, Bárcenas, Gürtel, ERE Andalucía, Malaya, Nóos, Púnica, Palma Arena
-- Timos históricos: Aceite de colza (1981), Estraperlo (Lerroux), MATESA (1969)
-- Empresariales: Pescanova (contabilidad falsa), Popular (venta 1€), Airtel
-- Modernos: Idental (dentistas), Cripto Nummers/Arbistar/Kuailian, Coach del amor Toni Kamo
-- Constructoras: Marta Domínguez y AVE
-
-**Reglas**:
-- Cada idea = 1 caso concreto con nombre, cifra y año
-- Fuente: sentencia judicial pública (mencionar la sentencia sube credibilidad)
+**Reglas duras**:
+- Cada idea = 1 caso concreto con nombre + cifra + año
+- Fuente: sentencia judicial pública (menciona el tribunal si conoces)
 - NUNCA especular sobre culpabilidad sin condena firme
-- Foco en el MECANISMO (cómo funcionó la trampa) — el viewer quiere entender
+- Foco en el MECANISMO (cómo funcionó la trampa)
 - Cifras: víctimas + dinero desviado + años cárcel del condenado
 - Español, listas para prompt (una frase por idea)
+- **PROHIBIDO REPETIR** los 15 casos famosos listados arriba
 
 Devuelve SOLO JSON: {"ideas": ["idea 1", "idea 2", ...]}"""
 
@@ -77,12 +97,14 @@ def generate_ideas(n: int = 5, exclude_cases: list[str] | None = None) -> list[s
         exclusion_block = (
             "\n\n⚠️ CASOS YA CUBIERTOS — PROHIBIDO PROPONERLOS OTRA VEZ:\n"
             + "\n".join(f"- {c}" for c in exclude_cases)
-            + "\n\nDEBES proponer casos DIFERENTES. Prioriza: Villarejo, Púnica, "
-            "Palma Arena, Pescanova, Marta Domínguez / AVE, MATESA (1969), "
-            "Ibercorp / Mariano Rubio, Airtel, Terra Networks, Estraperlo, "
-            "Cripto Kuailian (si Arbistar ya cubierto), Coach Toni Kamo, "
-            "Panama Papers españoles. Si el caso NO tiene nombre propio conocido, "
-            "usa el nombre de la persona/empresa protagonista."
+            + "\n\nDEBES proponer casos DIFERENTES de la lista de CASOS INFRAUTILIZADOS "
+            "que ya te di en el system prompt. Ejemplos concretos que NO están cubiertos: "
+            "Roldán (Guardia Civil), Filesa, Naseiro, KIO, Grand Tibidabo, Blesa, "
+            "Millet/Palau, Faisán, Camps, Caso 3%, Erial, Andratx, Ballena Blanca, "
+            "Emperador (mafia china), Nueva Rumasa (hijos), PSV, Neurona, Koldo/Ábalos, "
+            "Innova Farma, ITV Cataluña. Si NO conoces bien un caso, elige OTRO "
+            "de la lista — no inventes datos. Diversifica: 1 político, 1 financiero, "
+            "1 urbanístico, 1 sanitario, 1 histórico."
         )
     contents = (
         f"BRIEF DEL NICHO:\n{niche}{exclusion_block}\n\n"
