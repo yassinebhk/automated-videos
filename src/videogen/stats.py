@@ -74,13 +74,16 @@ def fetch_channel_stats() -> dict | None:
     }
 
 
-def fetch_recent_titles(n: int = 20) -> list[str]:
+def fetch_recent_titles(n: int = 20, days: int | None = None) -> list[str]:
     """Devuelve los títulos de los últimos N videos subidos al canal.
 
     Usado por el dedup del autogen para saber qué casos ya se han cubierto
-    (Mario Conde, Gescartera, Fórum Filatélico…) y evitar repetirlos. Es la
-    única fuente de verdad persistente cuando el pipeline corre en GitHub
-    Actions (cuyos runners son efímeros y no comparten filesystem entre runs).
+    (Mario Conde, Gescartera, Fórum Filatélico…) y evitar repetirlos.
+
+    Si `days` está dado, solo devuelve los publicados en los últimos N días.
+    Esto es importante porque tras 100+ videos publicados, el dedup absoluto
+    bloquea TODOS los casos conocidos (bug 08-12: no salió nada por días).
+    Con days=90 permite revisitar un caso con nuevo ángulo 3 meses después.
     """
     from googleapiclient.discovery import build
     from google.oauth2.credentials import Credentials
@@ -91,16 +94,32 @@ def fetch_recent_titles(n: int = 20) -> list[str]:
         return []
     creds = Credentials.from_authorized_user_file(str(TOKEN_FILE), SCOPES)
     yt = build("youtube", "v3", credentials=creds)
-    # 1) uploads playlist ID
     ch = yt.channels().list(part="contentDetails", mine=True).execute()
     items = ch.get("items", [])
     if not items:
         return []
     upl = items[0]["contentDetails"]["relatedPlaylists"]["uploads"]
-    # 2) últimos N items de la playlist (más nuevos primero)
     resp = yt.playlistItems().list(part="snippet", playlistId=upl,
                                    maxResults=min(n, 50)).execute()
-    return [it["snippet"]["title"] for it in resp.get("items", [])
+    items_yt = resp.get("items", [])
+    if days is not None:
+        from datetime import datetime, timedelta, timezone
+        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+        out = []
+        for it in items_yt:
+            sn = it.get("snippet", {})
+            title = sn.get("title")
+            pub = sn.get("publishedAt")
+            if not (title and pub):
+                continue
+            try:
+                pub_dt = datetime.fromisoformat(pub.replace("Z", "+00:00"))
+            except Exception:
+                continue
+            if pub_dt >= cutoff:
+                out.append(title)
+        return out
+    return [it["snippet"]["title"] for it in items_yt
             if it.get("snippet", {}).get("title")]
 
 

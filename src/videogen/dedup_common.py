@@ -15,47 +15,21 @@ import re
 # YA se subieron se detectan automáticamente, y esta lista solo añade aliases
 # y palabras minúsculas ambiguas.
 KEYWORDS_ALREADY_COVERED: set[str] = {
-    # === Ampliado tras auditoría 30/07 ===
-    # El canal tenía 9 Mario Conde, 9 Colza, 7 ERE, 5 Preferentes… Todos casos
-    # ya cubiertos que la dedup por proper_nouns no bloqueaba (Gemini insistía
-    # con el mismo caso variando el ángulo). Esta lista es un "veto" duro.
+    # === Solo aliases problemáticos ===
+    # Bug 08-12: la versión maximalista de esta lista (30+ casos) bloqueaba
+    # TODO porque el canal ya cubrió el pool clásico. Ahora la lista solo
+    # contiene ALIAS que el regex proper_nouns NO detecta (minúsculas,
+    # variantes con diacríticos, siglas cortas). El bloqueo real por caso
+    # cubierto lo hace fetch_recent_titles(days=90|180) + proper_nouns.
 
-    # Aceite de Colza
-    "colza", "aceite de colza",
-    # Fórum Filatélico
-    "fórum filatélico", "forum filatelico", "afinsa", "nummers",
-    # RUMASA / Ruiz-Mateos
-    "rumasa", "ruiz-mateos", "ruiz mateos",
-    # Gürtel — variantes con/sin diéresis
-    "gürtel", "gurtel", "correa", "bárcenas", "barcenas",
-    # ERE Andalucía
+    # "colza" en minúsculas (no regex proper_nouns)
+    "aceite de colza",
+    # Aliases de Fórum Filatélico
+    "afinsa", "nummers",
+    # "gurtel" sin diéresis (regex no cubre variantes)
+    "gurtel",
+    # "ere" solo (siglas cortas, regex >=4 chars no las coge)
     "ere andalucía", "ere andalucia",
-    # Preferentes bancarias — cubierto 5×, veto duro
-    "preferentes",
-    # Bankia
-    "bankia", "rato",
-    # Mario Conde / Banesto — cubierto 9×, veto absoluto
-    "mario conde", "banesto",
-    # Villarejo — cubierto 1× 07-28
-    "villarejo",
-    # Púnica — cubierto 1× 07-28
-    "púnica", "punica",
-    # Popular vendido 1€ — cubierto 1× 07-27
-    "banco popular",
-    # Urdangarin/Nóos
-    "urdangarin", "nóos", "noos",
-    # Arbistar/Kuailian
-    "arbistar", "kuailian",
-    # iDental
-    "idental", "i-dental",
-    # Pescanova + MATESA (los recién publicados 07-29)
-    "pescanova", "matesa",
-    # Gescartera
-    "gescartera",
-    # Malaya (Roca/Marbella)
-    "malaya", "marbella", "juan antonio roca",
-    # Filesa
-    "filesa",
 }
 
 # Stopwords que NO deben contar como nombre propio útil (aunque el regex las

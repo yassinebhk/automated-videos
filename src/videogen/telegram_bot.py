@@ -1190,7 +1190,9 @@ async def _run_longgen_weekly(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> N
     # 1. Ideas frescas + dedup vs long-forms ya generados
     # Casos ya cubiertos → pasar como exclusión a Gemini (mismo fix que autogen)
     try:
-        recent_pre = await _run_blocking(lambda: stats.fetch_recent_titles(50))
+        # days=180: solo bloquea casos publicados últimos 6 meses. Un caso más
+        # viejo puede revisitarse con nuevo ángulo. Fix bug 08-12 (dedup eterno).
+        recent_pre = await _run_blocking(lambda: stats.fetch_recent_titles(50, days=180))
         exclude_long = _extract_case_names(recent_pre)
     except Exception:
         exclude_long = []
@@ -1220,8 +1222,8 @@ async def _run_longgen_weekly(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> N
     from . import dedup_common
     recent_titles: list[str] = []
     try:
-        recent_titles = await _run_blocking(lambda: stats.fetch_recent_titles(50))
-        print(f"  longgen dedup: {len(recent_titles)} títulos recientes desde YT API")
+        recent_titles = await _run_blocking(lambda: stats.fetch_recent_titles(50, days=180))
+        print(f"  longgen dedup: {len(recent_titles)} títulos últimos 180 días desde YT API")
     except Exception as e:
         print(f"  longgen dedup: fallo YT API ({e}) — fallback local")
         for it in service.list_history()[:30]:
@@ -1543,9 +1545,10 @@ async def _run_autogen_daily(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> No
 
     # Casos ya cubiertos → pasarlos a Gemini como exclusión explícita.
     # Sin esto Gemini insiste con los mismos 8 casos del inicio del brief
-    # y el dedup bloquea TODO (bug 28/07).
+    # y el dedup bloquea TODO (bug 28/07). days=90: solo últimos 3 meses,
+    # tras eso permite revisitar con nuevo ángulo (bug 08-12).
     try:
-        recent_titles_pre = await _run_blocking(lambda: stats.fetch_recent_titles(50))
+        recent_titles_pre = await _run_blocking(lambda: stats.fetch_recent_titles(50, days=90))
         exclude = _extract_case_names(recent_titles_pre)
     except Exception:
         exclude = []
@@ -1579,8 +1582,8 @@ async def _run_autogen_daily(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> No
 
     recent_titles: list[str] = []
     try:
-        recent_titles = await _run_blocking(lambda: stats.fetch_recent_titles(50))
-        print(f"  dedup: {len(recent_titles)} títulos recientes desde YT API")
+        recent_titles = await _run_blocking(lambda: stats.fetch_recent_titles(50, days=90))
+        print(f"  dedup: {len(recent_titles)} títulos últimos 90 días desde YT API")
     except Exception as e:
         print(f"  dedup: fallo YT API ({e}) — fallback a filesystem local")
         # Fallback al filesystem local (funciona en Mac, no en Actions)
