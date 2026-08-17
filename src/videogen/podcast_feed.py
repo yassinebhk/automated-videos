@@ -44,9 +44,10 @@ PODCAST_META = {
     "explicit": "false",
     "site_url": "https://github.com/yassinebhk/automated-videos",
     # Public base URL que Spotify/Apple/iVoox usan para descargar MP3 + feed.
-    # Usa raw.githubusercontent.com — no requiere activar GitHub Pages ni
-    # custom domain. Bandwidth ilimitado para uso personal.
-    "public_base": "https://raw.githubusercontent.com/yassinebhk/automated-videos/main/docs/podcasts",
+    # Usa jsDelivr CDN — espeja GitHub gratis, sirve con content-type
+    # correcto (application/xml para .xml, audio/mpeg para .mp3). Sin setup.
+    # Bandwidth ilimitado para archivos pequeños.
+    "public_base": "https://cdn.jsdelivr.net/gh/yassinebhk/automated-videos@main/docs/podcasts",
     # Cover art (1400×1400 min, JPG/PNG). Si no existe, se skip.
     "cover_relpath": "cover.jpg",
 }
