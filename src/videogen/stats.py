@@ -124,21 +124,40 @@ def fetch_recent_titles(n: int = 20, days: int | None = None) -> list[str]:
 
 
 def fetch_youtube_stats() -> list[dict]:
-    """Stats por video subido: views, likes, comments. [] si no hay nada."""
+    """Stats por video subido: views, likes, comments. [] si no hay nada.
+
+    Fix bug 08-17: antes leía IDs de output/uploaded/*/youtube.json (filesystem
+    local). En GH Actions ese dir está vacío tras cada run efímero → los
+    snapshots per-video del daily-summary quedaban vacíos → panels 2 y 3 de
+    los charts salían en blanco. Ahora fetch la uploads playlist del canal
+    vía YT API (fuente de verdad persistente).
+    """
     from googleapiclient.discovery import build
     from google.oauth2.credentials import Credentials
 
     from .upload_youtube import SCOPES, TOKEN_FILE
 
-    vids = _collect_video_ids()
-    if not vids or not TOKEN_FILE.exists():
+    if not TOKEN_FILE.exists():
         return []
-
     creds = Credentials.from_authorized_user_file(str(TOKEN_FILE), SCOPES)
     yt = build("youtube", "v3", credentials=creds)
 
-    id_map = {v[0]: (v[1], v[2]) for v in vids}
-    ids = list(id_map.keys())
+    # 1) Obtener uploads playlist
+    ch = yt.channels().list(part="contentDetails", mine=True).execute()
+    items = ch.get("items", [])
+    if not items:
+        return []
+    upl = items[0]["contentDetails"]["relatedPlaylists"]["uploads"]
+
+    # 2) IDs de los últimos 50 videos + fallback filesystem para slug/lang
+    fs_map = {v[0]: (v[1], v[2]) for v in _collect_video_ids()}
+    pl = yt.playlistItems().list(part="contentDetails", playlistId=upl,
+                                  maxResults=50).execute()
+    ids = [it["contentDetails"]["videoId"] for it in pl.get("items", [])]
+    if not ids:
+        return []
+
+    id_map = {vid: fs_map.get(vid, ("", "")) for vid in ids}
     results = []
     # La API admite hasta 50 ids por llamada
     for i in range(0, len(ids), 50):

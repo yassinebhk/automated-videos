@@ -1535,7 +1535,8 @@ async def _run_autogen_daily(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> No
     from datetime import datetime, timedelta, timezone
     from . import ideas, compose, crosspost
 
-    await ctx.bot.send_message(chat_id, "🤖 *Generación diaria automática iniciada*", parse_mode="Markdown")
+    # Sin mensaje "iniciada" — reduce ruido. Solo se manda el resumen al final.
+    print("  autogen: iniciada")
 
     ok, reason = _check_yt_token()
     if not ok:
@@ -1703,11 +1704,8 @@ async def _run_autogen_daily(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> No
         except Exception as e:
             print(f"  autogen: ⚠ playlist add error {type(e).__name__}: {e}")
 
-        await ctx.bot.send_message(
-            chat_id,
-            f"🗓 YT programado <b>{label_local}</b>\n{yt_url}",
-            parse_mode="HTML",
-        )
+        # Mensaje YT diferido — se juntará con el resumen social al final.
+        yt_msg = f"🗓 YT programado <b>{label_local}</b>\n{yt_url}"
     except Exception as e:
         import traceback as _tb
         _tb.print_exc()
@@ -1732,90 +1730,60 @@ async def _run_autogen_daily(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> No
         except Exception:
             pass
 
+    # Post en todos los canales; los mensajes intermedios silenciados,
+    # solo mostramos icono OK/skip en el resumen final.
+    social_status: list[str] = []
+
     try:
         bsky_res = await _run_blocking(
-            lambda: bluesky_poster.post_short_to_bluesky(title_social, yt_url,
-                                                         teaser=teaser_social)
+            lambda: bluesky_poster.post_short_to_bluesky(title_social, yt_url, teaser=teaser_social)
         )
-        if bsky_res and not bsky_res.get("dry_run"):
-            await ctx.bot.send_message(
-                chat_id, f"🦋 Bluesky: {bsky_res.get('url','')}"
-            )
+        social_status.append("🦋 Bluesky ✅" if (bsky_res and not bsky_res.get("dry_run")) else "🦋 —")
     except Exception as e:
         print(f"  autogen: bluesky skip ({type(e).__name__}: {e})")
+        social_status.append("🦋 —")
 
     try:
         masto_res = await _run_blocking(
-            lambda: mastodon_poster.post_short_to_mastodon(title_social, yt_url,
-                                                           teaser=teaser_social)
+            lambda: mastodon_poster.post_short_to_mastodon(title_social, yt_url, teaser=teaser_social)
         )
-        if masto_res and not masto_res.get("dry_run"):
-            await ctx.bot.send_message(
-                chat_id, f"🐘 Mastodon: {masto_res.get('url','')}"
-            )
+        social_status.append("🐘 Mastodon ✅" if (masto_res and not masto_res.get("dry_run")) else "🐘 —")
     except Exception as e:
         print(f"  autogen: mastodon skip ({type(e).__name__}: {e})")
+        social_status.append("🐘 —")
 
-    # 4c. Reddit auto-post (palanca D — tráfico externo español gratis).
-    # Se hace en cuanto el vídeo está en YT (aunque scheduled a 21:00 CEST,
-    # el URL ya es válido y Reddit acepta URLs de shorts privados) — pero
-    # esto NO es óptimo. Mejor: postear tras publicación real. Por simplicidad,
-    # posteamos ya con URL (redditors que hagan clic verán "video privado" si
-    # llegan antes de las 21h). Si el video es SCHEDULED, mejor hacer la
-    # publicación Reddit en horario cercano al scheduled.
+    # Reddit (title real del script)
     try:
         from . import reddit_poster
-        # Cargar el título real que subimos (viene del script generado)
-        from .service import script as _script_mod
-        from .config import UPLOADED_DIR
-        slug_dir = UPLOADED_DIR / slug
-        title_real = topic  # fallback
-        if slug_dir.exists():
-            try:
-                loc = _script_mod.load_scripts(slug_dir).es
-                title_real = loc.title
-            except Exception:
-                pass
-        result = await _run_blocking(
-            lambda: reddit_poster.post_short_to_reddit(title_real, yt_url)
-        )
-        if result and not result.get("dry_run"):
-            await ctx.bot.send_message(
-                chat_id,
-                f"🔴 Reddit posted: r/{result['subreddit']}\n{result.get('url','')}",
-            )
+        loc_real = _script_mod.load_scripts(slug_dir).es if slug_dir.exists() else None
+        title_real = loc_real.title if loc_real else topic
+        result = await _run_blocking(lambda: reddit_poster.post_short_to_reddit(title_real, yt_url))
+        social_status.append(f"🔴 r/{result['subreddit']} ✅" if (result and not result.get("dry_run")) else "🔴 —")
     except Exception as e:
-        # Reddit falla → NO bloquea el pipeline (auxiliar)
         print(f"  autogen: reddit skip ({type(e).__name__}: {e})")
+        social_status.append("🔴 —")
 
-    # 4d. X/Twitter — audiencia hispanohablante enorme, tweet con thumbnail
     try:
         from . import x_poster
-        xr = await _run_blocking(
-            lambda: x_poster.post_short_to_x(title_social, yt_url, teaser=teaser_social)
-        )
-        if xr and not xr.get("dry_run"):
-            await ctx.bot.send_message(chat_id, f"🐦 X: {xr.get('url','')}")
+        xr = await _run_blocking(lambda: x_poster.post_short_to_x(title_social, yt_url, teaser=teaser_social))
+        social_status.append("🐦 X ✅" if (xr and not xr.get("dry_run")) else "🐦 —")
     except Exception as e:
         print(f"  autogen: x skip ({type(e).__name__}: {e})")
+        social_status.append("🐦 —")
 
-    # 4e. Threads (Meta) — 275M usuarios, ES community activa, thread de 2 posts
     try:
         from . import threads_poster
-        tr = await _run_blocking(
-            lambda: threads_poster.post_short_to_threads(title_social, yt_url, teaser=teaser_social)
-        )
-        if tr and not tr.get("dry_run"):
-            await ctx.bot.send_message(chat_id, f"🧵 Threads: {tr.get('url','')}")
+        tr = await _run_blocking(lambda: threads_poster.post_short_to_threads(title_social, yt_url, teaser=teaser_social))
+        social_status.append("🧵 Threads ✅" if (tr and not tr.get("dry_run")) else "🧵 —")
     except Exception as e:
         print(f"  autogen: threads skip ({type(e).__name__}: {e})")
+        social_status.append("🧵 —")
 
-    # 4f. Instagram Reels — requiere que el .mp4 esté generado y copiado a
-    # docs/reels/ (servido por GH Pages para que IG lo descargue).
     try:
         from . import instagram_poster
-        from .config import UPLOADED_DIR
-        vertical_mp4 = UPLOADED_DIR / slug / "video_es_vertical.mp4"
+        from .config import UPLOADED_DIR as _UD
+        vertical_mp4 = _UD / slug / "video_es_vertical.mp4"
+        ig_status = "📸 —"
         if vertical_mp4.exists():
             ir = await _run_blocking(
                 lambda: instagram_poster.post_reel_to_instagram(
@@ -1823,36 +1791,20 @@ async def _run_autogen_daily(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> No
                 )
             )
             if ir and not ir.get("dry_run"):
-                await ctx.bot.send_message(chat_id, f"📸 IG Reel: {ir.get('url','')}")
+                ig_status = "📸 IG ✅"
+        social_status.append(ig_status)
     except Exception as e:
         print(f"  autogen: instagram skip ({type(e).__name__}: {e})")
+        social_status.append("📸 —")
 
-    # 5. Versión sin subs + caption → móvil para TT/IG
-    try:
-        nosubs = await _run_blocking(lambda: service.recompose_no_subs(slug, "es"))
-        if not nosubs:
-            await ctx.bot.send_message(chat_id, "⚠️ No-subs falló, omito TT/IG.")
-            return
-        share_ns = nosubs.with_name("share_nosubs_es.mp4")
-        if not share_ns.exists():
-            await _run_blocking(lambda: compose.make_share(nosubs, share_ns))
-        loc = service.script.load_scripts(nosubs.parent).es
-        cap = crosspost.build_caption(loc)
-        with open(share_ns, "rb") as fh:
-            await ctx.bot.send_video(
-                chat_id, video=fh,
-                caption=f"📥 {loc.title[:70]} · SIN subs (TT/IG)",
-                read_timeout=300, write_timeout=300, connect_timeout=60,
-                supports_streaming=True,
-            )
-        import html as _html
-        await ctx.bot.send_message(
-            chat_id,
-            f"📝 <b>Caption</b>\n\n<pre>{_html.escape(cap)}</pre>",
-            parse_mode="HTML",
-        )
-    except Exception as e:
-        await ctx.bot.send_message(chat_id, f"⚠️ TT/IG falló: {e}")
+    # UN solo mensaje final: YT + resumen social. Reduce ruido de 8 msg → 1.
+    # (Eliminado el step "No-subs falló, omito TT/IG" — IG ya se cross-postea
+    # automático arriba, y ese mensaje solo generaba ruido.)
+    await ctx.bot.send_message(
+        chat_id,
+        f"{yt_msg}\n\n" + "  ·  ".join(social_status),
+        parse_mode="HTML",
+    )
 
 
 async def _send_social_stats(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> None:
@@ -1944,11 +1896,15 @@ def _fetch_youtube_totals() -> dict:
                     i["snippet"]["title"]) for i in r.get("items", [])]
     ids = [v[0] for v in vids_recent]
     vres = _req.get("https://www.googleapis.com/youtube/v3/videos",
-                    params={"part": "statistics,snippet", "id": ",".join(ids)},
+                    params={"part": "statistics,snippet,status", "id": ",".join(ids)},
                     headers=H, timeout=15).json()
     videos = []
     for v in vres.get("items", []):
         vst = v.get("statistics", {})
+        # Filtrar videos aún privados/scheduled (aparecen con views=0
+        # y contaminan el top3 del daily report — bug 08-17).
+        if v.get("status", {}).get("privacyStatus") != "public":
+            continue
         videos.append({
             "id": v["id"],
             "title": v["snippet"]["title"],
