@@ -78,6 +78,86 @@ def _get_channel_id(access_token: str) -> Optional[str]:
     return items[0]["id"] if items else None
 
 
+def _has_channel_comment(access_token: str, video_id: str, channel_id: str) -> bool:
+    """True si el canal ya comentó en este video (evita duplicar)."""
+    H = {"Authorization": f"Bearer {access_token}"}
+    r = requests.get("https://www.googleapis.com/youtube/v3/commentThreads",
+                     params={"part": "snippet", "videoId": video_id,
+                             "maxResults": 20, "textFormat": "plainText"},
+                     headers=H, timeout=15)
+    if r.status_code != 200:
+        return False  # asume no comentado, mejor duplicar que perder
+    for t in r.json().get("items", []):
+        top = t.get("snippet", {}).get("topLevelComment", {}).get("snippet", {})
+        if top.get("authorChannelId", {}).get("value") == channel_id:
+            return True
+    return False
+
+
+def catchup_pending_first_comments(max_videos: int = 20) -> dict:
+    """Recorre los últimos videos PÚBLICOS del canal y postea first-comment
+    en los que aún no lo tengan.
+
+    Fix bug 08-17: los videos se suben scheduled/private a las 21:00 UTC. El
+    first-comment en el upload inmediato falla 403 porque el video aún está
+    privado. Este catchup se ejecuta cada 2h y publica el first-comment
+    después de que YT haga público el video.
+
+    Devuelve dict con contadores.
+    """
+    tok = _get_access_token()
+    if not tok:
+        return {"error": "no token"}
+    channel_id = _get_channel_id(tok)
+    if not channel_id:
+        return {"error": "no channel_id"}
+    H = {"Authorization": f"Bearer {tok}"}
+    ch = requests.get("https://www.googleapis.com/youtube/v3/channels",
+                      params={"part": "contentDetails", "mine": "true"},
+                      headers=H, timeout=15).json()
+    items = ch.get("items", [])
+    if not items:
+        return {"error": "no channel"}
+    upl = items[0]["contentDetails"]["relatedPlaylists"]["uploads"]
+    pl = requests.get("https://www.googleapis.com/youtube/v3/playlistItems",
+                      params={"part": "contentDetails,snippet", "playlistId": upl,
+                              "maxResults": min(max_videos, 50)},
+                      headers=H, timeout=15).json()
+    ids = []
+    for it in pl.get("items", []):
+        vid = it.get("contentDetails", {}).get("videoId")
+        pub = it.get("contentDetails", {}).get("videoPublishedAt")
+        if vid and pub:  # solo los ya publicados (no scheduled)
+            ids.append(vid)
+    if not ids:
+        return {"checked": 0, "posted": 0, "already_had": 0}
+    # Fetch status + contentDetails para saber duración
+    vres = requests.get("https://www.googleapis.com/youtube/v3/videos",
+                        params={"part": "status,contentDetails", "id": ",".join(ids)},
+                        headers=H, timeout=15).json()
+    posted = already = errors = 0
+    import re as _re
+    for v in vres.get("items", []):
+        vid = v["id"]
+        ps = v.get("status", {}).get("privacyStatus")
+        if ps != "public":
+            continue
+        dur = v.get("contentDetails", {}).get("duration", "PT0S")
+        m = _re.match(r'PT(?:(\d+)M)?(?:(\d+)S)?', dur)
+        secs = (int(m.group(1) or 0)*60 + int(m.group(2) or 0)) if m else 0
+        is_short = secs <= 62
+        if _has_channel_comment(tok, vid, channel_id):
+            already += 1
+            continue
+        ok = post_first_comment(vid, is_short=is_short)
+        if ok:
+            posted += 1
+        else:
+            errors += 1
+    return {"checked": len(ids), "posted": posted,
+            "already_had": already, "errors": errors}
+
+
 def post_first_comment(video_id: str, is_short: bool = True,
                        custom_text: Optional[str] = None) -> bool:
     """Publica un comentario como el canal en un video. Devuelve True si OK.

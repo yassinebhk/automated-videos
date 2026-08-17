@@ -762,6 +762,15 @@ def daily_summary_cmd():
     runner.run_daily_summary()
 
 
+@cli.command(name="first-comment-catchup")
+def first_comment_catchup_cmd():
+    """Postea first-comment en videos públicos que aún no lo tengan.
+    Corre cada 2h para arreglar el bug 08-17 (scheduled videos → 403)."""
+    from . import first_comment
+    result = first_comment.catchup_pending_first_comments(max_videos=20)
+    print(f"  first-comment catchup: {result}")
+
+
 @cli.command(name="bluesky-growth")
 def bluesky_growth_cmd():
     """Ejecuta el growth loop de Bluesky (follows + likes + reposts)."""

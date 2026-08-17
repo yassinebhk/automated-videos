@@ -1,0 +1,28 @@
+name: First-comment catchup (post author comment on public videos)
+
+# Fix bug 08-17: videos se suben "scheduled" (privados hasta publishAt).
+# La YT API rechaza commentThreads en videos privados con 403. Sin este
+# catchup, los últimos ~20 videos quedaron sin author-comment → cero hilo
+# de replies → cero engagement inicial → algo YT no boostea → cero subs.
+#
+# Este workflow corre cada 2h. Chequea los últimos 20 videos publicados,
+# y si alguno no tiene comentario del canal, lo postea con hook polarizante.
+
+on:
+  schedule:
+    - cron: "15 */2 * * *"   # cada 2h a los 15min
+  workflow_dispatch: {}
+
+concurrency:
+  group: videogen-first-comment
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  catchup:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: first-comment-catchup
+    secrets: inherit

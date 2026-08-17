@@ -1284,9 +1284,9 @@ async def _run_longgen_weekly(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> N
             long_url = links.get('es', '')
             if long_url:
                 long_video_id = long_url.rsplit("/", 1)[-1].split("?")[0]
-                from . import playlists as _pl, first_comment as _fc
+                from . import playlists as _pl
                 _pl.add_video_to_category(long_video_id, topic)
-                _fc.post_first_comment(long_video_id, is_short=False)
+                # First-comment se hace por catchup (bug 08-17: scheduled → 403)
         except Exception as e:
             print(f"  longgen: ⚠ post-publish hooks error {type(e).__name__}: {e}")
 
@@ -1347,13 +1347,12 @@ async def _run_longgen_weekly(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> N
             )
             url = f"https://youtube.com/shorts/{vid}"
             short_links.append((clip_target, ch_name, url))
-            # Playlist segmentada + first-comment strategy para el clip atomizado
+            # Playlist segmentada. First-comment lo hace el catchup 2h.
             try:
-                from . import playlists as _pl, first_comment as _fc
+                from . import playlists as _pl
                 _pl.add_video_to_category(vid, topic)
-                _fc.post_first_comment(vid, is_short=True)
             except Exception as _e:
-                print(f"  longgen: ⚠ atom post-publish {type(_e).__name__}: {_e}")
+                print(f"  longgen: ⚠ atom playlist add {type(_e).__name__}: {_e}")
             await ctx.bot.send_message(
                 chat_id,
                 f"📅 Clip {i+1}/5 «{ch_name}» → {clip_target.strftime('%a %d/%m %H:%M')} · {url}",
@@ -1693,18 +1692,16 @@ async def _run_autogen_daily(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> No
         yt_url = links.get('es', '')
         print(f"  autogen: YT publicado → {yt_url}")
 
-        # Playlist segmentada + first-comment strategy
+        # Playlist segmentada. First-comment se hace por catchup cada 2h
+        # después de que YT publique el video (bug 08-17: videos scheduled
+        # están privados, comment API devuelve 403).
         try:
             if yt_url:
                 video_id = yt_url.rsplit("/", 1)[-1]
-                from . import playlists as _pl, first_comment as _fc
+                from . import playlists as _pl
                 _pl.add_video_to_category(video_id, topic)
-                # Author-first-comment con hook polarizante = boost engagement.
-                # El video está scheduled (aún no público) — puede fallar; el
-                # hourly-catchup u otro run lo reintentará luego si hace falta.
-                _fc.post_first_comment(video_id, is_short=True)
         except Exception as e:
-            print(f"  autogen: ⚠ post-publish hooks error {type(e).__name__}: {e}")
+            print(f"  autogen: ⚠ playlist add error {type(e).__name__}: {e}")
 
         await ctx.bot.send_message(
             chat_id,
