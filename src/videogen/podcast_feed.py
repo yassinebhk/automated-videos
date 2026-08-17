@@ -42,10 +42,11 @@ PODCAST_META = {
     "language": "es",
     "category": "True Crime",  # categoría iTunes válida
     "explicit": "false",
-    "site_url": "https://waitwhy-podcast.yassinebhk.com",  # solo referencial
-    # Public base URL que Spotify usará para descargar los MP3.
-    # GitHub Pages sirve desde /docs/ del repo.
-    "public_base": "https://yassinebhk.github.io/automated-videos/podcasts",
+    "site_url": "https://github.com/yassinebhk/automated-videos",
+    # Public base URL que Spotify/Apple/iVoox usan para descargar MP3 + feed.
+    # Usa raw.githubusercontent.com — no requiere activar GitHub Pages ni
+    # custom domain. Bandwidth ilimitado para uso personal.
+    "public_base": "https://raw.githubusercontent.com/yassinebhk/automated-videos/main/docs/podcasts",
     # Cover art (1400×1400 min, JPG/PNG). Si no existe, se skip.
     "cover_relpath": "cover.jpg",
 }
