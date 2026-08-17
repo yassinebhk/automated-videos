@@ -785,6 +785,13 @@ def mastodon_growth_cmd():
     mastodon_growth.run_growth_loop(dry_run=False)
 
 
+@cli.command(name="x-growth")
+def x_growth_cmd():
+    """Ejecuta el growth loop de X (follows + likes de cuentas ES relevantes)."""
+    from . import x_growth
+    x_growth.run_growth_loop(dry_run=False)
+
+
 @cli.command(name="dispatch")
 @click.option("--cmd", required=True, help="Comando (autogen|longgen|snapshot|atomize|send|ideas|stats|help|start)")
 @click.option("--args", "args_text", default="", help="Argumentos textuales del comando")
