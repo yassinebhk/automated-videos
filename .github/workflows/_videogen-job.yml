@@ -77,9 +77,10 @@ jobs:
           X_API_SECRET:     ${{ secrets.X_API_SECRET }}
           X_ACCESS_TOKEN:   ${{ secrets.X_ACCESS_TOKEN }}
           X_ACCESS_SECRET:  ${{ secrets.X_ACCESS_SECRET }}
-          # Instagram Reels — Meta Graph API (setup 15 min via IG Business + FB Page)
-          IG_ACCESS_TOKEN:         ${{ secrets.IG_ACCESS_TOKEN }}
-          IG_BUSINESS_ACCOUNT_ID:  ${{ secrets.IG_BUSINESS_ACCOUNT_ID }}
+          # Instagram Reels — Meta Graph API (IG Business Login, endpoint graph.instagram.com)
+          IG_TOKEN:                ${{ secrets.IG_TOKEN }}
+          IG_USER_ID:              ${{ secrets.IG_USER_ID }}
+          IG_APP_SCOPED_ID:        ${{ secrets.IG_APP_SCOPED_ID }}
           # Threads (Meta) — API separada de IG pero mismo app FB (setup 5 min extra)
           THREADS_ACCESS_TOKEN: ${{ secrets.THREADS_ACCESS_TOKEN }}
           THREADS_USER_ID:      ${{ secrets.THREADS_USER_ID }}
@@ -122,8 +123,9 @@ jobs:
             [ -n "$X_API_SECRET"        ] && printf 'X_API_SECRET=%s\n' "$X_API_SECRET"
             [ -n "$X_ACCESS_TOKEN"      ] && printf 'X_ACCESS_TOKEN=%s\n' "$X_ACCESS_TOKEN"
             [ -n "$X_ACCESS_SECRET"     ] && printf 'X_ACCESS_SECRET=%s\n' "$X_ACCESS_SECRET"
-            [ -n "$IG_ACCESS_TOKEN"         ] && printf 'IG_ACCESS_TOKEN=%s\n' "$IG_ACCESS_TOKEN"
-            [ -n "$IG_BUSINESS_ACCOUNT_ID"  ] && printf 'IG_BUSINESS_ACCOUNT_ID=%s\n' "$IG_BUSINESS_ACCOUNT_ID"
+            [ -n "$IG_TOKEN"            ] && printf 'IG_TOKEN=%s\n' "$IG_TOKEN"
+            [ -n "$IG_USER_ID"          ] && printf 'IG_USER_ID=%s\n' "$IG_USER_ID"
+            [ -n "$IG_APP_SCOPED_ID"    ] && printf 'IG_APP_SCOPED_ID=%s\n' "$IG_APP_SCOPED_ID"
             [ -n "$THREADS_ACCESS_TOKEN" ] && printf 'THREADS_ACCESS_TOKEN=%s\n' "$THREADS_ACCESS_TOKEN"
             [ -n "$THREADS_USER_ID"      ] && printf 'THREADS_USER_ID=%s\n' "$THREADS_USER_ID"
             printf 'VOICE_ENGINE=%s\n' "${VOICE_ENGINE:-edge}"

@@ -39,8 +39,14 @@ from .config import ROOT
 
 
 REELS_HOST_DIR = ROOT / "docs" / "reels"
-# Sirvido por GitHub Pages — mismo host que docs/podcasts/
-PUBLIC_REELS_BASE = "https://yassinebhk.github.io/automated-videos/reels"
+# Sirvido por jsDelivr CDN (mirror de GitHub raw) con Content-Type correcto.
+# GH Pages exigía dominio custom para nuestro caso; jsDelivr no.
+PUBLIC_REELS_BASE = "https://cdn.jsdelivr.net/gh/yassinebhk/automated-videos@main/docs/reels"
+
+# Instagram Business Login usa graph.instagram.com (v21+).
+# El endpoint clásico graph.facebook.com/v21.0 es para "Facebook Login for
+# Business" — otra ruta, otro token. Nosotros usamos IG Business Login.
+IG_API_BASE = "https://graph.instagram.com/v21.0"
 
 
 def _prepare_public_reel(local_mp4: Path, slug: str) -> Optional[str]:
@@ -59,7 +65,7 @@ def _create_media_container(access_token: str, ig_account_id: str,
                              video_url: str, caption: str) -> Optional[str]:
     """Paso 1 de IG publish: subir el video a un container. Devuelve container_id."""
     r = requests.post(
-        f"https://graph.facebook.com/v21.0/{ig_account_id}/media",
+        f"{IG_API_BASE}/{ig_account_id}/media",
         params={
             "media_type": "REELS",
             "video_url": video_url,
@@ -80,7 +86,7 @@ def _wait_container_ready(access_token: str, container_id: str, max_wait: int = 
     start = time.time()
     while time.time() - start < max_wait:
         r = requests.get(
-            f"https://graph.facebook.com/v21.0/{container_id}",
+            f"{IG_API_BASE}/{container_id}",
             params={"fields": "status_code,status", "access_token": access_token},
             timeout=20,
         )
@@ -99,7 +105,7 @@ def _wait_container_ready(access_token: str, container_id: str, max_wait: int = 
 def _publish_container(access_token: str, ig_account_id: str, container_id: str) -> Optional[str]:
     """Paso 2: publicar el container. Devuelve media_id."""
     r = requests.post(
-        f"https://graph.facebook.com/v21.0/{ig_account_id}/media_publish",
+        f"{IG_API_BASE}/{ig_account_id}/media_publish",
         params={"creation_id": container_id, "access_token": access_token},
         timeout=30,
     )
@@ -116,10 +122,14 @@ def post_reel_to_instagram(video_title: str, video_url: str,
     """Publica un Reel en IG. Requiere que el video esté disponible en URL
     pública — lo copiamos a docs/reels/<slug>.mp4 que sirve GH Pages.
     """
-    access_token = os.environ.get("IG_ACCESS_TOKEN")
-    ig_account_id = os.environ.get("IG_BUSINESS_ACCOUNT_ID")
+    # IG_TOKEN + IG_USER_ID vienen del setup con Instagram Business Login
+    # (developers.facebook.com → app → Instagram → API setup). Los nombres
+    # legacy IG_ACCESS_TOKEN + IG_BUSINESS_ACCOUNT_ID se mantienen como
+    # fallback por si el entorno los tiene con la nomenclatura antigua.
+    access_token = os.environ.get("IG_TOKEN") or os.environ.get("IG_ACCESS_TOKEN")
+    ig_account_id = os.environ.get("IG_USER_ID") or os.environ.get("IG_BUSINESS_ACCOUNT_ID")
     if not (access_token and ig_account_id):
-        print("  ig: skip — faltan IG_ACCESS_TOKEN o IG_BUSINESS_ACCOUNT_ID")
+        print("  ig: skip — faltan IG_TOKEN o IG_USER_ID")
         return None
 
     from . import social_post
