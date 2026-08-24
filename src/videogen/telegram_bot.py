@@ -1812,6 +1812,25 @@ async def _run_autogen_daily(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> No
         print(f"  autogen: instagram skip ({type(e).__name__}: {e})")
         social_status.append("📸 —")
 
+    try:
+        from . import tiktok_poster
+        from .config import UPLOADED_DIR as _UD
+        vertical_mp4 = _UD / slug / "video_es_vertical.mp4"
+        tt_status = "🎵 —"
+        if vertical_mp4.exists():
+            tr = await _run_blocking(
+                lambda: tiktok_poster.post_video_to_tiktok(
+                    title_social, vertical_mp4, slug,
+                )
+            )
+            if tr and not tr.get("dry_run") and tr.get("publish_id"):
+                kind = tr.get("kind", "?")
+                tt_status = "🎵 TT ✅" if kind == "direct" else "🎵 TT 📥"  # 📥 = draft
+        social_status.append(tt_status)
+    except Exception as e:
+        print(f"  autogen: tiktok skip ({type(e).__name__}: {e})")
+        social_status.append("🎵 —")
+
     # UN solo mensaje final: YT + resumen social. Reduce ruido de 8 msg → 1.
     # (Eliminado el step "No-subs falló, omito TT/IG" — IG ya se cross-postea
     # automático arriba, y ese mensaje solo generaba ruido.)

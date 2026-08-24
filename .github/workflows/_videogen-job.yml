@@ -84,6 +84,13 @@ jobs:
           # Threads (Meta) — API separada de IG pero mismo app FB
           THREADS_TOKEN:        ${{ secrets.THREADS_TOKEN }}
           THREADS_USER_ID:      ${{ secrets.THREADS_USER_ID }}
+          # TikTok Content Posting API (Ruta A: draft; Ruta B: direct tras review)
+          TIKTOK_ACCESS_TOKEN:  ${{ secrets.TIKTOK_ACCESS_TOKEN }}
+          TIKTOK_REFRESH_TOKEN: ${{ secrets.TIKTOK_REFRESH_TOKEN }}
+          TIKTOK_CLIENT_KEY:    ${{ secrets.TIKTOK_CLIENT_KEY }}
+          TIKTOK_CLIENT_SECRET: ${{ secrets.TIKTOK_CLIENT_SECRET }}
+          TIKTOK_OPEN_ID:       ${{ secrets.TIKTOK_OPEN_ID }}
+          TIKTOK_MODE:          ${{ vars.TIKTOK_MODE || 'auto' }}
           VOICE_ENGINE:          ${{ vars.VOICE_ENGINE || 'edge' }}
           KOKORO_VOICE_ES:       ${{ vars.KOKORO_VOICE_ES }}
           WEBHOOK_URL:           ${{ vars.WEBHOOK_URL }}
@@ -128,6 +135,12 @@ jobs:
             [ -n "$IG_APP_SCOPED_ID"    ] && printf 'IG_APP_SCOPED_ID=%s\n' "$IG_APP_SCOPED_ID"
             [ -n "$THREADS_TOKEN"       ] && printf 'THREADS_TOKEN=%s\n' "$THREADS_TOKEN"
             [ -n "$THREADS_USER_ID"     ] && printf 'THREADS_USER_ID=%s\n' "$THREADS_USER_ID"
+            [ -n "$TIKTOK_ACCESS_TOKEN" ] && printf 'TIKTOK_ACCESS_TOKEN=%s\n' "$TIKTOK_ACCESS_TOKEN"
+            [ -n "$TIKTOK_REFRESH_TOKEN"] && printf 'TIKTOK_REFRESH_TOKEN=%s\n' "$TIKTOK_REFRESH_TOKEN"
+            [ -n "$TIKTOK_CLIENT_KEY"   ] && printf 'TIKTOK_CLIENT_KEY=%s\n' "$TIKTOK_CLIENT_KEY"
+            [ -n "$TIKTOK_CLIENT_SECRET"] && printf 'TIKTOK_CLIENT_SECRET=%s\n' "$TIKTOK_CLIENT_SECRET"
+            [ -n "$TIKTOK_OPEN_ID"      ] && printf 'TIKTOK_OPEN_ID=%s\n' "$TIKTOK_OPEN_ID"
+            printf 'TIKTOK_MODE=%s\n' "${TIKTOK_MODE:-auto}"
             printf 'VOICE_ENGINE=%s\n' "${VOICE_ENGINE:-edge}"
             [ -n "$KOKORO_VOICE_ES" ] && printf 'KOKORO_VOICE_ES=%s\n' "$KOKORO_VOICE_ES"
             printf 'AUTOGEN_PUBLISH_HOUR=%s\n' "${AUTOGEN_PUBLISH_HOUR:-21}"

@@ -1,0 +1,53 @@
+name: TikTok Token Refresh
+
+# El access_token de TikTok caduca en 24h; el refresh_token dura 365d y rota
+# cada refresh. Este workflow renueva ambos cada día → el pipeline siempre
+# encuentra un token fresco al arrancar.
+#
+# Requiere secrets: TIKTOK_CLIENT_KEY, TIKTOK_CLIENT_SECRET, TIKTOK_REFRESH_TOKEN,
+# REPO_ADMIN_PAT (fine-grained PAT con Secrets:write).
+
+on:
+  schedule:
+    # 07:15 UTC = antes del autogen 08:00, deja el token fresco para el día
+    - cron: "15 7 * * *"
+  workflow_dispatch:
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Refresh TikTok tokens
+        env:
+          TIKTOK_CLIENT_KEY:     ${{ secrets.TIKTOK_CLIENT_KEY }}
+          TIKTOK_CLIENT_SECRET:  ${{ secrets.TIKTOK_CLIENT_SECRET }}
+          TIKTOK_REFRESH_TOKEN:  ${{ secrets.TIKTOK_REFRESH_TOKEN }}
+          GH_TOKEN:              ${{ secrets.REPO_ADMIN_PAT }}
+        run: |
+          set -eu
+          if [ -z "${TIKTOK_REFRESH_TOKEN:-}" ] || [ -z "${TIKTOK_CLIENT_KEY:-}" ]; then
+            echo "TIKTOK_* vacío — skip refresh (aún no cableado)"
+            exit 0
+          fi
+          echo "Refrescando TikTok tokens…"
+          RESP=$(curl -sX POST "https://open.tiktokapis.com/v2/oauth/token/" \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            --data-urlencode "client_key=$TIKTOK_CLIENT_KEY" \
+            --data-urlencode "client_secret=$TIKTOK_CLIENT_SECRET" \
+            --data-urlencode "grant_type=refresh_token" \
+            --data-urlencode "refresh_token=$TIKTOK_REFRESH_TOKEN")
+
+          NEW_ACCESS=$(echo "$RESP"  | python3 -c 'import sys,json; d=json.load(sys.stdin); print(d.get("access_token","") or "")')
+          NEW_REFRESH=$(echo "$RESP" | python3 -c 'import sys,json; d=json.load(sys.stdin); print(d.get("refresh_token","") or "")')
+          EXPIRES=$(echo "$RESP"     | python3 -c 'import sys,json; d=json.load(sys.stdin); print(d.get("expires_in","") or "")')
+
+          if [ -z "$NEW_ACCESS" ]; then
+            echo "❌ Refresh TikTok falló: $RESP"
+            exit 1
+          fi
+          echo "✅ TikTok access_token nuevo (expires_in=${EXPIRES}s)"
+          echo -n "$NEW_ACCESS" | gh secret set TIKTOK_ACCESS_TOKEN --repo "$GITHUB_REPOSITORY"
+          if [ -n "$NEW_REFRESH" ]; then
+            echo -n "$NEW_REFRESH" | gh secret set TIKTOK_REFRESH_TOKEN --repo "$GITHUB_REPOSITORY"
+            echo "✅ TikTok refresh_token rotado"
+          fi
