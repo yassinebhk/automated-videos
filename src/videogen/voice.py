@@ -119,12 +119,19 @@ def _synthesize_kokoro(script: LocalizedScript, dest_dir: Path) -> VoiceTrack:
         words.append(WordTimestamp(word=w, start=t, end=t + w_dur))
         t += w_dur
 
-    return VoiceTrack(
+    track = VoiceTrack(
         lang=script.lang,
         audio_path=str(audio_path),
         duration_seconds=total_dur,
         words=words,
     )
+    # atomize.py y recompose_no_subs() leen voice_<lang>.json del disco más
+    # tarde (fuera de este proceso) — sin esto, Kokoro es el único motor que
+    # no lo deja escrito y esos pasos fallan con FileNotFoundError.
+    (dest_dir / f"voice_{script.lang}.json").write_text(
+        track.model_dump_json(indent=2), encoding="utf-8"
+    )
+    return track
 
 
 # ---------------------------------------------------------------- Edge TTS
