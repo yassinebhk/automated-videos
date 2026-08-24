@@ -6,7 +6,7 @@ const HTML = `<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="tiktok-developers-site-verification" content="Va82lakWs7jaMizQqtDc5w1bzy3MdGEH">
+<meta name="tiktok-developers-site-verification" content="jYEtDCE0kptF8mhBRMkchQIWfrTDqXDr">
 <title>WaitWhy Autopost</title>
 <style>
   body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 640px; margin: 4rem auto; padding: 1rem; line-height: 1.6; color: #222; text-align: center; }

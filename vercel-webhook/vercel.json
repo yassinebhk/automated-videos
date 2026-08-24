@@ -6,6 +6,6 @@
     { "source": "/legal/tos.html", "destination": "/api/legal?page=tos" },
     { "source": "/legal/privacy", "destination": "/api/legal?page=privacy" },
     { "source": "/legal/privacy.html", "destination": "/api/legal?page=privacy" },
-    { "source": "/tiktokVa82lakWs7jaMizQqtDc5w1bzy3MdGEH.txt", "destination": "/api/tiktok-verify" }
+    { "source": "/tiktok:token.txt", "destination": "/api/tiktok-verify" }
   ]
 }
