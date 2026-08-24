@@ -1429,6 +1429,37 @@ async def snapshot_cmd(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> None:
     await _send_charts(update.effective_chat.id, ctx)
 
 
+async def tiktok_auth_cmd(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> None:
+    """/tiktok_auth → link inline para autorizar TikTok via OAuth desde el móvil.
+
+    Callback en Vercel guarda TIKTOK_ACCESS_TOKEN + REFRESH_TOKEN + OPEN_ID como
+    GH Secrets, y avisa por Telegram. Ver vercel-webhook/api/tiktok-callback.js.
+    """
+    import os
+    webhook_base = os.environ.get("WEBHOOK_URL", "").rstrip("/")
+    chat_id = update.effective_chat.id
+    if not webhook_base:
+        await update.message.reply_text(
+            "🔴 WEBHOOK_URL no configurado — no puedo generar link OAuth."
+        )
+        return
+    auth_url = f"{webhook_base}/api/tiktok-auth?t={chat_id}"
+    reply_markup = {
+        "inline_keyboard": [[
+            {"text": "🎵 Conectar TikTok (30s)", "url": auth_url}
+        ]]
+    }
+    await ctx.bot.send_message(
+        chat_id,
+        "🎵 <b>Conectar TikTok</b>\n\n"
+        "Tap el botón → autoriza a WaitWhy Autopost en TikTok → "
+        "tokens se guardan solos.\n\n"
+        "Al terminar te llegará confirmación aquí con los scopes activos.",
+        parse_mode="HTML",
+        reply_markup=reply_markup,
+    )
+
+
 import time as _time
 _GENERATION_LOCK = PENDING_DIR.parent / ".generation.lock"
 
@@ -2227,6 +2258,7 @@ def run():
     app.add_handler(CommandHandler("atomize", atomize_cmd))
     app.add_handler(CommandHandler("autogen", autogen_cmd))
     app.add_handler(CommandHandler("longgen", longgen_cmd))
+    app.add_handler(CommandHandler("tiktok_auth", tiktok_auth_cmd))
     app.add_handler(CallbackQueryHandler(on_callback))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_prompt))
 
@@ -2240,6 +2272,7 @@ def run():
             BotCommand("atomize", "Saca clips promo de un long-form (slug)"),
             BotCommand("autogen", "Genera+programa+envía 1 Short ahora (idem job 08:00)"),
             BotCommand("longgen", "Genera long-form + 5 clips derivados + programa todo (idem job dom 10:00)"),
+            BotCommand("tiktok_auth", "🎵 Conectar TikTok via OAuth (una vez)"),
             BotCommand("help", "Ayuda: qué puedo hacer"),
             BotCommand("stats", "Estadísticas de YouTube"),
             BotCommand("ui", "Enlace a la UI web"),
