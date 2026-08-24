@@ -57,6 +57,15 @@
           "topic": "El Pocero 4000 millones Seseña"
         }
       ]
+    },
+    "nueva_rumasa": {
+      "count": 1,
+      "history": [
+        {
+          "ts": "2026-08-24T10:30:36.843528+00:00",
+          "topic": "[CRIMEN] Nueva Rumasa: Cómo los hijos de Ruiz-Mateos estafaron a 200.000 personas tras el imperio de su padre (STS 2019)"
+        }
+      ]
     }
   }
 }
