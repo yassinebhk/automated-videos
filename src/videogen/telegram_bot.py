@@ -1246,6 +1246,13 @@ async def _run_longgen_weekly(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> N
         return
     topic = fresh[0]
     print(f"  longgen: topic elegido «{topic[:80]}»")
+    try:
+        from . import case_ledger
+        key = case_ledger.register_used_case(topic)
+        if key:
+            print(f"  case_ledger: registrado key={key}")
+    except Exception as _e:
+        print(f"  case_ledger: skip ({type(_e).__name__}: {_e})")
     await ctx.bot.send_message(chat_id, f"📝 Topic long-form: «{topic[:80]}»\n⚙️ Generando (~10-15 min)…")
 
     # 2. Genera long-form — DURACIÓN ROTATIVA para escapar del detector
@@ -1655,6 +1662,14 @@ async def _run_autogen_daily(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> No
         f"{topic}"
     )
     print(f"  dedup: elegido «{topic[:80]}» — episodio #{episode_num}")
+    # Registrar en el ledger para excluir del pool en futuras generaciones
+    try:
+        from . import case_ledger
+        key = case_ledger.register_used_case(topic)
+        if key:
+            print(f"  case_ledger: registrado key={key}")
+    except Exception as _e:
+        print(f"  case_ledger: skip ({type(_e).__name__}: {_e})")
     await ctx.bot.send_message(
         chat_id,
         f"📝 Topic elegido (#Episodio {episode_num}): «{topic[:80]}»\n⚙️ Generando…"

@@ -93,18 +93,21 @@ def generate_ideas(n: int = 5, exclude_cases: list[str] | None = None) -> list[s
         max_output_tokens=2048,
     )
     exclusion_block = ""
-    if exclude_cases:
+    # Pool rotativo diario: excluye casos ya cubiertos (persistente) y hace
+    # shuffle → Gemini ve un orden distinto cada día → deja de anclarse a KIO.
+    from . import case_ledger
+    pool_text = case_ledger.format_pool_for_prompt(days=180)
+    if pool_text:
         exclusion_block = (
-            "\n\n⚠️ CASOS YA CUBIERTOS — PROHIBIDO PROPONERLOS OTRA VEZ:\n"
+            f"\n\n📋 CASOS DISPONIBLES HOY (pool rotativo — ya excluidos "
+            f"los usados últimos 180 días):\n{pool_text}\n\n"
+            f"Elige UN caso de esta lista. NO propongas casos que no estén aquí. "
+            f"Diversifica: 1 político, 1 financiero, 1 urbanístico, 1 sanitario, 1 histórico."
+        )
+    if exclude_cases:
+        exclusion_block += (
+            "\n\n⚠️ ADEMÁS PROHIBIDO PROPONER (ya cubiertos últimos meses):\n"
             + "\n".join(f"- {c}" for c in exclude_cases)
-            + "\n\nDEBES proponer casos DIFERENTES de la lista de CASOS INFRAUTILIZADOS "
-            "que ya te di en el system prompt. Ejemplos concretos que NO están cubiertos: "
-            "Roldán (Guardia Civil), Filesa, Naseiro, KIO, Grand Tibidabo, Blesa, "
-            "Millet/Palau, Faisán, Camps, Caso 3%, Erial, Andratx, Ballena Blanca, "
-            "Emperador (mafia china), Nueva Rumasa (hijos), PSV, Neurona, Koldo/Ábalos, "
-            "Innova Farma, ITV Cataluña. Si NO conoces bien un caso, elige OTRO "
-            "de la lista — no inventes datos. Diversifica: 1 político, 1 financiero, "
-            "1 urbanístico, 1 sanitario, 1 histórico."
         )
     contents = (
         f"BRIEF DEL NICHO:\n{niche}{exclusion_block}\n\n"

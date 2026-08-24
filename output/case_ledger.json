@@ -1,0 +1,58 @@
+{
+  "cases": {
+    "kio": {
+      "count": 1,
+      "history": [
+        {
+          "ts": "2026-08-24T07:57:23.240427+00:00",
+          "topic": "Caso KIO fraude bursátil 300 millones"
+        }
+      ]
+    },
+    "andratx": {
+      "count": 1,
+      "history": [
+        {
+          "ts": "2026-08-24T07:57:23.244137+00:00",
+          "topic": "Andratx urbanismo Mallorca"
+        }
+      ]
+    },
+    "grand_tibidabo": {
+      "count": 1,
+      "history": [
+        {
+          "ts": "2026-08-24T07:57:23.246473+00:00",
+          "topic": "Javier de la Rosa Grand Tibidabo 40 millones"
+        }
+      ]
+    },
+    "roldan": {
+      "count": 1,
+      "history": [
+        {
+          "ts": "2026-08-24T07:57:23.248688+00:00",
+          "topic": "Roldán jefe Guardia Civil 1500 millones"
+        }
+      ]
+    },
+    "filesa": {
+      "count": 1,
+      "history": [
+        {
+          "ts": "2026-08-24T07:57:23.251476+00:00",
+          "topic": "Filesa financiación PSOE"
+        }
+      ]
+    },
+    "pocero": {
+      "count": 1,
+      "history": [
+        {
+          "ts": "2026-08-24T07:57:23.254465+00:00",
+          "topic": "El Pocero 4000 millones Seseña"
+        }
+      ]
+    }
+  }
+}

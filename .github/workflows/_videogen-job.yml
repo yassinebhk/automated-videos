@@ -161,10 +161,10 @@ jobs:
           # Commiteamos: analytics snapshots + docs/ (podcast feed/MP3 + IG reels MP4).
           # docs/podcasts/*.mp3 = audios para Spotify. docs/reels/*.mp4 = videos para IG.
           # Ambos servidos vía GitHub Pages.
-          if [ -n "$(git status --porcelain output/stats_history.jsonl output/reddit_history.json output/pinned_summary_id.txt docs/ 2>/dev/null)" ]; then
+          if [ -n "$(git status --porcelain output/stats_history.jsonl output/reddit_history.json output/pinned_summary_id.txt output/case_ledger.json docs/ 2>/dev/null)" ]; then
             git config user.name "videogen-bot"
             git config user.email "bot@videogen.local"
-            for f in output/stats_history.jsonl output/reddit_history.json output/pinned_summary_id.txt; do
+            for f in output/stats_history.jsonl output/reddit_history.json output/pinned_summary_id.txt output/case_ledger.json; do
               [ -f "$f" ] && git add "$f" || true
             done
             # docs/ completo (podcast + reels + cualquier futuro asset servido)
