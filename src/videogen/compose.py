@@ -42,9 +42,18 @@ def build_caption_ass(track: VoiceTrack, dest: Path, vertical: bool = True) -> P
     - Chunks de 2 palabras para máxima legibilidad en mobile
     """
     play_w, play_h = (VERT_W, VERT_H) if vertical else (HORIZ_W, HORIZ_H)
-    font_size = 96 if vertical else 70
+    # Bajado de 96 → 84pt en vertical: a 96 los chunks con palabras largas
+    # ("PROCESAMIENTO PENITENCIARIO", "MEDICAMENTOS PATRIMONIO") desbordaban
+    # el ancho útil (1080px - 160 margen = 920px). 84pt cabe siempre incluso
+    # con 2 palabras de 12+ chars.
+    font_size = 84 if vertical else 70
     # Alignment=2 (bottom-center). MarginV = px desde abajo
     margin_v = int(play_h * 0.30) if vertical else 100
+
+    # Umbral: si el chunk combinado supera MAX_CHARS_CHUNK caracteres,
+    # el texto renderizado desbordará → usar solo 1 palabra en ese chunk.
+    # 14 chars * ~55px/char = 770px, cabe con margen holgado en 920px útil.
+    MAX_CHARS_CHUNK = 14 if vertical else 22
 
     chunks: list[tuple[float, float, str]] = []
     i = 0
@@ -53,9 +62,14 @@ def build_caption_ass(track: VoiceTrack, dest: Path, vertical: bool = True) -> P
     while i < len(words):
         size = chunk_size if i + chunk_size <= len(words) else (len(words) - i)
         chunk_words = words[i : i + size]
+        text = " ".join(w.word.upper() for w in chunk_words)
+        # Si desborda, retrocedemos a 1 palabra para este chunk
+        if len(text) > MAX_CHARS_CHUNK and size > 1:
+            size = 1
+            chunk_words = words[i : i + 1]
+            text = chunk_words[0].word.upper()
         start = chunk_words[0].start
         end = chunk_words[-1].end
-        text = " ".join(w.word.upper() for w in chunk_words)
         chunks.append((start, end, text))
         i += size
 
@@ -65,7 +79,7 @@ def build_caption_ass(track: VoiceTrack, dest: Path, vertical: bool = True) -> P
 ScriptType: v4.00+
 PlayResX: {play_w}
 PlayResY: {play_h}
-WrapStyle: 2
+WrapStyle: 0
 ScaledBorderAndShadow: yes
 YCbCr Matrix: TV.709
 
