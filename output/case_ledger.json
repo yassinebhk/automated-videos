@@ -1,11 +1,15 @@
 {
   "cases": {
     "kio": {
-      "count": 1,
+      "count": 2,
       "history": [
         {
           "ts": "2026-08-24T07:57:23.240427+00:00",
           "topic": "Caso KIO fraude bursátil 300 millones"
+        },
+        {
+          "ts": "2026-08-24T08:54:20.025553+00:00",
+          "topic": "[CRIMEN] El caso KIO: 300 millones de euros de fraude bursátil y la caída de los hermanos Al-Zayat"
         }
       ]
     },
