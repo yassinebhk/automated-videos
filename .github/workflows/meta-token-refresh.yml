@@ -1,0 +1,65 @@
+name: Meta Token Refresh
+
+# IG y Threads emiten tokens long-lived de 60 días, refrescables vía
+# graph.instagram.com/refresh_access_token y graph.threads.net/refresh_access_token.
+# Este workflow renueva ambos cada domingo → efectivamente no caducan mientras
+# corra al menos una vez cada ~55 días.
+#
+# Requiere secret REPO_ADMIN_PAT (fine-grained PAT con permiso
+# "Secrets: Read and write" sobre este repo).
+
+on:
+  schedule:
+    # domingos 03:00 UTC — bajo tráfico, sin colisión con autogen/longgen
+    - cron: "0 3 * * 0"
+  workflow_dispatch:
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Refresh Instagram token
+        env:
+          IG_TOKEN:       ${{ secrets.IG_TOKEN }}
+          GH_TOKEN:       ${{ secrets.REPO_ADMIN_PAT }}
+        run: |
+          set -eu
+          if [ -z "${IG_TOKEN:-}" ]; then
+            echo "IG_TOKEN vacío — skip refresh"
+            exit 0
+          fi
+          echo "Refrescando IG token…"
+          RESP=$(curl -s "https://graph.instagram.com/refresh_access_token?grant_type=ig_refresh_token&access_token=$IG_TOKEN")
+          NEW_TOKEN=$(echo "$RESP" | python3 -c 'import sys,json; d=json.load(sys.stdin); print(d.get("access_token",""))')
+          EXPIRES_IN=$(echo "$RESP" | python3 -c 'import sys,json; d=json.load(sys.stdin); print(d.get("expires_in",""))')
+          if [ -z "$NEW_TOKEN" ]; then
+            echo "❌ Refresh IG falló: $RESP"
+            exit 1
+          fi
+          DAYS=$(( EXPIRES_IN / 86400 ))
+          echo "✅ IG token nuevo válido $DAYS días"
+          echo -n "$NEW_TOKEN" | gh secret set IG_TOKEN --repo "$GITHUB_REPOSITORY"
+        # gh CLI usa GH_TOKEN — pasamos el PAT que sí tiene secrets:write
+        # (el GITHUB_TOKEN estándar no puede modificar secrets)
+
+      - name: Refresh Threads token
+        env:
+          THREADS_TOKEN:  ${{ secrets.THREADS_TOKEN }}
+          GH_TOKEN:       ${{ secrets.REPO_ADMIN_PAT }}
+        run: |
+          set -eu
+          if [ -z "${THREADS_TOKEN:-}" ]; then
+            echo "THREADS_TOKEN vacío — skip refresh"
+            exit 0
+          fi
+          echo "Refrescando Threads token…"
+          RESP=$(curl -s "https://graph.threads.net/refresh_access_token?grant_type=th_refresh_token&access_token=$THREADS_TOKEN")
+          NEW_TOKEN=$(echo "$RESP" | python3 -c 'import sys,json; d=json.load(sys.stdin); print(d.get("access_token",""))')
+          EXPIRES_IN=$(echo "$RESP" | python3 -c 'import sys,json; d=json.load(sys.stdin); print(d.get("expires_in",""))')
+          if [ -z "$NEW_TOKEN" ]; then
+            echo "⚠️ Refresh Threads falló: $RESP"
+            exit 0  # no bloquea (Threads es opcional)
+          fi
+          DAYS=$(( EXPIRES_IN / 86400 ))
+          echo "✅ Threads token nuevo válido $DAYS días"
+          echo -n "$NEW_TOKEN" | gh secret set THREADS_TOKEN --repo "$GITHUB_REPOSITORY"
