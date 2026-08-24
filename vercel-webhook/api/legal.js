@@ -4,7 +4,7 @@
 const TOS = `<!DOCTYPE html><html lang="es"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="tiktok-developers-site-verification" content="OmgJZY3V5Yu3nm0zofXPViJhSvYHyyKL">
+<meta name="tiktok-developers-site-verification" content="Va82lakWs7jaMizQqtDc5w1bzy3MdGEH">
 <title>Terms of Service — WaitWhy Autopost</title>
 <style>body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;max-width:720px;margin:2rem auto;padding:1rem;line-height:1.6;color:#222}h1{border-bottom:2px solid #333;padding-bottom:.5rem}h2{margin-top:2rem}code{background:#f4f4f4;padding:.1rem .3rem;border-radius:3px}</style>
 </head><body>
@@ -27,7 +27,7 @@ const TOS = `<!DOCTYPE html><html lang="es"><head>
 const PRIVACY = `<!DOCTYPE html><html lang="es"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="tiktok-developers-site-verification" content="OmgJZY3V5Yu3nm0zofXPViJhSvYHyyKL">
+<meta name="tiktok-developers-site-verification" content="Va82lakWs7jaMizQqtDc5w1bzy3MdGEH">
 <title>Privacy Policy — WaitWhy Autopost</title>
 <style>body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;max-width:720px;margin:2rem auto;padding:1rem;line-height:1.6;color:#222}h1{border-bottom:2px solid #333;padding-bottom:.5rem}h2{margin-top:2rem}code{background:#f4f4f4;padding:.1rem .3rem;border-radius:3px}</style>
 </head><body>
