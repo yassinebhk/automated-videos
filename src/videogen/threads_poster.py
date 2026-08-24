@@ -65,10 +65,13 @@ def _publish_thread(access_token: str, user_id: str, container_id: str) -> Optio
 def post_short_to_threads(video_title: str, video_url: str,
                           teaser: str = "", dry_run: bool = False) -> dict[str, Any] | None:
     """Publica un thread (post + reply) en Threads. Devuelve dict o None."""
-    access_token = os.environ.get("THREADS_ACCESS_TOKEN")
+    # THREADS_TOKEN es el nombre nuevo (setup 2025 con "Generate Token" en
+    # el panel developer). THREADS_ACCESS_TOKEN es el legacy — mantenemos
+    # ambos para no romper entornos antiguos.
+    access_token = os.environ.get("THREADS_TOKEN") or os.environ.get("THREADS_ACCESS_TOKEN")
     user_id = os.environ.get("THREADS_USER_ID")
     if not (access_token and user_id):
-        print("  threads: skip — faltan THREADS_ACCESS_TOKEN o THREADS_USER_ID")
+        print("  threads: skip — faltan THREADS_TOKEN o THREADS_USER_ID")
         return None
 
     from . import social_post
