@@ -1,0 +1,27 @@
+// Homepage con el meta tag de verificación TikTok. Servido en / via
+// rewrite en vercel.json.
+
+const HTML = `<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="tiktok-developers-site-verification" content="OmgJZY3V5Yu3nm0zofXPViJhSvYHyyKL">
+<title>WaitWhy Autopost</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 640px; margin: 4rem auto; padding: 1rem; line-height: 1.6; color: #222; text-align: center; }
+  h1 { font-size: 2rem; }
+  a { color: #2563eb; }
+</style>
+</head>
+<body>
+<h1>WaitWhy Autopost</h1>
+<p>Personal automation service for cross-posting a single Spanish-language media channel's content across YouTube, Instagram, Threads, TikTok, Bluesky, and Mastodon.</p>
+<p><a href="/legal/tos">Terms of Service</a> · <a href="/legal/privacy">Privacy Policy</a></p>
+</body>
+</html>`;
+
+export default function handler(req, res) {
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.status(200).send(HTML);
+}

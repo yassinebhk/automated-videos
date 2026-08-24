@@ -1,3 +1,11 @@
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json"
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    { "source": "/", "destination": "/api/index" },
+    { "source": "/legal/tos", "destination": "/api/legal?page=tos" },
+    { "source": "/legal/tos.html", "destination": "/api/legal?page=tos" },
+    { "source": "/legal/privacy", "destination": "/api/legal?page=privacy" },
+    { "source": "/legal/privacy.html", "destination": "/api/legal?page=privacy" },
+    { "source": "/tiktokOmgJZY3V5Yu3nm0zofXPViJhSvYHyyKL.txt", "destination": "/api/tiktok-verify" }
+  ]
 }
