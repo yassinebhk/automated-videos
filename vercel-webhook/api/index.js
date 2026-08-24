@@ -23,5 +23,8 @@ const HTML = `<!DOCTYPE html>
 
 export default function handler(req, res) {
   res.setHeader("Content-Type", "text/html; charset=utf-8");
+  // No-cache: TikTok verifier hace HEAD/GET del meta tag y necesita
+  // ver el token vigente inmediatamente, no una versión cacheada.
+  res.setHeader("Cache-Control", "no-store, max-age=0, must-revalidate");
   res.status(200).send(HTML);
 }
