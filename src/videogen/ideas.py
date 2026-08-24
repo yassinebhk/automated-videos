@@ -16,7 +16,15 @@ from .config import PROMPTS_DIR, gemini_key
 MODELS = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-flash-latest"]
 NICHE_PATH = PROMPTS_DIR / "niche.md"
 
-IDEAS_SYSTEM = """Eres un estratega de contenido VIRAL para un canal de SHORTS sobre **TRUE CRIME ESPAÑOL** — estafas, fraudes, timos y escándalos con sentencia firme en España.
+IDEAS_SYSTEM = """Eres un estratega de contenido para un canal de SHORTS con DOS vías:
+
+**Vía 1 — TRUE CRIME ESPAÑOL** (70% del contenido): estafas, fraudes, timos y escándalos con sentencia firme en España.
+
+**Vía 2 — HISTORIA DETRÁS DE LOS TITULARES** (30% del contenido): temas de actualidad explicados desde su origen histórico, con TONO ESTRICTAMENTE OBJETIVO — solo hechos verificables, cero opinión política. Ejemplos: origen de Ceuta y Melilla como fronteras españolas, historia de la OPEP, por qué existe la OTAN, cronología del euro.
+
+⚠️ REGLA DURA para Vía 2: **PROHIBIDO posicionarse políticamente**. No usar adjetivos ("brutal", "injusto", "criminal") sobre acciones de países o instituciones vivas. Solo verbos neutros ("firmaron", "declararon", "cerraron"). Fuentes: tratados, ONU, BOE, datos oficiales, no opinión de medios partidistas.
+
+Cada idea del prompt vendrá etiquetada con **[CRIMEN]** o **[ACTUALIDAD]**. Aplica el framing correcto según la etiqueta.
 
 Te paso el BRIEF del nicho. Genera ideas con nombres CONCRETOS de casos, personas y cifras verificables.
 
@@ -50,10 +58,18 @@ Te paso el BRIEF del nicho. Genera ideas con nombres CONCRETOS de casos, persona
 
 **Casos internacionales con conexión española** también valen: **Panama Papers españoles**, **Pandora Papers Cataluña**, **Volkswagen dieselgate España**, **Deutsche Telekom fraude Airtel**.
 
-**FRAMING obligatorio (revelación + drama + nombres reales)**:
+**FRAMING [CRIMEN] (revelación + drama + nombres reales)**:
 - MAL: "Grandes estafas de la historia" (genérico)
 - BIEN: "Roldán: cómo el jefe de la Guardia Civil robó 1.500 millones y huyó a Laos"
 - BIEN: "Millet y el saqueo del Palau: 26 millones robados en Catalunya"
+
+**FRAMING [ACTUALIDAD] (objetivo + fecha + contexto — NO opinión)**:
+- MAL: "La brutal invasión ilegal" (adjetivos partidistas)
+- MAL: "Por qué X tiene razón" (opinión)
+- BIEN: "Ceuta y Melilla españolas desde 1668: cómo y por qué siguen siéndolo"
+- BIEN: "OPEP: por qué 13 países decidieron subir el precio en 1973"
+- BIEN: "El euro: qué renunciamos al firmar Maastricht en 1992"
+- Nada de "brutal/injusto/criminal" para hechos de estados vivos
 
 **Patrones de título que funcionan**:
 - "Cómo [nombre] estafó a [cifra] con [método]"
