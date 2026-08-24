@@ -10,11 +10,13 @@ import crypto from "node:crypto";
 
 // user.info.basic → obtener open_id + username (necesario para el poster)
 // video.upload    → subir a bandeja de borradores (Sandbox, sin review)
-// video.publish   → publicar directo (requiere app review, se añadirá tras aprobación)
+//
+// video.publish se AÑADIRÁ AQUÍ una vez TikTok apruebe la review — hasta
+// entonces, incluirlo en la petición hace que TikTok rechace la auth con
+// "invalid_scope" porque el scope no está registrado en el app dashboard.
 const SCOPES = [
   "user.info.basic",
   "video.upload",
-  "video.publish",  // se ignora si no aprobada — TikTok emite token con solo los aprobados
 ];
 
 function signState(payload, secret) {

@@ -35,7 +35,7 @@
 <p>No data is shared with any third party. Videos are posted directly from a GitHub Actions runner to the TikTok Content Posting API endpoints.</p>
 
 <h2>5. Data Retention</h2>
-<p>OAuth tokens are stored encrypted in GitHub Actions Secrets and rotated periodically. Video files are stored in the GitHub repository (public via jsDelivr CDN as required by TikTok's PULL_FROM_URL flow). No user data is retained.</p>
+<p>OAuth tokens are stored encrypted in GitHub Actions Secrets and rotated periodically. Video files are transmitted directly to TikTok via the Content Posting API's FILE_UPLOAD chunked HTTP flow. No user data is retained.</p>
 
 <h2>6. Deletion Requests</h2>
 <p>As no third-party data is collected, no deletion process applies. To revoke tool access, the account owner can revoke the app authorization in TikTok's developer settings at any time.</p>
