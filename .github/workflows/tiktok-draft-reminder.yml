@@ -1,0 +1,58 @@
+name: TikTok Draft Reminder
+
+# 19:30 CEST diario — prime time engagement TikTok ES. Envía reminder por
+# Telegram para publicar el draft del día. Sandbox mode no permite
+# autopublicar drafts (exige video.publish tras review 2-4 sem); este
+# reminder es el atajo mientras.
+
+on:
+  schedule:
+    # 17:30 UTC = 19:30 CEST (verano) / 18:30 CET (invierno).
+    - cron: "30 17 * * *"
+  workflow_dispatch:
+
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send TikTok draft reminder
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID:   ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          python3 <<'PY'
+          import json, os, urllib.request
+
+          tok = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+          chat = os.environ.get("TELEGRAM_CHAT_ID", "")
+          if not (tok and chat):
+              print("Telegram no configurado — skip")
+              raise SystemExit(0)
+
+          msg = (
+              "🎵 <b>Recuerda publicar tu draft de TikTok</b>\n\n"
+              "Tienes el video de hoy esperando en <b>Borradores</b> "
+              "de @interest_stuff.\n\n"
+              "<b>2 taps:</b>\n"
+              "1. Abre app TikTok\n"
+              "2. Perfil → Borradores → toca el video → <b>Publicar</b>\n\n"
+              "⏰ Ahora es prime time engagement (19:30-22:00 CEST) — "
+              "publicar ya rinde 3-5× más que a mediodía.\n\n"
+              "<i>(Este reminder desaparece cuando TikTok apruebe el review "
+              "para direct-post — 2-4 semanas.)</i>"
+          )
+
+          req = urllib.request.Request(
+              f"https://api.telegram.org/bot{tok}/sendMessage",
+              data=json.dumps({
+                  "chat_id": int(chat),
+                  "text": msg,
+                  "parse_mode": "HTML",
+                  "disable_web_page_preview": True,
+              }).encode(),
+              headers={"Content-Type": "application/json"},
+          )
+          with urllib.request.urlopen(req, timeout=30) as r:
+              resp = json.loads(r.read())
+          print("sent" if resp.get("ok") else f"fail: {resp}")
+          PY
