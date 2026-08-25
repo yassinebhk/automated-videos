@@ -808,16 +808,20 @@ def backfill_once_cmd(per_platform: int):
     chat = os.environ.get("TELEGRAM_CHAT_ID")
     if tok and chat:
         lines = ["🔁 <b>Backfill diario</b>"]
-        any_posted = False
-        for plat, items in results.items():
+        any_activity = False
+        for plat, r in results.items():
             icon = {"tiktok": "🎵", "instagram": "📸", "threads": "🧵"}.get(plat, "•")
-            if not items:
-                lines.append(f"{icon} {plat}: sin candidatos")
-            else:
-                any_posted = True
-                for x in items:
-                    lines.append(f"{icon} {plat}: {x['title'][:60]} ({x['views']}v)")
-        if any_posted or not results:
+            posted = r.get("posted", [])
+            failed = r.get("failed", [])
+            if not posted and not failed:
+                lines.append(f"{icon} {plat}: 0 candidatos")
+            for x in posted:
+                any_activity = True
+                lines.append(f"{icon} {plat} ✅: {x['title'][:60]} ({x['views']}v)")
+            for x in failed:
+                any_activity = True
+                lines.append(f"{icon} {plat} ❌: {x['title'][:60]} — download/post falló")
+        if any_activity or not results:
             try:
                 req = urllib.request.Request(
                     f"https://api.telegram.org/bot{tok}/sendMessage",
@@ -829,8 +833,8 @@ def backfill_once_cmd(per_platform: int):
             except Exception as e:
                 print(f"tg notify fail: {e}")
 
-    for plat, items in results.items():
-        print(f"{plat}: {len(items)} reposted")
+    for plat, r in results.items():
+        print(f"{plat}: {len(r.get('posted', []))} posted, {len(r.get('failed', []))} failed")
 
 
 @cli.command(name="dispatch")

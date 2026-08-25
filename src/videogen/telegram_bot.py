@@ -1448,13 +1448,17 @@ async def backfill_cmd(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> None:
         await ctx.bot.send_message(chat_id, f"❌ backfill falló: {type(e).__name__}: {e}")
         return
     lines = ["🔁 <b>Backfill completo</b>"]
-    for plat, items in results.items():
+    for plat, r in results.items():
         icon = {"tiktok": "🎵", "instagram": "📸", "threads": "🧵"}.get(plat, "•")
-        if not items:
-            lines.append(f"{icon} {plat}: sin candidatos (ya reposteados o &lt;20 views)")
-        else:
-            for x in items:
-                lines.append(f"{icon} {plat}: <i>{x['title'][:60]}</i> ({x['views']}v)")
+        posted = r.get("posted", [])
+        failed = r.get("failed", [])
+        found = r.get("candidates_found", 0)
+        if not posted and not failed:
+            lines.append(f"{icon} {plat}: 0 candidatos (todos reposteados o &lt;20v)")
+        for x in posted:
+            lines.append(f"{icon} {plat} ✅: <i>{x['title'][:60]}</i> ({x['views']}v)")
+        for x in failed:
+            lines.append(f"{icon} {plat} ❌: <i>{x['title'][:60]}</i> ({x['views']}v — download/post falló, ver logs)")
     await ctx.bot.send_message(chat_id, "\n".join(lines), parse_mode="HTML")
 
 

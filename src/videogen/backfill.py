@@ -144,25 +144,29 @@ def _ensure_vertical_local(cand: dict[str, Any]) -> Path | None:
     url = f"https://youtube.com/shorts/{cand['video_id']}"
     try:
         import subprocess
-        # yt-dlp mp4 en la mejor calidad disponible <=1080p (para 9:16 shorts)
+        # Selector `b[ext=mp4]/best`: pide UN stream mp4 ya pre-mergeado, sin
+        # requerir ffmpeg. Los YT Shorts casi siempre tienen mp4 progresivo
+        # (video+audio en un solo fichero) hasta 720p → suficiente para reciclar.
         cmd = [
             "yt-dlp",
-            "-f", "bestvideo[height<=1920]+bestaudio/best",
-            "--merge-output-format", "mp4",
+            "-f", "b[ext=mp4]/b",
             "-o", str(path),
-            "--quiet", "--no-warnings",
+            "--no-warnings",
+            "--no-playlist",
             url,
         ]
         r = subprocess.run(cmd, capture_output=True, text=True, timeout=180)
         if r.returncode != 0:
-            print(f"  backfill: yt-dlp fail para {cand['video_id']} — {r.stderr[:200]}")
+            stderr = (r.stderr or r.stdout or "")[:300]
+            print(f"  backfill: yt-dlp fail para {cand['video_id']} — {stderr}")
             return None
         if not path.exists() or path.stat().st_size < 100_000:
             print(f"  backfill: yt-dlp completó pero mp4 vacío: {path}")
             return None
+        print(f"  backfill: descargado {path.stat().st_size // 1024}KB → {path.name}")
         return path
     except FileNotFoundError:
-        print("  backfill: yt-dlp no instalado (falta dep en el entorno)")
+        print("  backfill: yt-dlp CLI no encontrado (dep no instalada)")
         return None
     except Exception as e:
         print(f"  backfill: yt-dlp exception — {type(e).__name__}: {e}")
@@ -179,26 +183,34 @@ def mark_backfilled(slug: str, platform: str) -> None:
 
 
 def backfill_once(platforms: list[str] | None = None,
-                   per_platform: int = 2) -> dict[str, list[dict[str, Any]]]:
+                   per_platform: int = 2) -> dict[str, dict]:
     """Ejecuta un ciclo de backfill: para cada plataforma, coge top N y postea.
 
-    Devuelve dict {platform: [resultados]}.
+    Devuelve dict {platform: {posted: [...], failed: [...], candidates_found: N}}
+    para diagnóstico claro (¿0 candidatos vs 3 candidatos-todos-fallaron?).
     """
     if platforms is None:
         platforms = ["tiktok", "instagram", "threads"]
 
-    results: dict[str, list[dict[str, Any]]] = {}
+    results: dict[str, dict] = {}
 
     for platform in platforms:
         candidates = pick_top_candidates(platform, n=per_platform)
-        results[platform] = []
+        posted: list[dict[str, Any]] = []
+        failed: list[dict[str, Any]] = []
         for cand in candidates:
             outcome = _post_to_platform(platform, cand)
             if outcome:
                 mark_backfilled(cand["slug"], platform)
-                results[platform].append({**cand, "result": outcome})
-            # Espaciar posts para evitar rate-limit
+                posted.append({**cand, "result": outcome})
+            else:
+                failed.append(cand)
             time.sleep(20)
+        results[platform] = {
+            "posted": posted,
+            "failed": failed,
+            "candidates_found": len(candidates),
+        }
     return results
 
 
