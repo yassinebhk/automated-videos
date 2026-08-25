@@ -71,15 +71,20 @@ def _init_upload(access_token: str, video_size: int, endpoint: str,
                  post_info: Optional[dict] = None) -> Optional[dict]:
     """Inicia FILE_UPLOAD chunked. Devuelve dict con upload_url + publish_id.
 
-    Reglas TikTok API:
-    - chunk_size ∈ [5MB, 64MB]
-    - total_chunk_count = ceil(video_size / chunk_size), pero SIEMPRE ≥ 1
-    - último chunk puede ser < chunk_size, pero chunk_size NO puede ser < 5MB
-    - por eso para videos < 5MB usamos chunk_size = 5MB (declarado) + upload
-      real de video_size bytes con Content-Range correspondiente.
+    Reglas TikTok API observadas empíricamente (dificultan lo que dicen los
+    docs): TikTok exige chunk_size ≤ video_size EN el init. Es decir NO
+    puedes declarar chunk_size 10MB si video pesa 3MB. Fórmula usada:
+    - Si video < 5MB: chunk_size = video_size + total_chunk_count = 1
+    - Si video >= 5MB: chunk_size = min(video_size, CHUNK_SIZE) +
+      total_chunk_count = ceil(video_size / chunk_size)
     """
-    chunk_size = max(TT_MIN_CHUNK, min(CHUNK_SIZE, TT_MAX_CHUNK))
-    total_chunks = max(1, (video_size + chunk_size - 1) // chunk_size)
+    if video_size < TT_MIN_CHUNK:
+        chunk_size = video_size
+        total_chunks = 1
+    else:
+        chunk_size = min(video_size, CHUNK_SIZE)
+        total_chunks = (video_size + chunk_size - 1) // chunk_size
+    print(f"  tt: init video={video_size}B chunk={chunk_size}B count={total_chunks}")
 
     body: dict[str, Any] = {
         "source_info": {
