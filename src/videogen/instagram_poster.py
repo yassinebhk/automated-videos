@@ -122,7 +122,8 @@ def _wait_container_ready(access_token: str, container_id: str, max_wait: int = 
     ratio wrong. Logueamos toda la respuesta para diagnosticar.
     """
     start = time.time()
-    last_status = ""
+    last_status = None
+    poll_count = 0
     while time.time() - start < max_wait:
         r = requests.get(
             f"{IG_API_BASE}/{container_id}",
@@ -132,7 +133,9 @@ def _wait_container_ready(access_token: str, container_id: str, max_wait: int = 
         )
         d = r.json()
         st = d.get("status_code", "").upper()
-        if st != last_status:
+        poll_count += 1
+        # Log SIEMPRE la primera lectura + cambios de estado + cada 60s.
+        if last_status is None or st != last_status or (poll_count % 12 == 0):
             elapsed = int(time.time() - start)
             print(f"  ig: status@{elapsed}s = {st or '(vacío)'} · full={str(d)[:400]}")
             last_status = st
