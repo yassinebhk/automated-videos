@@ -91,12 +91,21 @@ jobs:
           TIKTOK_CLIENT_SECRET: ${{ secrets.TIKTOK_CLIENT_SECRET }}
           TIKTOK_OPEN_ID:       ${{ secrets.TIKTOK_OPEN_ID }}
           TIKTOK_MODE:          ${{ vars.TIKTOK_MODE || 'auto' }}
+          # yt-dlp cookies: si YT_COOKIES está seteado, el step "run" abajo
+          # lo escribe a /tmp/yt_cookies.txt y backfill._ensure_vertical_local
+          # lo pasa a yt-dlp con --cookies (bypass bot-check en runners cloud).
+          YT_COOKIES:           ${{ secrets.YT_COOKIES }}
           VOICE_ENGINE:          ${{ vars.VOICE_ENGINE || 'edge' }}
           KOKORO_VOICE_ES:       ${{ vars.KOKORO_VOICE_ES }}
           WEBHOOK_URL:           ${{ vars.WEBHOOK_URL }}
           AUTOGEN_PUBLISH_HOUR:  ${{ inputs.publish_hour || '21' }}
         run: |
           mkdir -p secrets
+          # Dump YT_COOKIES a /tmp/yt_cookies.txt para backfill/yt-dlp
+          if [ -n "$YT_COOKIES" ]; then
+            printf '%s\n' "$YT_COOKIES" > /tmp/yt_cookies.txt
+            echo "YT_COOKIES escrito en /tmp/yt_cookies.txt ($(wc -c < /tmp/yt_cookies.txt) bytes)"
+          fi
           # Genera un token JSON mínimo que google-auth OAuth2 acepta.
           # Al primer uso hace refresh automático y rellena access_token.
           python3 - <<'PY'

@@ -142,21 +142,22 @@ def _ensure_vertical_local(cand: dict[str, Any]) -> Path | None:
 
     path.parent.mkdir(parents=True, exist_ok=True)
     video_id = cand["video_id"]
-    # /watch?v= evita el fingerprint específico de la URL /shorts/ que YT
-    # revisa con más severidad.
     url = f"https://www.youtube.com/watch?v={video_id}"
-    import subprocess
+    import os, subprocess
 
-    # Estrategia multi-cliente para saltar bot-check: probar Android (que casi
-    # siempre funciona en runners cloud), luego iOS, luego TV embed, y solo
-    # como último recurso el web client (el que dispara "confirma que eres
-    # persona"). yt-dlp acepta el flag --extractor-args con cliente específico.
+    # Cookies file: si YT_COOKIES secret está presente, el workflow lo dump-ea
+    # en /tmp/yt_cookies.txt antes de invocarnos. Esto salta el bot-check de YT
+    # en runners cloud (fetch autenticado con la sesión del user).
+    cookies_file = os.environ.get("YT_COOKIES_FILE") or "/tmp/yt_cookies.txt"
+    has_cookies = os.path.exists(cookies_file) and os.path.getsize(cookies_file) > 100
+    cookie_args = ["--cookies", cookies_file] if has_cookies else []
+
     base_ua = "Mozilla/5.0 (Linux; Android 14; SM-S921B) AppleWebKit/537.36"
     strategies = [
         ["--extractor-args", "youtube:player_client=android,web_embedded", "--user-agent", base_ua],
         ["--extractor-args", "youtube:player_client=ios"],
         ["--extractor-args", "youtube:player_client=tv_embedded"],
-        [],  # último recurso: cliente web (probablemente falla en runner)
+        [],
     ]
 
     for i, extra in enumerate(strategies):
@@ -166,6 +167,7 @@ def _ensure_vertical_local(cand: dict[str, Any]) -> Path | None:
             "-o", str(path),
             "--no-warnings",
             "--no-playlist",
+            *cookie_args,
             *extra,
             url,
         ]
@@ -179,11 +181,14 @@ def _ensure_vertical_local(cand: dict[str, Any]) -> Path | None:
             continue
 
         if r.returncode == 0 and path.exists() and path.stat().st_size >= 100_000:
-            print(f"  backfill: descargado {path.stat().st_size // 1024}KB via estrategia {i+1}")
+            src = "cookies+" if has_cookies else ""
+            print(f"  backfill: descargado {path.stat().st_size // 1024}KB via {src}estrategia {i+1}")
             return path
         stderr = (r.stderr or r.stdout or "")[:200]
         print(f"  backfill: estrategia {i+1} falló ({video_id}) — {stderr}")
 
+    if not has_cookies:
+        print("  backfill: sin YT_COOKIES secret — YT bloquea el runner. Setup en README.")
     return None
 
 
