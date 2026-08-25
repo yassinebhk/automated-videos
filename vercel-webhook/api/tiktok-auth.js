@@ -8,15 +8,19 @@
 
 import crypto from "node:crypto";
 
-// user.info.basic → obtener open_id + username (necesario para el poster)
-// video.upload    → subir a bandeja de borradores (Sandbox, sin review)
+// user.info.basic  → obtener open_id + username (necesario para el poster)
+// user.info.stats  → total likes/followers/videos (para daily summary)
+// video.upload     → subir a bandeja de borradores (Sandbox, sin review)
+// video.list       → leer views/likes/comments por video (para daily summary)
 //
 // video.publish se AÑADIRÁ AQUÍ una vez TikTok apruebe la review — hasta
 // entonces, incluirlo en la petición hace que TikTok rechace la auth con
 // "invalid_scope" porque el scope no está registrado en el app dashboard.
 const SCOPES = [
   "user.info.basic",
+  "user.info.stats",
   "video.upload",
+  "video.list",
 ];
 
 function signState(payload, secret) {
