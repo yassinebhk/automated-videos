@@ -157,9 +157,16 @@ def _upload_chunks(local_mp4: Path, upload_url: str, chunk_size: int,
     return True
 
 
-def _poll_status(access_token: str, publish_id: str, max_wait: int = 300) -> Optional[str]:
-    """Espera a que TikTok procese el video. Devuelve status final."""
+def _poll_status(access_token: str, publish_id: str, max_wait: int = 120) -> Optional[str]:
+    """Espera a que TikTok procese el video. Devuelve status final.
+
+    TikTok sandbox uploads a veces quedan en PROCESSING_UPLOAD indefinidamente
+    sin llegar a terminal. Logging cada 30s para diagnosticar. Timeout bajo
+    (120s) porque el status polling no bloquea nada — si TT tarda más, el
+    video probablemente sí llegó a inbox pero TT no lo marca listo.
+    """
     start = time.time()
+    last_status = ""
     while time.time() - start < max_wait:
         r = requests.post(
             f"{TT_API}/post/publish/status/fetch/",
@@ -176,13 +183,17 @@ def _poll_status(access_token: str, publish_id: str, max_wait: int = 300) -> Opt
             continue
         data = d.get("data") or {}
         status = (data.get("status") or "").upper()
+        if status != last_status:
+            elapsed = int(time.time() - start)
+            print(f"  tt: status@{elapsed}s = {status or '(vacío)'} · full={str(d)[:250]}")
+            last_status = status
         if status in ("PUBLISH_COMPLETE", "SEND_TO_USER_INBOX"):
             return status
         if status == "FAILED":
             print(f"  tt: status FAILED — {d}")
             return status
-        time.sleep(5)
-    print(f"  tt: status timeout tras {max_wait}s")
+        time.sleep(10)
+    print(f"  tt: status timeout tras {max_wait}s (último status = '{last_status}')")
     return None
 
 
