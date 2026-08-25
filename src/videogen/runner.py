@@ -191,6 +191,10 @@ async def _dispatch_command_impl(cmd: str, args_text: str = "") -> None:
         effective_chat = _FakeChat()
         message = _FakeMessage()
 
+    # Los handlers PTB reciben args vía ctx.args (list[str]). El dispatcher
+    # los split-ea desde args_text para replicar la firma esperada por PTB.
+    ctx.args = args_text.split() if args_text else []
+
     update = _FakeUpdate()
     table = {
         "autogen": telegram_bot.autogen_cmd,
@@ -202,6 +206,8 @@ async def _dispatch_command_impl(cmd: str, args_text: str = "") -> None:
         "stats": telegram_bot.stats_cmd,
         "help": telegram_bot.help_cmd,
         "start": telegram_bot.start,
+        "backfill": telegram_bot.backfill_cmd,
+        "tiktok_auth": telegram_bot.tiktok_auth_cmd,
     }
     handler = table.get(cmd)
     if not handler:
