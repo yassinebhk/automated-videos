@@ -2140,7 +2140,70 @@ async def _build_daily_report(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> i
     except Exception:
         pass
 
-    # --- 4) Salud sistema: token YT + próximo cron ---
+    # --- 4) Instagram ---
+    ig_line = "📸 <b>Instagram</b>: no configurado"
+    try:
+        import requests as _req
+        ig_tok = _os.environ.get("IG_TOKEN")
+        ig_uid = _os.environ.get("IG_USER_ID")
+        if ig_tok and ig_uid:
+            base = "https://graph.instagram.com/v21.0"
+            u = _req.get(f"{base}/{ig_uid}",
+                         params={"fields": "followers_count,username",
+                                 "access_token": ig_tok}, timeout=15).json()
+            followers = u.get("followers_count", 0)
+            username = u.get("username", "waitwhy_")
+            m = _req.get(f"{base}/{ig_uid}/media",
+                         params={"fields": "like_count,comments_count",
+                                 "limit": 5, "access_token": ig_tok},
+                         timeout=15).json()
+            media = m.get("data", [])
+            tl = sum(int(x.get("like_count") or 0) for x in media)
+            tc = sum(int(x.get("comments_count") or 0) for x in media)
+            ig_line = (f"📸 <b>Instagram</b> @{username}\n"
+                       f"   👥 {followers} followers · "
+                       f"últimos {len(media)} posts: {tl}❤ {tc}💬")
+    except Exception:
+        pass
+
+    # --- 5) Threads ---
+    threads_line = "🧵 <b>Threads</b>: no configurado"
+    try:
+        import requests as _req
+        th_tok = _os.environ.get("THREADS_TOKEN")
+        th_uid = _os.environ.get("THREADS_USER_ID")
+        if th_tok and th_uid:
+            base = "https://graph.threads.net/v1.0"
+            # followers_count solo vive en /threads_insights (no en user obj).
+            ins = _req.get(f"{base}/{th_uid}/threads_insights",
+                           params={"metric": "followers_count",
+                                   "access_token": th_tok}, timeout=15).json()
+            followers = 0
+            for m in ins.get("data", []):
+                if m.get("name") == "followers_count":
+                    followers = int((m.get("total_value") or {}).get("value") or 0)
+                    break
+            u = _req.get(f"{base}/{th_uid}",
+                         params={"fields": "username", "access_token": th_tok},
+                         timeout=15).json()
+            username = u.get("username", "waitwhy_")
+            # Cuenta posts (indicador de que el pipeline los está creando)
+            posts = _req.get(f"{base}/{th_uid}/threads",
+                             params={"fields": "id", "limit": 25,
+                                     "access_token": th_tok}, timeout=15).json()
+            n_posts = len(posts.get("data", []))
+            threads_line = (f"🧵 <b>Threads</b> @{username}\n"
+                            f"   👥 {followers} followers · {n_posts} posts")
+    except Exception:
+        pass
+
+    # --- 6) TikTok (Sandbox mode: sin scope user.info.stats, solo status) ---
+    tt_line = "🎵 <b>TikTok</b>: no configurado"
+    if _os.environ.get("TIKTOK_ACCESS_TOKEN"):
+        tt_line = ("🎵 <b>TikTok</b> @interest_stuff (Sandbox)\n"
+                   "   Drafts publicables manual · review pendiente para direct-post")
+
+    # --- 7) Salud sistema: token YT + próximo cron ---
     token_ok, _ = _check_yt_token()
     token_line = "✅ activo" if token_ok else "🔴 CADUCADO — hacer /reauth"
 
@@ -2167,7 +2230,8 @@ async def _build_daily_report(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> i
                 f"{v['comments']}💬 · {lr:.1f}%LR\n      <i>{title_short}</i>"
             )
         lines.append("")
-    lines += [bsky_line, "", masto_line, "", "🤖 <b>Sistema</b>", f"   Token YT: {token_line}",
+    lines += [bsky_line, "", masto_line, "", ig_line, "", threads_line, "", tt_line, "",
+              "🤖 <b>Sistema</b>", f"   Token YT: {token_line}",
               "   Cron: daily-short 08:00+13:00 CEST · long-form dom 10:00",
               "",
               '<a href="https://youtube.com/playlist?list=PLK08iO9LACck">📼 Playlist Estafas Españolas</a>']
