@@ -30,11 +30,14 @@ from .config import UPLOADED_DIR
 HISTORY_PATH = Path(__file__).resolve().parents[2] / "output" / "stats_history.jsonl"
 CHARTS_DIR = Path(__file__).resolve().parents[2] / "output" / "charts"
 
-PLATFORMS = ("youtube", "tiktok", "instagram")
+PLATFORMS = ("youtube", "tiktok", "instagram", "threads", "bluesky", "mastodon")
 COLORS = {  # paleta cálida coherente con la UI (terracota + ocre)
     "youtube": "#c0633f",
     "tiktok": "#3a3a3a",
     "instagram": "#a84e2c",
+    "threads": "#1a1a1a",
+    "bluesky": "#0085ff",
+    "mastodon": "#6364ff",
     "ink": "#2a2521",
     "body": "#4a443c",
     "muted": "#8a8074",
@@ -112,17 +115,18 @@ def snapshot_youtube() -> list[dict]:
 
 
 def snapshot_instagram() -> list[dict]:
-    """IG Graph API (cuenta Creator/Business). Requiere IG_ACCESS_TOKEN +
-    IG_BUSINESS_ACCOUNT_ID en .env. Si faltan, devuelve [] silenciosamente."""
+    """IG Graph API (Instagram Business Login). Requiere IG_TOKEN + IG_USER_ID.
+    Fallback a legacy IG_ACCESS_TOKEN + IG_BUSINESS_ACCOUNT_ID."""
     import requests
-    token = os.environ.get("IG_ACCESS_TOKEN", "").strip()
-    ig_id = os.environ.get("IG_BUSINESS_ACCOUNT_ID", "").strip()
+    token = (os.environ.get("IG_TOKEN") or os.environ.get("IG_ACCESS_TOKEN") or "").strip()
+    ig_id = (os.environ.get("IG_USER_ID") or os.environ.get("IG_BUSINESS_ACCOUNT_ID") or "").strip()
     if not token or not ig_id:
         return []
     rows: list[dict] = []
+    base = "https://graph.instagram.com/v21.0"
     try:
         ch = requests.get(
-            f"https://graph.facebook.com/v21.0/{ig_id}",
+            f"{base}/{ig_id}",
             params={"fields": "followers_count,media_count", "access_token": token},
             timeout=15,
         ).json()
@@ -132,23 +136,19 @@ def snapshot_instagram() -> list[dict]:
             "views": 0, "likes": 0, "source": "api",
         })
         media = requests.get(
-            f"https://graph.facebook.com/v21.0/{ig_id}/media",
-            params={"fields": "id,caption,timestamp", "limit": 20, "access_token": token},
+            f"{base}/{ig_id}/media",
+            params={"fields": "id,caption,like_count,comments_count,media_type",
+                    "limit": 20, "access_token": token},
             timeout=15,
         ).json().get("data", [])
         for m in media:
-            ins = requests.get(
-                f"https://graph.facebook.com/v21.0/{m['id']}/insights",
-                params={"metric": "reach,likes,comments,plays", "access_token": token},
-                timeout=15,
-            ).json().get("data", [])
-            vals = {x["name"]: (x["values"][0].get("value") or 0) for x in ins}
             rows.append({
                 "platform": "instagram", "kind": "video",
                 "video_id": m["id"], "slug": None,
                 "title": (m.get("caption") or "")[:80],
-                "views": int(vals.get("plays") or vals.get("reach") or 0),
-                "likes": int(vals.get("likes") or 0),
+                "views": 0,  # views requiere /insights por media, coste extra
+                "likes": int(m.get("like_count") or 0),
+                "comments": int(m.get("comments_count") or 0),
                 "source": "api",
             })
     except Exception:
@@ -318,23 +318,160 @@ def record_manual(platform: str, views: int, likes: int = 0,
     return row
 
 
+def snapshot_threads() -> list[dict]:
+    """Threads via graph.threads.net. Requiere THREADS_TOKEN + THREADS_USER_ID."""
+    import requests
+    token = (os.environ.get("THREADS_TOKEN") or os.environ.get("THREADS_ACCESS_TOKEN") or "").strip()
+    th_id = os.environ.get("THREADS_USER_ID", "").strip()
+    if not token or not th_id:
+        return []
+    rows: list[dict] = []
+    base = "https://graph.threads.net/v1.0"
+    try:
+        # Followers via insights (no está en user obj)
+        followers = 0
+        try:
+            ins = requests.get(f"{base}/{th_id}/threads_insights",
+                                params={"metric": "followers_count", "access_token": token},
+                                timeout=15).json()
+            for m in ins.get("data", []):
+                if m.get("name") == "followers_count":
+                    followers = int((m.get("total_value") or {}).get("value") or 0)
+                    break
+        except Exception:
+            pass
+        rows.append({"platform": "threads", "kind": "channel",
+                     "subs": followers, "views": 0, "likes": 0, "source": "api"})
+    except Exception:
+        pass
+    return rows
+
+
+def snapshot_tiktok() -> list[dict]:
+    """TikTok via open.tiktokapis.com. Requiere TIKTOK_ACCESS_TOKEN + scopes
+    user.info.stats + video.list."""
+    import requests
+    token = os.environ.get("TIKTOK_ACCESS_TOKEN", "").strip()
+    if not token:
+        return []
+    rows: list[dict] = []
+    hdr = {"Authorization": f"Bearer {token}"}
+    try:
+        u = requests.get(
+            "https://open.tiktokapis.com/v2/user/info/",
+            headers=hdr,
+            params={"fields": "follower_count,video_count,likes_count"},
+            timeout=15,
+        ).json()
+        data = (u.get("data") or {}).get("user") or {}
+        rows.append({
+            "platform": "tiktok", "kind": "channel",
+            "subs": int(data.get("follower_count") or 0),
+            "views": 0,
+            "likes": int(data.get("likes_count") or 0),
+            "source": "api",
+        })
+        vl = requests.post(
+            "https://open.tiktokapis.com/v2/video/list/",
+            headers={**hdr, "Content-Type": "application/json"},
+            params={"fields": "id,title,view_count,like_count,comment_count,share_count"},
+            json={"max_count": 20}, timeout=15,
+        ).json()
+        for v in (vl.get("data") or {}).get("videos") or []:
+            rows.append({
+                "platform": "tiktok", "kind": "video",
+                "video_id": v.get("id"), "slug": None,
+                "title": (v.get("title") or "")[:80],
+                "views": int(v.get("view_count") or 0),
+                "likes": int(v.get("like_count") or 0),
+                "comments": int(v.get("comment_count") or 0),
+                "source": "api",
+            })
+    except Exception:
+        pass
+    return rows
+
+
+def snapshot_bluesky() -> list[dict]:
+    """Bluesky via atproto."""
+    handle = os.environ.get("BLUESKY_HANDLE", "").strip()
+    pwd = os.environ.get("BLUESKY_APP_PASSWORD", "").strip()
+    if not (handle and pwd):
+        return []
+    rows: list[dict] = []
+    try:
+        from atproto import Client
+        c = Client()
+        p = c.login(handle, pwd)
+        rows.append({"platform": "bluesky", "kind": "channel",
+                     "subs": int(p.followers_count or 0),
+                     "views": 0, "likes": 0, "source": "api"})
+        feed = c.get_author_feed(p.did, limit=20)
+        for i in feed.feed:
+            pp = i.post
+            if pp.author.did != p.did:
+                continue
+            rows.append({
+                "platform": "bluesky", "kind": "video",
+                "video_id": pp.uri.split("/")[-1], "slug": None,
+                "title": (getattr(pp.record, "text", "") or "")[:80],
+                "views": 0,
+                "likes": int(pp.like_count or 0),
+                "comments": int(pp.reply_count or 0),
+                "source": "api",
+            })
+    except Exception:
+        pass
+    return rows
+
+
+def snapshot_mastodon() -> list[dict]:
+    """Mastodon via REST API."""
+    import requests
+    instance = os.environ.get("MASTODON_INSTANCE", "https://mastodon.social").rstrip("/")
+    token = os.environ.get("MASTODON_ACCESS_TOKEN", "").strip()
+    if not token:
+        return []
+    rows: list[dict] = []
+    hdr = {"Authorization": f"Bearer {token}"}
+    try:
+        me = requests.get(f"{instance}/api/v1/accounts/verify_credentials",
+                          headers=hdr, timeout=15).json()
+        rows.append({"platform": "mastodon", "kind": "channel",
+                     "subs": int(me.get("followers_count") or 0),
+                     "views": 0, "likes": 0, "source": "api"})
+        ts = requests.get(f"{instance}/api/v1/accounts/{me['id']}/statuses",
+                          headers=hdr, params={"limit": 20}, timeout=15).json()
+        for t in ts:
+            rows.append({
+                "platform": "mastodon", "kind": "video",
+                "video_id": t.get("id"), "slug": None,
+                "title": (t.get("content") or "")[:80],
+                "views": 0,
+                "likes": int(t.get("favourites_count") or 0),
+                "comments": int(t.get("replies_count") or 0),
+                "source": "api",
+            })
+    except Exception:
+        pass
+    return rows
+
+
 def snapshot_all(progress=lambda m: None) -> dict[str, int]:
     """Snapshot de todas las plataformas con API. Devuelve {plataforma: nº filas}."""
     counts: dict[str, int] = {}
-    try:
-        yt_rows = snapshot_youtube()
-        if yt_rows:
-            record_snapshot(yt_rows)
-            counts["youtube"] = len(yt_rows)
-            progress(f"YT: {len(yt_rows)} filas")
-    except Exception as e:
-        progress(f"YT failed: {e}")
-    try:
-        ig_rows = snapshot_instagram()
-        if ig_rows:
-            record_snapshot(ig_rows)
-            counts["instagram"] = len(ig_rows)
-            progress(f"IG: {len(ig_rows)} filas")
-    except Exception as e:
-        progress(f"IG failed: {e}")
+    for platform, fn in [("youtube", snapshot_youtube),
+                          ("instagram", snapshot_instagram),
+                          ("threads", snapshot_threads),
+                          ("tiktok", snapshot_tiktok),
+                          ("bluesky", snapshot_bluesky),
+                          ("mastodon", snapshot_mastodon)]:
+        try:
+            rows = fn()
+            if rows:
+                record_snapshot(rows)
+                counts[platform] = len(rows)
+                progress(f"{platform}: {len(rows)} filas")
+        except Exception as e:
+            progress(f"{platform} failed: {e}")
     return counts
