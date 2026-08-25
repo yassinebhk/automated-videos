@@ -2411,7 +2411,6 @@ def run():
             BotCommand("autogen", "Genera+programa+envía 1 Short ahora (idem job 08:00)"),
             BotCommand("longgen", "Genera long-form + 5 clips derivados + programa todo (idem job dom 10:00)"),
             BotCommand("tiktok_auth", "🎵 Conectar TikTok via OAuth (una vez)"),
-            BotCommand("backfill", "🔁 Repostea top shorts YT a TT+IG+Threads (N por red)"),
             BotCommand("help", "Ayuda: qué puedo hacer"),
             BotCommand("stats", "Estadísticas de YouTube"),
             BotCommand("ui", "Enlace a la UI web"),

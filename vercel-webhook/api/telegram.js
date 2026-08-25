@@ -47,7 +47,7 @@ export default async function handler(req, res) {
   const allowed = new Set([
     "autogen", "longgen", "snapshot", "atomize", "send",
     "ideas", "stats", "help", "start",
-    "backfill", "tiktok_auth",
+    "tiktok_auth",
   ]);
   if (!allowed.has(cmd)) {
     await tgReply(chatId, `❌ Comando /${cmd} no soportado por el webhook.`);
