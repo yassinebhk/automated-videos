@@ -97,6 +97,15 @@
           "topic": "[ACTUALIDAD] OTAN: Por qué se creó en 1949 y cómo España firmó su ingreso en 1982 (hechos verificables)"
         }
       ]
+    },
+    "opep_petroleo": {
+      "count": 1,
+      "history": [
+        {
+          "ts": "2026-08-25T22:34:49.003306+00:00",
+          "topic": "[ACTUALIDAD] OPEP: Cómo la decisión de 1973 de subir el precio del petróleo cambió la economía mundial"
+        }
+      ]
     }
   }
 }
