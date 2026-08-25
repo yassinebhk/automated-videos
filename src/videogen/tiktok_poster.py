@@ -78,11 +78,14 @@ def _init_upload(access_token: str, video_size: int, endpoint: str,
     - Si video >= 5MB: chunk_size = min(video_size, CHUNK_SIZE) +
       total_chunk_count = ceil(video_size / chunk_size)
     """
-    if video_size < TT_MIN_CHUNK:
+    if video_size <= TT_MAX_CHUNK:
+        # Single chunk: mucho más fiable. TikTok acepta chunk_size==video_size
+        # incluso si es < 5MB, cuando total_chunk_count == 1.
         chunk_size = video_size
         total_chunks = 1
     else:
-        chunk_size = min(video_size, CHUNK_SIZE)
+        # >64MB → obligado multi-chunk. Chunk size fijo 10MB.
+        chunk_size = CHUNK_SIZE
         total_chunks = (video_size + chunk_size - 1) // chunk_size
     print(f"  tt: init video={video_size}B chunk={chunk_size}B count={total_chunks}")
 

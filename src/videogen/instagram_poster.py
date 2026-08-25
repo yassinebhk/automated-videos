@@ -50,14 +50,47 @@ IG_API_BASE = "https://graph.instagram.com/v21.0"
 
 
 def _prepare_public_reel(local_mp4: Path, slug: str) -> Optional[str]:
-    """Copia el vídeo a docs/reels/<slug>.mp4 para exponerlo vía GH Pages.
-    Devuelve la URL pública o None si falla."""
+    """Copia el vídeo a docs/reels/<slug>.mp4, commit + push a main para
+    que jsDelivr lo sirva, y devuelve la URL pública.
+
+    Sin commit+push, jsDelivr no ve el fichero (aún no está en el repo main),
+    IG hace fetch → 404 → container ERROR. Con commit inmediato + espera
+    corta, jsDelivr indexa en segundos."""
     if not local_mp4.exists():
         return None
     REELS_HOST_DIR.mkdir(parents=True, exist_ok=True)
     dst = REELS_HOST_DIR / f"{slug}.mp4"
     if not dst.exists() or dst.stat().st_size != local_mp4.stat().st_size:
         shutil.copy2(local_mp4, dst)
+
+    # Commit + push del mp4 antes de que IG intente descargarlo. Silencioso
+    # si falla — el flujo sigue y IG lo notificará como container ERROR.
+    import subprocess
+    try:
+        subprocess.run(["git", "config", "user.name", "videogen-bot"],
+                       cwd=ROOT, check=False, capture_output=True, timeout=10)
+        subprocess.run(["git", "config", "user.email", "bot@videogen.local"],
+                       cwd=ROOT, check=False, capture_output=True, timeout=10)
+        subprocess.run(["git", "add", str(dst.relative_to(ROOT))],
+                       cwd=ROOT, check=False, capture_output=True, timeout=10)
+        r = subprocess.run(["git", "commit", "-m", f"reel: {slug} [skip ci]"],
+                           cwd=ROOT, capture_output=True, timeout=15)
+        if r.returncode == 0:
+            # Push con reintentos (race con otros workflows que commitean)
+            for _ in range(3):
+                p = subprocess.run(["git", "pull", "--rebase", "origin", "main"],
+                                    cwd=ROOT, capture_output=True, timeout=30)
+                if p.returncode != 0:
+                    continue
+                p = subprocess.run(["git", "push", "origin", "HEAD:main"],
+                                    cwd=ROOT, capture_output=True, timeout=30)
+                if p.returncode == 0:
+                    print(f"  ig: mp4 pushed → jsDelivr propagará en ~15s")
+                    time.sleep(15)  # cache jsDelivr fresco
+                    break
+    except Exception as e:
+        print(f"  ig: commit mp4 falló ({type(e).__name__}: {e}) — IG puede fallar")
+
     return f"{PUBLIC_REELS_BASE}/{slug}.mp4"
 
 
