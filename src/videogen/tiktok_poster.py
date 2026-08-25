@@ -29,7 +29,13 @@ import requests
 
 
 TT_API = "https://open.tiktokapis.com/v2"
-CHUNK_SIZE = 10 * 1024 * 1024  # 10 MB por chunk (TikTok recomienda 5-64 MB)
+# TikTok Content Posting API: chunk_size DEBE estar entre 5MB y 64MB, y el
+# total_chunk_count debe cumplir la aritmética ceil(video_size/chunk_size).
+# El ÚLTIMO chunk puede ser menor que chunk_size. Pero chunk_size NUNCA
+# puede ser menor de 5MB, incluso para uploads de un solo chunk.
+TT_MIN_CHUNK = 5 * 1024 * 1024
+TT_MAX_CHUNK = 64 * 1024 * 1024
+CHUNK_SIZE = 10 * 1024 * 1024
 
 
 def _refresh_access_token() -> Optional[str]:
@@ -63,11 +69,17 @@ def _refresh_access_token() -> Optional[str]:
 
 def _init_upload(access_token: str, video_size: int, endpoint: str,
                  post_info: Optional[dict] = None) -> Optional[dict]:
-    """Inicia FILE_UPLOAD chunked. Devuelve dict con upload_url + publish_id."""
-    total_chunks = (video_size + CHUNK_SIZE - 1) // CHUNK_SIZE
-    # TikTok exige que todos los chunks tengan el mismo tamaño EXCEPTO el último.
-    # Si es un solo chunk, chunk_size == video_size.
-    chunk_size = video_size if total_chunks == 1 else CHUNK_SIZE
+    """Inicia FILE_UPLOAD chunked. Devuelve dict con upload_url + publish_id.
+
+    Reglas TikTok API:
+    - chunk_size ∈ [5MB, 64MB]
+    - total_chunk_count = ceil(video_size / chunk_size), pero SIEMPRE ≥ 1
+    - último chunk puede ser < chunk_size, pero chunk_size NO puede ser < 5MB
+    - por eso para videos < 5MB usamos chunk_size = 5MB (declarado) + upload
+      real de video_size bytes con Content-Range correspondiente.
+    """
+    chunk_size = max(TT_MIN_CHUNK, min(CHUNK_SIZE, TT_MAX_CHUNK))
+    total_chunks = max(1, (video_size + chunk_size - 1) // chunk_size)
 
     body: dict[str, Any] = {
         "source_info": {
@@ -110,12 +122,20 @@ def _init_upload(access_token: str, video_size: int, endpoint: str,
 
 def _upload_chunks(local_mp4: Path, upload_url: str, chunk_size: int,
                     total_chunks: int) -> bool:
-    """Envía el mp4 por chunks vía PUT. TikTok exige Content-Range headers."""
+    """Envía el mp4 por chunks vía PUT. TikTok exige Content-Range headers.
+
+    Para el ÚLTIMO chunk (o único chunk cuando video < chunk_size), leemos
+    el resto del stream — que puede ser menor que chunk_size — y usamos
+    Content-Range con los bytes reales.
+    """
     total_size = local_mp4.stat().st_size
     with open(local_mp4, "rb") as f:
         for i in range(total_chunks):
             start = i * chunk_size
+            # Leer hasta chunk_size o hasta EOF, lo que llegue primero.
             data = f.read(chunk_size)
+            if not data:
+                break
             end = start + len(data) - 1  # inclusive
             headers = {
                 "Content-Range": f"bytes {start}-{end}/{total_size}",
