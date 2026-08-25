@@ -100,6 +100,10 @@ def pick_top_candidates(platform: str, n: int = 2, min_views: int = 20) -> list[
 
     platform: 'tiktok' | 'instagram' | 'threads'
     min_views: umbral para evitar backfillear videos flops (<20 views).
+
+    NOTA: el archivo vertical mp4 NO es filtro — si no existe local (GH Actions
+    corre sin uploaded/), lo descarga bajo demanda desde YT vía yt-dlp en
+    _ensure_vertical_local(). Solo requiere que exista el video_id (YT público).
     """
     slug_to_vid = _map_slug_to_video_id()
     vid_to_stats = _latest_stats_by_video_id()
@@ -114,21 +118,55 @@ def pick_top_candidates(platform: str, n: int = 2, min_views: int = 20) -> list[
         # Ya reposteado a esta plataforma?
         if platform in (ledger.get(slug) or {}):
             continue
-        # Debe existir el archivo vertical
-        vertical = UPLOADED_DIR / slug / "video_es_vertical.mp4"
-        if not vertical.exists():
-            continue
         candidates.append({
             "slug": slug,
             "video_id": vid,
             "title": stats.get("title") or slug.replace("-", " ").title(),
             "views": views,
             "likes": int(stats.get("likes") or 0),
-            "vertical_path": vertical,
+            "vertical_path": UPLOADED_DIR / slug / "video_es_vertical.mp4",
         })
 
     candidates.sort(key=lambda x: -x["views"])
     return candidates[:n]
+
+
+def _ensure_vertical_local(cand: dict[str, Any]) -> Path | None:
+    """Devuelve la ruta al mp4 vertical. Si no existe local (típico en GH
+    Actions runner tras fresh checkout), descarga el Short desde YouTube via
+    yt-dlp usando el video_id. Los Shorts son públicos → download OK sin auth.
+    """
+    path: Path = cand["vertical_path"]
+    if path.exists() and path.stat().st_size > 100_000:
+        return path
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    url = f"https://youtube.com/shorts/{cand['video_id']}"
+    try:
+        import subprocess
+        # yt-dlp mp4 en la mejor calidad disponible <=1080p (para 9:16 shorts)
+        cmd = [
+            "yt-dlp",
+            "-f", "bestvideo[height<=1920]+bestaudio/best",
+            "--merge-output-format", "mp4",
+            "-o", str(path),
+            "--quiet", "--no-warnings",
+            url,
+        ]
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=180)
+        if r.returncode != 0:
+            print(f"  backfill: yt-dlp fail para {cand['video_id']} — {r.stderr[:200]}")
+            return None
+        if not path.exists() or path.stat().st_size < 100_000:
+            print(f"  backfill: yt-dlp completó pero mp4 vacío: {path}")
+            return None
+        return path
+    except FileNotFoundError:
+        print("  backfill: yt-dlp no instalado (falta dep en el entorno)")
+        return None
+    except Exception as e:
+        print(f"  backfill: yt-dlp exception — {type(e).__name__}: {e}")
+        return None
 
 
 def mark_backfilled(slug: str, platform: str) -> None:
@@ -165,7 +203,16 @@ def backfill_once(platforms: list[str] | None = None,
 
 
 def _post_to_platform(platform: str, cand: dict[str, Any]) -> dict | None:
-    """Enruta al poster correspondiente."""
+    """Enruta al poster correspondiente. Asegura el mp4 local antes de postear
+    (descarga desde YT si el runner no lo tiene)."""
+    # Threads es texto solo, no necesita mp4.
+    if platform != "threads":
+        vert = _ensure_vertical_local(cand)
+        if not vert:
+            print(f"  backfill {platform}: sin mp4 disponible para {cand['slug']}")
+            return None
+        cand["vertical_path"] = vert
+
     try:
         if platform == "tiktok":
             from . import tiktok_poster
