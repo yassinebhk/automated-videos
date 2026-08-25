@@ -152,13 +152,22 @@ def _ensure_vertical_local(cand: dict[str, Any]) -> Path | None:
     has_cookies = os.path.exists(cookies_file) and os.path.getsize(cookies_file) > 100
     cookie_args = ["--cookies", cookies_file] if has_cookies else []
 
-    base_ua = "Mozilla/5.0 (Linux; Android 14; SM-S921B) AppleWebKit/537.36"
-    strategies = [
-        ["--extractor-args", "youtube:player_client=android,web_embedded", "--user-agent", base_ua],
-        ["--extractor-args", "youtube:player_client=ios"],
-        ["--extractor-args", "youtube:player_client=tv_embedded"],
-        [],
-    ]
+    # Con cookies presentes → web client las USA (los otros clients las ignoran).
+    # Sin cookies → android/ios/tv_embedded intentan bypass sin auth.
+    if has_cookies:
+        strategies = [
+            ["--extractor-args", "youtube:player_client=web"],
+            ["--extractor-args", "youtube:player_client=web_safari"],
+            ["--extractor-args", "youtube:player_client=mweb"],
+        ]
+    else:
+        base_ua = "Mozilla/5.0 (Linux; Android 14; SM-S921B) AppleWebKit/537.36"
+        strategies = [
+            ["--extractor-args", "youtube:player_client=android,web_embedded", "--user-agent", base_ua],
+            ["--extractor-args", "youtube:player_client=ios"],
+            ["--extractor-args", "youtube:player_client=tv_embedded"],
+            [],
+        ]
 
     for i, extra in enumerate(strategies):
         cmd = [
