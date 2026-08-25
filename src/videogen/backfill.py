@@ -141,36 +141,50 @@ def _ensure_vertical_local(cand: dict[str, Any]) -> Path | None:
         return path
 
     path.parent.mkdir(parents=True, exist_ok=True)
-    url = f"https://youtube.com/shorts/{cand['video_id']}"
-    try:
-        import subprocess
-        # Selector `b[ext=mp4]/best`: pide UN stream mp4 ya pre-mergeado, sin
-        # requerir ffmpeg. Los YT Shorts casi siempre tienen mp4 progresivo
-        # (video+audio en un solo fichero) hasta 720p → suficiente para reciclar.
+    video_id = cand["video_id"]
+    # /watch?v= evita el fingerprint específico de la URL /shorts/ que YT
+    # revisa con más severidad.
+    url = f"https://www.youtube.com/watch?v={video_id}"
+    import subprocess
+
+    # Estrategia multi-cliente para saltar bot-check: probar Android (que casi
+    # siempre funciona en runners cloud), luego iOS, luego TV embed, y solo
+    # como último recurso el web client (el que dispara "confirma que eres
+    # persona"). yt-dlp acepta el flag --extractor-args con cliente específico.
+    base_ua = "Mozilla/5.0 (Linux; Android 14; SM-S921B) AppleWebKit/537.36"
+    strategies = [
+        ["--extractor-args", "youtube:player_client=android,web_embedded", "--user-agent", base_ua],
+        ["--extractor-args", "youtube:player_client=ios"],
+        ["--extractor-args", "youtube:player_client=tv_embedded"],
+        [],  # último recurso: cliente web (probablemente falla en runner)
+    ]
+
+    for i, extra in enumerate(strategies):
         cmd = [
             "yt-dlp",
             "-f", "b[ext=mp4]/b",
             "-o", str(path),
             "--no-warnings",
             "--no-playlist",
+            *extra,
             url,
         ]
-        r = subprocess.run(cmd, capture_output=True, text=True, timeout=180)
-        if r.returncode != 0:
-            stderr = (r.stderr or r.stdout or "")[:300]
-            print(f"  backfill: yt-dlp fail para {cand['video_id']} — {stderr}")
+        try:
+            r = subprocess.run(cmd, capture_output=True, text=True, timeout=180)
+        except FileNotFoundError:
+            print("  backfill: yt-dlp CLI no encontrado (dep no instalada)")
             return None
-        if not path.exists() or path.stat().st_size < 100_000:
-            print(f"  backfill: yt-dlp completó pero mp4 vacío: {path}")
-            return None
-        print(f"  backfill: descargado {path.stat().st_size // 1024}KB → {path.name}")
-        return path
-    except FileNotFoundError:
-        print("  backfill: yt-dlp CLI no encontrado (dep no instalada)")
-        return None
-    except Exception as e:
-        print(f"  backfill: yt-dlp exception — {type(e).__name__}: {e}")
-        return None
+        except Exception as e:
+            print(f"  backfill: yt-dlp exception estrategia {i+1} — {type(e).__name__}: {e}")
+            continue
+
+        if r.returncode == 0 and path.exists() and path.stat().st_size >= 100_000:
+            print(f"  backfill: descargado {path.stat().st_size // 1024}KB via estrategia {i+1}")
+            return path
+        stderr = (r.stderr or r.stdout or "")[:200]
+        print(f"  backfill: estrategia {i+1} falló ({video_id}) — {stderr}")
+
+    return None
 
 
 def mark_backfilled(slug: str, platform: str) -> None:
