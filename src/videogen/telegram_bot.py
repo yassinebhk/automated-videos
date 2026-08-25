@@ -1429,6 +1429,35 @@ async def snapshot_cmd(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> None:
     await _send_charts(update.effective_chat.id, ctx)
 
 
+async def backfill_cmd(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> None:
+    """/backfill [N] → cross-postea los top N shorts YT históricos a TT + IG + Threads.
+    N default 2 por plataforma. Ledger persistente evita duplicados.
+    """
+    args = ctx.args or []
+    try:
+        n = int(args[0]) if args else 2
+    except Exception:
+        n = 2
+    n = max(1, min(5, n))
+    chat_id = update.effective_chat.id
+    await ctx.bot.send_message(chat_id, f"🔁 Backfill {n} videos/plataforma…")
+    try:
+        from . import backfill
+        results = await _run_blocking(lambda: backfill.backfill_once(per_platform=n))
+    except Exception as e:
+        await ctx.bot.send_message(chat_id, f"❌ backfill falló: {type(e).__name__}: {e}")
+        return
+    lines = ["🔁 <b>Backfill completo</b>"]
+    for plat, items in results.items():
+        icon = {"tiktok": "🎵", "instagram": "📸", "threads": "🧵"}.get(plat, "•")
+        if not items:
+            lines.append(f"{icon} {plat}: sin candidatos (ya reposteados o &lt;20 views)")
+        else:
+            for x in items:
+                lines.append(f"{icon} {plat}: <i>{x['title'][:60]}</i> ({x['views']}v)")
+    await ctx.bot.send_message(chat_id, "\n".join(lines), parse_mode="HTML")
+
+
 async def tiktok_auth_cmd(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> None:
     """/tiktok_auth → link inline para autorizar TikTok via OAuth desde el móvil.
 
@@ -2363,6 +2392,7 @@ def run():
     app.add_handler(CommandHandler("autogen", autogen_cmd))
     app.add_handler(CommandHandler("longgen", longgen_cmd))
     app.add_handler(CommandHandler("tiktok_auth", tiktok_auth_cmd))
+    app.add_handler(CommandHandler("backfill", backfill_cmd))
     app.add_handler(CallbackQueryHandler(on_callback))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_prompt))
 
@@ -2377,6 +2407,7 @@ def run():
             BotCommand("autogen", "Genera+programa+envía 1 Short ahora (idem job 08:00)"),
             BotCommand("longgen", "Genera long-form + 5 clips derivados + programa todo (idem job dom 10:00)"),
             BotCommand("tiktok_auth", "🎵 Conectar TikTok via OAuth (una vez)"),
+            BotCommand("backfill", "🔁 Repostea top shorts YT a TT+IG+Threads (N por red)"),
             BotCommand("help", "Ayuda: qué puedo hacer"),
             BotCommand("stats", "Estadísticas de YouTube"),
             BotCommand("ui", "Enlace a la UI web"),

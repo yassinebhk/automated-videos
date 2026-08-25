@@ -792,6 +792,47 @@ def x_growth_cmd():
     x_growth.run_growth_loop(dry_run=False)
 
 
+@cli.command(name="backfill-once")
+@click.option("--per-platform", type=int, default=2,
+              help="Cuántos videos backfillear por plataforma (default 2)")
+def backfill_once_cmd(per_platform: int):
+    """Repostea top-N Shorts YT históricos a TikTok + IG + Threads.
+    Idempotente vía ledger output/backfill_log.json."""
+    from . import backfill
+    import os, json, urllib.request
+
+    results = backfill.backfill_once(per_platform=per_platform)
+
+    # Report a Telegram si está configurado
+    tok = os.environ.get("TELEGRAM_BOT_TOKEN")
+    chat = os.environ.get("TELEGRAM_CHAT_ID")
+    if tok and chat:
+        lines = ["🔁 <b>Backfill diario</b>"]
+        any_posted = False
+        for plat, items in results.items():
+            icon = {"tiktok": "🎵", "instagram": "📸", "threads": "🧵"}.get(plat, "•")
+            if not items:
+                lines.append(f"{icon} {plat}: sin candidatos")
+            else:
+                any_posted = True
+                for x in items:
+                    lines.append(f"{icon} {plat}: {x['title'][:60]} ({x['views']}v)")
+        if any_posted or not results:
+            try:
+                req = urllib.request.Request(
+                    f"https://api.telegram.org/bot{tok}/sendMessage",
+                    data=json.dumps({"chat_id": int(chat), "text": "\n".join(lines),
+                                      "parse_mode": "HTML"}).encode(),
+                    headers={"Content-Type": "application/json"},
+                )
+                urllib.request.urlopen(req, timeout=30).read()
+            except Exception as e:
+                print(f"tg notify fail: {e}")
+
+    for plat, items in results.items():
+        print(f"{plat}: {len(items)} reposted")
+
+
 @cli.command(name="dispatch")
 @click.option("--cmd", required=True, help="Comando (autogen|longgen|snapshot|atomize|send|ideas|stats|help|start)")
 @click.option("--args", "args_text", default="", help="Argumentos textuales del comando")

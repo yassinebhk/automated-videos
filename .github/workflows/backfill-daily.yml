@@ -1,0 +1,23 @@
+name: Backfill top YT Shorts a TT+IG+Threads
+
+on:
+  schedule:
+    # 10:00 UTC = 12:00 CEST — después del autogen (08:00) y del catchup (09:00),
+    # antes del reminder TT (17:30). Espacia posts durante el día.
+    - cron: "0 10 * * *"
+  workflow_dispatch:
+    inputs:
+      per_platform:
+        description: "Videos por plataforma"
+        default: "2"
+
+permissions:
+  contents: write
+
+jobs:
+  backfill:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: backfill-once
+      # backfill-once soporta --per-platform, se pasa vía env
+    secrets: inherit
