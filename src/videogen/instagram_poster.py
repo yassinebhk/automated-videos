@@ -116,20 +116,30 @@ def _create_media_container(access_token: str, ig_account_id: str,
 
 
 def _wait_container_ready(access_token: str, container_id: str, max_wait: int = 240) -> bool:
-    """IG procesa el video en su lado. Esperar hasta status=FINISHED."""
+    """IG procesa el video en su lado. Esperar hasta status=FINISHED.
+
+    IG puede fallar por: URL no fetchable, video mal formateado, aspect
+    ratio wrong. Logueamos toda la respuesta para diagnosticar.
+    """
     start = time.time()
+    last_status = ""
     while time.time() - start < max_wait:
         r = requests.get(
             f"{IG_API_BASE}/{container_id}",
-            params={"fields": "status_code,status", "access_token": access_token},
+            params={"fields": "status_code,status,copyright_check_status",
+                    "access_token": access_token},
             timeout=20,
         )
         d = r.json()
         st = d.get("status_code", "").upper()
+        if st != last_status:
+            elapsed = int(time.time() - start)
+            print(f"  ig: status@{elapsed}s = {st or '(vacío)'} · full={str(d)[:400]}")
+            last_status = st
         if st == "FINISHED":
             return True
         if st == "ERROR":
-            print(f"  ig: container ERROR — {d.get('status', '')[:200]}")
+            print(f"  ig: container ERROR — {d}")
             return False
         time.sleep(5)
     print(f"  ig: container timeout tras {max_wait}s")
