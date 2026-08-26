@@ -39,10 +39,11 @@ from .config import ROOT
 
 
 REELS_HOST_DIR = ROOT / "docs" / "reels"
-# raw.githubusercontent.com sirve fresh commits inmediatamente (jsDelivr
-# puede tardar minutos en indexar). El content-type es "text/plain" pero
-# IG inspecciona los bytes del video, no el header.
-PUBLIC_REELS_BASE = "https://raw.githubusercontent.com/yassinebhk/automated-videos/main/docs/reels"
+# jsDelivr sirve con Content-Type: video/mp4 correcto (IG requiere media
+# type reconocible). raw.githubusercontent.com devuelve
+# application/octet-stream que Meta puede rechazar silenciosamente. Espera
+# 90s tras push para que jsDelivr indexe.
+PUBLIC_REELS_BASE = "https://cdn.jsdelivr.net/gh/yassinebhk/automated-videos@main/docs/reels"
 
 # Instagram Business Login usa graph.instagram.com (v21+).
 # El endpoint clásico graph.facebook.com/v21.0 es para "Facebook Login for
@@ -86,8 +87,11 @@ def _prepare_public_reel(local_mp4: Path, slug: str) -> Optional[str]:
                 p = subprocess.run(["git", "push", "origin", "HEAD:main"],
                                     cwd=ROOT, capture_output=True, timeout=30)
                 if p.returncode == 0:
-                    print(f"  ig: mp4 pushed → raw.githubusercontent.com listo")
-                    time.sleep(5)  # margen mínimo para propagación git internal
+                    print(f"  ig: mp4 pushed → esperando 90s para jsDelivr")
+                    # jsDelivr suele indexar commits nuevos en 30-60s.
+                    # 90s es margen holgado. Si IG sigue fallando tras esto,
+                    # el problema no es propagación → es la URL o el video.
+                    time.sleep(90)
                     break
     except Exception as e:
         print(f"  ig: commit mp4 falló ({type(e).__name__}: {e}) — IG puede fallar")
