@@ -106,6 +106,15 @@
           "topic": "[ACTUALIDAD] OPEP: Cómo la decisión de 1973 de subir el precio del petróleo cambió la economía mundial"
         }
       ]
+    },
+    "neurona": {
+      "count": 1,
+      "history": [
+        {
+          "ts": "2026-08-26T06:37:04.535225+00:00",
+          "topic": "[CRIMEN] El caso Neurona: Cómo Podemos financió su campaña con 400.000€ y las claves de la sentencia de 2020."
+        }
+      ]
     }
   }
 }
