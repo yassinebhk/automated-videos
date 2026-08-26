@@ -16,10 +16,14 @@ import crypto from "node:crypto";
 // video.publish se AÑADIRÁ AQUÍ una vez TikTok apruebe la review — hasta
 // entonces, incluirlo en la petición hace que TikTok rechace la auth con
 // "invalid_scope" porque el scope no está registrado en el app dashboard.
+// video.publish: en Sandbox mode la cuenta del developer (waitwhy_/interest_stuff)
+// puede publicar DIRECTO al feed sin review, saltándose el intermediate step
+// de "inbox" que en Sandbox parece no exponer los videos en la UI.
 const SCOPES = [
   "user.info.basic",
   "user.info.stats",
   "video.upload",
+  "video.publish",
   "video.list",
 ];
 
