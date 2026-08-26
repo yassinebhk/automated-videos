@@ -115,6 +115,15 @@
           "topic": "[CRIMEN] El caso Neurona: Cómo Podemos financió su campaña con 400.000€ y las claves de la sentencia de 2020."
         }
       ]
+    },
+    "koldo": {
+      "count": 1,
+      "history": [
+        {
+          "ts": "2026-08-26T07:23:52.020707+00:00",
+          "topic": "[CRIMEN] Caso Koldo y Ábalos: Las comisiones ocultas de las mascarillas COVID en 2020 que salpican a políticos"
+        }
+      ]
     }
   }
 }
