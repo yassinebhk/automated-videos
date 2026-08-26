@@ -133,6 +133,15 @@
           "topic": "Innova Farma: El fraude sanitario de 2009 que dejó a miles de españoles sin sus tratamientos."
         }
       ]
+    },
+    "blesa": {
+      "count": 1,
+      "history": [
+        {
+          "ts": "2026-08-26T11:19:22.718794+00:00",
+          "topic": "Las Tarjetas Black de Blesa: el escándalo de Caja Madrid donde su cúpula gastó millones y la sentencia de 6 años para él en 2015."
+        }
+      ]
     }
   }
 }
