@@ -131,7 +131,8 @@ def _wait_container_ready(access_token: str, container_id: str, max_wait: int = 
     while time.time() - start < max_wait:
         r = requests.get(
             f"{IG_API_BASE}/{container_id}",
-            params={"fields": "status_code,status", "access_token": access_token},
+            params={"fields": "status_code,status,error_message,video_title",
+                    "access_token": access_token},
             timeout=20,
         )
         d = r.json()
