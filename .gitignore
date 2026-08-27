@@ -8,6 +8,7 @@ output/**
 !output/pinned_summary_id.txt
 !output/case_ledger.json
 !output/backfill_log.json
+!output/social_boost_log.json
 # Los youtube.json + youtube_long.json (100 bytes cada uno) son metadata
 # necesaria para backfill (slug → video_id). Sin ellos, GH Actions runner
 # no encuentra los Shorts para reciclar.

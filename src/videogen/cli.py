@@ -792,6 +792,37 @@ def x_growth_cmd():
     x_growth.run_growth_loop(dry_run=False)
 
 
+@cli.command(name="social-boost")
+def social_boost_cmd():
+    """Postea a Bluesky + Mastodon + Threads un top-YT reciente con hook fresco."""
+    from . import social_boost
+    import os, json, urllib.request
+    result = social_boost.boost_once()
+    tok = os.environ.get("TELEGRAM_BOT_TOKEN")
+    chat = os.environ.get("TELEGRAM_CHAT_ID")
+    lines = ["📣 <b>Social boost</b>"]
+    for plat, r in result.items():
+        icon = {"bluesky": "🦋", "mastodon": "🐘", "threads": "🧵"}.get(plat, "•")
+        if r.get("status") == "no_candidate":
+            lines.append(f"{icon} sin candidato disponible")
+        elif r.get("posted"):
+            lines.append(f"{icon} ✅ {r.get('title','')[:60]}")
+        else:
+            lines.append(f"{icon} ❌ fallo post")
+    print("\n".join(lines))
+    if tok and chat:
+        try:
+            req = urllib.request.Request(
+                f"https://api.telegram.org/bot{tok}/sendMessage",
+                data=json.dumps({"chat_id": int(chat), "text": "\n".join(lines),
+                                  "parse_mode": "HTML"}).encode(),
+                headers={"Content-Type": "application/json"},
+            )
+            urllib.request.urlopen(req, timeout=30).read()
+        except Exception as e:
+            print(f"tg notify fail: {e}")
+
+
 @cli.command(name="backfill-once")
 @click.option("--per-platform", type=int, default=2,
               help="Cuántos videos backfillear por plataforma (default 2)")
