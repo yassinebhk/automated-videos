@@ -142,6 +142,15 @@
           "topic": "Las Tarjetas Black de Blesa: el escándalo de Caja Madrid donde su cúpula gastó millones y la sentencia de 6 años para él en 2015."
         }
       ]
+    },
+    "punica_lezo": {
+      "count": 1,
+      "history": [
+        {
+          "ts": "2026-08-27T17:17:17.924699+00:00",
+          "topic": "[CRIMEN] Caso Lezo: 2017, la trama que desviaba millones a través de Canal de Isabel II y la Audiencia Nacional condenó a varios de sus miembros."
+        }
+      ]
     }
   }
 }
