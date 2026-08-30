@@ -7,8 +7,10 @@ name: Daily Short — segunda tanda (13:00 CEST) → publica 21:00
 # Con este split, comparamos ambas franjas con contenido fresco cada día.
 
 on:
-  schedule:
-    - cron: "0 11 * * *"
+  # Cron DESACTIVADO 2026-08-30: la 2ª tanda diaria estaba saturando el canal
+  # (11 videos/día un pico). Volvemos a 1 video/día del daily-short.yml
+  # (06:00 UTC) para no diluir señal algorítmica. Sigue disponible via
+  # workflow_dispatch si se necesita empujar un extra puntual.
   workflow_dispatch: {}
 
 concurrency:
