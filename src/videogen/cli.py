@@ -9,6 +9,7 @@ Comandos:
 """
 from __future__ import annotations
 
+import json
 import shutil
 import subprocess
 import sys
@@ -790,6 +791,16 @@ def x_growth_cmd():
     """Ejecuta el growth loop de X (follows + likes de cuentas ES relevantes)."""
     from . import x_growth
     x_growth.run_growth_loop(dry_run=False)
+
+
+@cli.command(name="ambient-once")
+def ambient_once_cmd():
+    """Genera + sube 1 video ambient/relax al canal YT_AMBIENT_*."""
+    from .ambient import pipeline
+    result = pipeline.run_once()
+    if not result:
+        raise SystemExit(1)
+    print(json.dumps(result, indent=2, default=str))
 
 
 @cli.command(name="social-boost")

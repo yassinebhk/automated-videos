@@ -1,0 +1,72 @@
+name: Ambient — daily long-form (relax/música)
+
+# Canal ambient/relax paralelo a WaitWhy. Genera 1 video long-form (30-60 min)
+# con música CC0 Pixabay + imagen Pexels + fade ffmpeg.
+# Corre 09:00 UTC (11:00 CEST) — 1h después del daily-short.yml para no
+# solapar el runner.
+#
+# DESACTIVADO hasta que el user cree el canal YT + configure secrets:
+# YT_AMBIENT_REFRESH_TOKEN, YT_AMBIENT_CLIENT_ID, YT_AMBIENT_CLIENT_SECRET,
+# PIXABAY_API_KEY.
+
+on:
+  # schedule:
+  #   - cron: "0 9 * * *"
+  workflow_dispatch: {}
+
+concurrency:
+  group: videogen-ambient
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  ambient:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install ffmpeg
+        run: sudo apt-get install -y ffmpeg
+      - name: Install deps
+        run: pip install -e .
+      - name: Generar credenciales YT ambient
+        env:
+          YT_AMBIENT_REFRESH_TOKEN: ${{ secrets.YT_AMBIENT_REFRESH_TOKEN }}
+          YT_AMBIENT_CLIENT_ID:     ${{ secrets.YT_AMBIENT_CLIENT_ID }}
+          YT_AMBIENT_CLIENT_SECRET: ${{ secrets.YT_AMBIENT_CLIENT_SECRET }}
+        run: |
+          python3 - <<'PY'
+          import os
+          # El uploader lee env vars directamente, solo verificamos que estén.
+          for k in ("YT_AMBIENT_REFRESH_TOKEN", "YT_AMBIENT_CLIENT_ID", "YT_AMBIENT_CLIENT_SECRET"):
+              if not os.environ.get(k):
+                  print(f"⚠️ falta {k}")
+          PY
+      - name: Generar + subir video ambient
+        env:
+          TELEGRAM_BOT_TOKEN:       ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID:         ${{ secrets.TELEGRAM_CHAT_ID }}
+          GEMINI_API_KEY:           ${{ secrets.GEMINI_API_KEY }}
+          PEXELS_API_KEY:           ${{ secrets.PEXELS_API_KEY }}
+          PIXABAY_API_KEY:          ${{ secrets.PIXABAY_API_KEY }}
+          YT_AMBIENT_REFRESH_TOKEN: ${{ secrets.YT_AMBIENT_REFRESH_TOKEN }}
+          YT_AMBIENT_CLIENT_ID:     ${{ secrets.YT_AMBIENT_CLIENT_ID }}
+          YT_AMBIENT_CLIENT_SECRET: ${{ secrets.YT_AMBIENT_CLIENT_SECRET }}
+        run: videogen ambient-once
+      - name: Commit ledger
+        run: |
+          if [ -f output/ambient_ledger.json ]; then
+            git config user.name "videogen-bot"
+            git config user.email "bot@videogen.local"
+            git add output/ambient_ledger.json
+            git commit -m "ambient: ledger update [skip ci]" || true
+            for i in 1 2 3; do
+              git pull --rebase origin main && git push origin HEAD:main && break
+              sleep 3
+            done
+          fi
