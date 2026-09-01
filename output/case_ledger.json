@@ -1,7 +1,7 @@
 {
   "cases": {
     "kio": {
-      "count": 6,
+      "count": 7,
       "history": [
         {
           "ts": "2026-08-24T07:57:23.240427+00:00",
@@ -26,6 +26,10 @@
         {
           "ts": "2026-08-31T19:54:40.699205+00:00",
           "topic": "[CRIMEN] Los KIO y el escándalo bursátil: 300 millones de euros evaporados en la bolsa española"
+        },
+        {
+          "ts": "2026-09-01T11:24:38.873804+00:00",
+          "topic": "[CRIMEN] KIO: El fraude bursátil de 300 millones de euros que sacudió la bolsa española"
         }
       ]
     },
