@@ -1043,13 +1043,12 @@ def _shorts_published_today_count() -> int:
         return 0
 
 
-def _autogen_already_today(max_per_day: int = 2) -> bool:
-    """¿Ya se alcanzó el tope diario de shorts? (default: 2/día).
+def _autogen_already_today(max_per_day: int = 1) -> bool:
+    """¿Ya se alcanzó el tope diario de shorts? (default: 1/día).
 
-    Reemplaza al chequeo local basado en filesystem (roto en Actions) por un
-    conteo real de uploads YT del día. `max_per_day=2` es la palanca C
-    (2 shorts/día) para acelerar el ritmo de subida sin duplicar en el mismo
-    slot.
+    Bajado 2 → 1 el 02/09/26: la palanca C (2/día) saturaba el canal y
+    diluía señal algorítmica. Volvemos a 1 tras confirmar que 1/día
+    sostiene racha +1 sub/día durante 6 días seguidos (agosto 27-sep 01).
     """
     return _shorts_published_today_count() >= max_per_day
 
@@ -1718,10 +1717,27 @@ async def _run_autogen_daily(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> No
     # que el prompt genere titles del tipo "Estafas Españolas #47: <hook>"
     # + thumbnail_text con "#47" grande. YT premia binge-watching de series.
     episode_num = _next_episode_num(recent_titles)
+    # Detecta si el topic viene marcado como [ACTUALIDAD] → usa patrón distinto
+    # para no forzar "Caso X" cuando el tema no es una estafa.
+    # Bug 29/08: Gemini devolvía "AVISO: Este Tema NO es de Estafas Españolas · #1"
+    # como título porque le forzábamos "Caso X" para un tema tipo OPEP/OTAN.
+    is_actualidad = "[ACTUALIDAD]" in topic.upper()
+    if is_actualidad:
+        title_rule = (
+            f"El title DEBE seguir el patrón SEO '[Tema/Suceso] — [dato clave objetivo] · #{episode_num}' "
+            f"(ej. 'OPEP 1973 — 13 países que subieron el precio · #47' o "
+            f"'OTAN España 1982 — 40 años en la Alianza · #47'). "
+            f"PROHIBIDO usar 'Caso X', 'estafa', 'fraude' — es un tema de actualidad histórica, no crimen. "
+            f"PROHIBIDO meta-comentarios tipo 'AVISO:' o 'Este tema no es de...'. "
+        )
+    else:
+        title_rule = (
+            f"El title DEBE seguir el patrón SEO 'Caso [NombreConocido] — [gancho] · #{episode_num}' "
+            f"(o fallback '[Persona] — [dato shock] · #{episode_num}' si el caso no tiene nombre 'Caso X'). "
+        )
     topic_with_ep = (
         f"[Episodio #{episode_num} de la serie 'Estafas Españolas'. "
-        f"El title DEBE seguir el patrón SEO 'Caso [NombreConocido] — [gancho] · #{episode_num}' "
-        f"(o fallback '[Persona] — [dato shock] · #{episode_num}' si el caso no tiene nombre 'Caso X'). "
+        f"{title_rule}"
         f"El thumbnail_text DEBE mostrar la CIFRA clave del caso en 2 líneas (cifra + verbo emocional).] "
         f"{topic}"
     )
