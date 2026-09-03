@@ -834,6 +834,39 @@ def social_boost_cmd():
             print(f"tg notify fail: {e}")
 
 
+@cli.command(name="narrative-post")
+def narrative_post_cmd():
+    """Publica 1 hilo narrativo (5 posts encadenados) en Bluesky+Mastodon+Threads."""
+    from . import narrative_post
+    import os, json, urllib.request
+    result = narrative_post.run_once()
+    lines = ["🧵 <b>Hilo narrativo</b>"]
+    if result.get("status") == "no_candidate":
+        lines.append("· sin candidato (todos <14d)")
+    elif result.get("status") == "gen_fail":
+        lines.append("· ❌ generación Gemini falló")
+    else:
+        lines.append(f"· <i>{result.get('title','')[:70]}</i>")
+        lines.append(f"· {result.get('posts_count',0)} posts")
+        for plat in ("bluesky", "mastodon", "threads"):
+            icon = {"bluesky": "🦋", "mastodon": "🐘", "threads": "🧵"}[plat]
+            lines.append(f"{icon} {'✅' if result.get(plat) else '❌'}")
+    print("\n".join(lines))
+    tok = os.environ.get("TELEGRAM_BOT_TOKEN")
+    chat = os.environ.get("TELEGRAM_CHAT_ID")
+    if tok and chat:
+        try:
+            req = urllib.request.Request(
+                f"https://api.telegram.org/bot{tok}/sendMessage",
+                data=json.dumps({"chat_id": int(chat), "text": "\n".join(lines),
+                                  "parse_mode": "HTML"}).encode(),
+                headers={"Content-Type": "application/json"},
+            )
+            urllib.request.urlopen(req, timeout=30).read()
+        except Exception as e:
+            print(f"tg notify fail: {e}")
+
+
 @cli.command(name="backfill-once")
 @click.option("--per-platform", type=int, default=2,
               help="Cuántos videos backfillear por plataforma (default 2)")

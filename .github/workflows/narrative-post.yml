@@ -1,0 +1,23 @@
+name: Narrative post (thread)
+
+# Publica 1 hilo narrativo (5 posts encadenados) sobre un caso YT
+# a Bluesky + Threads + Mastodon. Formato thread — engagement mucho más alto
+# que un post + link.
+#
+# 16:00 UTC = 18:00 CEST — hora prime tarde en España
+# Solo 1×/día para no saturar y darle su momento en el feed.
+
+on:
+  schedule:
+    - cron: "0 16 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  narrative:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: narrative-post
+    secrets: inherit

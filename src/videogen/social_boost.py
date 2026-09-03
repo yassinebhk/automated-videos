@@ -87,8 +87,13 @@ def _load_top_videos() -> list[dict[str, Any]]:
         prev = latest.get(vid)
         if not prev or ts > int(prev.get("ts") or 0):
             latest[vid] = r
+    def _is_true_crime(title: str) -> bool:
+        low = (title or "").lower()
+        return ("caso " in low or "· #" in low or " · #" in low
+                or "estafa" in low or "fraude" in low or "corrupción" in low)
     top = [r for r in latest.values()
-           if int(r.get("views") or 0) >= MIN_VIEWS]
+           if int(r.get("views") or 0) >= MIN_VIEWS
+           and _is_true_crime(r.get("title") or "")]
     top.sort(key=lambda r: -int(r.get("views") or 0))
     return top
 
@@ -104,16 +109,28 @@ def _pick_video_for_platform(platform: str) -> dict | None:
     return random.choices(fresh[:15], weights=weights, k=1)[0]
 
 
+HOOK_ANGLES = [
+    "dato-bomba",         # "300 millones desaparecieron en 3 años. Nadie fue a prisión."
+    "cita-sentencia",     # "El TS lo llamó 'saqueo sistemático'. Terminaron con..."
+    "paradoja-tiempo",    # "En 1993 lo condenaron. En 2019 ya estaba libre. En 2024..."
+    "comparacion-cifra",  # "Con lo robado se pagaban 12 hospitales."
+    "personaje-inesperado", # "El cabecilla no era un mafioso. Era un ministro."
+    "pregunta-provocadora", # "¿Cuánto tiempo cabría alguien preso por robar 300M€ en España? Menos de lo que crees."
+    "arranque-frio",      # "Julio, 1993. Una llamada. Todo se cae."
+    "consecuencia-hoy",   # "Ese caso todavía marca la ley de..."
+]
+
+
 def _hook_for(video: dict) -> str:
-    """Hook via Gemini que NO reusa el título. Fallback estático si falla."""
+    """Hook via Gemini con ángulo aleatorio. Fallback estático si falla."""
     title = video.get("title") or ""
     yt_url = f"https://youtu.be/{video.get('video_id')}"
+    angle = random.choice(HOOK_ANGLES)
     fallback_hooks = [
-        f"¿Sabías esto de un caso español que casi nadie recuerda?\n\n{title}\n\n{yt_url}",
-        f"Historia real de estafa en España que deberían enseñar en el colegio.\n\n{title}\n\n{yt_url}",
-        f"Este caso te va a impactar. Real, con sentencia firme.\n\n{title}\n\n{yt_url}",
-        f"Corrupción que quedó impune en España. Los números son brutales.\n\n{title}\n\n{yt_url}",
-        f"El caso español que casi nadie conoce y que deberías conocer.\n\n{title}\n\n{yt_url}",
+        f"Caso real, sentencia firme, cifras que no cuadran.\n\n{title}\n\n{yt_url}",
+        f"Robaron millones y ni siquiera es lo más brutal del caso.\n\n{title}\n\n{yt_url}",
+        f"Esto no lo contaron en las noticias así.\n\n{title}\n\n{yt_url}",
+        f"Corrupción española que sigue marcando la ley.\n\n{title}\n\n{yt_url}",
     ]
     try:
         from google import genai
@@ -124,21 +141,37 @@ def _hook_for(video: dict) -> str:
             return random.choice(fallback_hooks)
         client = genai.Client(api_key=key)
         prompt = (
-            f"Escribe UN post corto (max 250 chars) para redes sociales sobre este video "
-            f"de un caso de estafa española. El post debe ser MUY diferente al título — "
-            f"un hook nuevo con un ángulo distinto (dato impactante, pregunta directa, "
-            f"paralelismo con actualidad). Nada de emojis excesivos, tono directo español. "
-            f"Termina con el link del video.\n\n"
+            f"Escribe UN post corto (150-250 chars) para redes sobre este video de un caso español real.\n\n"
+            f"ÁNGULO OBLIGATORIO: {angle}\n"
+            f"- dato-bomba: arranca con una cifra brutal + consecuencia mínima\n"
+            f"- cita-sentencia: cita textual imaginada del juez o del sumario\n"
+            f"- paradoja-tiempo: fechas que chocan (X pasó tal año, en 20XX ya estaba libre)\n"
+            f"- comparacion-cifra: con esa cantidad se podrían pagar N hospitales/salarios/pisos\n"
+            f"- personaje-inesperado: no era un mafioso, era un [ministro/banquero/empresario]\n"
+            f"- pregunta-provocadora: pregunta directa que rompa el scroll\n"
+            f"- arranque-frio: [fecha]. [detalle mínimo]. Todo cambia.\n"
+            f"- consecuencia-hoy: cómo ese caso todavía afecta hoy\n\n"
+            f"REGLAS:\n"
+            f"- PROHIBIDO empezar con '¿Sabías...?', 'Todos hemos...', '¿Recuerdas...?'\n"
+            f"- PROHIBIDO usar 'brutal', 'increíble', 'te va a impactar', 'no te lo vas a creer'\n"
+            f"- Tono directo, seco, español periodístico\n"
+            f"- Sin emojis salvo 1 al final máximo (opcional)\n"
+            f"- Termina con el link\n\n"
             f"Título del video: {title}\n"
             f"Link: {yt_url}\n\n"
-            f"Devuelve SOLO el texto del post, sin comillas ni introducción."
+            f"Devuelve SOLO el post, sin comillas ni encabezado."
         )
         resp = client.models.generate_content(
             model="gemini-2.5-flash-lite",
             contents=prompt,
-            config=types.GenerateContentConfig(temperature=1.1, max_output_tokens=200),
+            config=types.GenerateContentConfig(temperature=1.2, max_output_tokens=250),
         )
-        text = (resp.text or "").strip()
+        text = (resp.text or "").strip().strip('"')
+        # Rechaza si empieza con clichés
+        lower = text.lower()
+        if any(lower.startswith(bad) for bad in ("¿sabías", "sabías", "¿recuerdas", "todos hemos", "increíble")):
+            print(f"  boost: hook rechazado por cliché — fallback")
+            return random.choice(fallback_hooks)
         if 30 < len(text) < 400 and yt_url in text:
             return text
         if 30 < len(text) < 350:

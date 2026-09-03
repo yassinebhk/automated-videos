@@ -1,15 +1,17 @@
 name: Social boost (re-promo top YT)
 
-# Postea 2× al día top-YT videos con hooks frescos generados por Gemini
+# Postea 4× al día top-YT videos con hooks frescos generados por Gemini
 # a Bluesky + Mastodon + Threads. Distintas horas del autogen normal
 # para espaciar contenido en el feed y saturar picos ES.
 #
-# 14:00 UTC = 16:00 CEST (sobremesa)
-# 20:00 UTC = 22:00 CEST (prime time noche)
+# 09:00 UTC = 11:00 CEST (mañana)
+# 13:00 UTC = 15:00 CEST (sobremesa)
+# 17:00 UTC = 19:00 CEST (tarde)
+# 21:00 UTC = 23:00 CEST (prime time noche)
 
 on:
   schedule:
-    - cron: "0 14,20 * * *"
+    - cron: "0 9,13,17,21 * * *"
   workflow_dispatch: {}
 
 permissions:
