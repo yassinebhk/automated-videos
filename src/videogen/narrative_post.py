@@ -104,6 +104,18 @@ def _generate_thread(video: dict) -> list[str] | None:
         if not key:
             return None
         client = genai.Client(api_key=key)
+        schema = {
+            "type": "object",
+            "properties": {
+                "posts": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "minItems": 5,
+                    "maxItems": 5,
+                }
+            },
+            "required": ["posts"],
+        }
         prompt = (
             f"Escribe un HILO de exactamente 5 posts sobre este caso español real, para redes sociales.\n\n"
             f"Título del video: {title}\n"
@@ -115,29 +127,35 @@ def _generate_thread(video: dict) -> list[str] | None:
             f"- Post 4: consecuencia + cifra clave. Máx 280 chars.\n"
             f"- Post 5: cierre + reflexión + link YT al final. Máx 240 chars.\n\n"
             f"PROHIBIDO:\n"
-            f"- Empezar con '¿Sabías...?', 'Todos hemos...', 'Increíble...', 'Brutal...'\n"
+            f"- Empezar cualquier post con '¿Sabías...?', 'Todos hemos...', 'Increíble...', 'Brutal...'\n"
             f"- Usar hashtags dentro del texto\n"
             f"- Emojis excesivos (máx 1 por post)\n"
             f"- Meta-comentarios tipo 'este hilo va sobre...'\n\n"
-            f"FORMATO OUTPUT (importante):\n"
-            f"Devuelve 5 posts separados EXACTAMENTE por la línea '---' (tres guiones).\n"
-            f"Nada más, ni encabezado ni numeración.\n"
+            f"Devuelve un JSON con la clave 'posts' que sea un array de exactamente 5 strings.\n"
         )
         resp = client.models.generate_content(
             model="gemini-2.5-flash",
             contents=prompt,
-            config=types.GenerateContentConfig(temperature=1.1, max_output_tokens=1200),
+            config=types.GenerateContentConfig(
+                temperature=1.1,
+                max_output_tokens=1500,
+                response_mime_type="application/json",
+                response_schema=schema,
+            ),
         )
         text = (resp.text or "").strip()
-        posts = [p.strip() for p in text.split("---") if p.strip()]
+        try:
+            data = json.loads(text)
+        except Exception as je:
+            print(f"  narrative: JSON parse fail — {je} — text[:200]={text[:200]}")
+            return None
+        posts = [str(p).strip() for p in (data.get("posts") or []) if str(p).strip()]
         if len(posts) < 4:
             print(f"  narrative: solo {len(posts)} posts generados — insuficiente")
             return None
-        # Asegura link YT en el último
         posts = posts[:5]
         if yt_url not in posts[-1]:
             posts[-1] = f"{posts[-1]}\n\n{yt_url}"
-        # Trim length
         posts = [p[:295] for p in posts]
         return posts
     except Exception as e:
