@@ -206,6 +206,15 @@
           "topic": "[CRIMEN] El Caso Faisán: cómo la Policía permitió la fuga de ETA en 2004 y 10 años después fueron condenados"
         }
       ]
+    },
+    "3por100": {
+      "count": 1,
+      "history": [
+        {
+          "ts": "2026-09-03T10:37:39.028954+00:00",
+          "topic": "[CRIMEN] El '3%': la financiación ilegal de CDC Catalunya que terminó en sentencia del TS en 2018"
+        }
+      ]
     }
   }
 }
