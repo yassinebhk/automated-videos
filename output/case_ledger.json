@@ -224,6 +224,15 @@
           "topic": "Francisco Camps y 'los trajes': el escándalo de los regalos al expresidente valenciano que derivó en sentencia firme en 2012."
         }
       ]
+    },
+    "ballena_blanca": {
+      "count": 1,
+      "history": [
+        {
+          "ts": "2026-09-06T10:12:25.212575+00:00",
+          "topic": "Ballena Blanca: el megafraude de blanqueo que movió 250 millones de euros en la Costa del Sol con sentencia firme en 2009 y quiénes fueron los condenados."
+        }
+      ]
     }
   }
 }
