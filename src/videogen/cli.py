@@ -850,7 +850,9 @@ def narrative_post_cmd():
         lines.append(f"· {result.get('posts_count',0)} posts")
         for plat in ("bluesky", "mastodon", "threads"):
             icon = {"bluesky": "🦋", "mastodon": "🐘", "threads": "🧵"}[plat]
-            lines.append(f"{icon} {'✅' if result.get(plat) else '❌'}")
+            val = result.get(plat)
+            mark = "—" if val is None else ("✅" if val else "❌")
+            lines.append(f"{icon} {mark}")
     print("\n".join(lines))
     tok = os.environ.get("TELEGRAM_BOT_TOKEN")
     chat = os.environ.get("TELEGRAM_CHAT_ID")
