@@ -364,11 +364,17 @@ def snapshot_tiktok() -> list[dict]:
             timeout=15,
         ).json()
         data = (u.get("data") or {}).get("user") or {}
+        subs_ct = int(data.get("follower_count") or 0)
+        likes_ct = int(data.get("likes_count") or 0)
+        # Log diagnóstico si TT devuelve 0 (token roto o cambio de API)
+        if subs_ct == 0 and likes_ct == 0:
+            err = u.get("error") or {}
+            print(f"  tiktok snapshot: 0/0 sospechoso — error={err} raw={str(u)[:300]}")
         rows.append({
             "platform": "tiktok", "kind": "channel",
-            "subs": int(data.get("follower_count") or 0),
+            "subs": subs_ct,
             "views": 0,
-            "likes": int(data.get("likes_count") or 0),
+            "likes": likes_ct,
             "source": "api",
         })
         vl = requests.post(

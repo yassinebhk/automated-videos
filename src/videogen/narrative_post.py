@@ -133,21 +133,39 @@ def _generate_thread(video: dict) -> list[str] | None:
             f"- Meta-comentarios tipo 'este hilo va sobre...'\n\n"
             f"Devuelve un JSON con la clave 'posts' que sea un array de exactamente 5 strings.\n"
         )
-        resp = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                temperature=1.1,
-                max_output_tokens=1500,
-                response_mime_type="application/json",
-                response_schema=schema,
-            ),
-        )
-        text = (resp.text or "").strip()
-        try:
-            data = json.loads(text)
-        except Exception as je:
-            print(f"  narrative: JSON parse fail — {je} — text[:200]={text[:200]}")
+        # Reintenta hasta 2 veces si el JSON queda truncado por tokens
+        text = ""
+        data = None
+        for attempt in range(2):
+            resp = client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    temperature=1.1,
+                    max_output_tokens=3000,
+                    response_mime_type="application/json",
+                    response_schema=schema,
+                ),
+            )
+            text = (resp.text or "").strip()
+            try:
+                data = json.loads(text)
+                break
+            except Exception as je:
+                print(f"  narrative: JSON parse fail (attempt {attempt+1}) — {je}")
+                # Intenta recuperar arreglando string truncado: recorta al último } válido
+                if attempt == 0:
+                    for cut in range(len(text) - 1, 100, -1):
+                        try:
+                            data = json.loads(text[:cut] + '"]}')
+                            print(f"  narrative: recuperado tras truncar en char {cut}")
+                            break
+                        except Exception:
+                            continue
+                    if data:
+                        break
+        if not data:
+            print(f"  narrative: JSON parse falló 2× — text[:300]={text[:300]}")
             return None
         posts = [str(p).strip() for p in (data.get("posts") or []) if str(p).strip()]
         if len(posts) < 4:
