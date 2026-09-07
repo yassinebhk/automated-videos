@@ -37,9 +37,9 @@ FOLLOW_HASHTAGS = [
     "estafas", "documentales", "periodismo", "política",
 ]
 
-MAX_FOLLOWS_PER_RUN = 15
-MAX_LIKES_PER_RUN = 20
-MAX_REPOSTS_PER_RUN = 3
+MAX_FOLLOWS_PER_RUN = 20
+MAX_LIKES_PER_RUN = 35
+MAX_REPOSTS_PER_RUN = 5
 
 
 def _client():

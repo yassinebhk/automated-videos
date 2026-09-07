@@ -24,6 +24,11 @@ on:
         required: false
         type: string
         default: "21"
+      extra_env:
+        description: "Env vars extra (multilínea KEY=VALUE) pasadas al step de ejecución."
+        required: false
+        type: string
+        default: ""
 
 jobs:
   run:
@@ -165,8 +170,15 @@ jobs:
           # (no como bloque al final del step, que oculta dónde abortó el pipeline).
           PYTHONUNBUFFERED: "1"
           AUTOGEN_PUBLISH_HOUR: ${{ inputs.publish_hour || '21' }}
+          EXTRA_ENV: ${{ inputs.extra_env }}
         run: |
           set -x  # traza cada línea shell para ver dónde muere si aborta
+          # Carga extra_env como env vars adicionales del proceso videogen
+          if [ -n "$EXTRA_ENV" ]; then
+            while IFS='=' read -r k v; do
+              [ -n "$k" ] && export "$k=$v"
+            done <<< "$EXTRA_ENV"
+          fi
           case "${{ inputs.command }}" in
             dispatch)
               videogen dispatch --cmd "${{ inputs.dispatch_cmd }}" --args "${{ inputs.dispatch_args }}"

@@ -266,21 +266,25 @@ def _post_threads_thread(posts: list[str]) -> bool:
 
 
 def run_once() -> dict[str, Any]:
+    # Filtro opcional de plataformas via env (ej: NARRATIVE_PLATFORMS=bluesky)
+    plats_env = os.environ.get("NARRATIVE_PLATFORMS", "").strip().lower()
+    active = set(p.strip() for p in plats_env.split(",") if p.strip()) or {
+        "bluesky", "mastodon", "threads"}
     video = _pick_video()
     if not video:
         return {"status": "no_candidate"}
     posts = _generate_thread(video)
     if not posts:
         return {"status": "gen_fail", "video_id": video.get("video_id")}
-    print(f"  narrative: hilo de {len(posts)} posts sobre {video.get('title','')[:60]}")
+    print(f"  narrative: hilo de {len(posts)} posts sobre {video.get('title','')[:60]} · plats={sorted(active)}")
     result = {
         "video_id": video.get("video_id"),
         "title": (video.get("title") or "")[:80],
         "posts_count": len(posts),
-        "bluesky": _post_bluesky_thread(posts),
-        "mastodon": _post_mastodon_thread(posts),
-        "threads": _post_threads_thread(posts),
+        "bluesky": _post_bluesky_thread(posts) if "bluesky" in active else None,
+        "mastodon": _post_mastodon_thread(posts) if "mastodon" in active else None,
+        "threads": _post_threads_thread(posts) if "threads" in active else None,
     }
-    if any([result["bluesky"], result["mastodon"], result["threads"]]):
+    if any(v for v in (result["bluesky"], result["mastodon"], result["threads"]) if v):
         _mark_used(video["video_id"])
     return result

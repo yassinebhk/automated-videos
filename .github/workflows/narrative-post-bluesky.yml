@@ -1,0 +1,22 @@
+name: Narrative post (Bluesky extra)
+
+# 2º hilo del día SÓLO en Bluesky, donde el growth está funcionando (+4.5 subs/día).
+# El otro workflow narrative-post.yml (16 UTC) publica en las 3 redes;
+# éste dispara a las 09 UTC (11 CEST mañana) sólo en Bluesky para saturar el feed.
+
+on:
+  schedule:
+    - cron: "0 9 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  narrative:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: narrative-post
+      extra_env: |
+        NARRATIVE_PLATFORMS=bluesky
+    secrets: inherit

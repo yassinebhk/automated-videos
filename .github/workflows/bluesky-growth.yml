@@ -1,13 +1,14 @@
 name: Bluesky growth loop
 
-# 3× al día (09:30, 14:30, 19:30 UTC = 11:30, 16:30, 21:30 CEST) para
-# tocar picos de actividad ES distintos: mañana, tarde-café, prime time.
-# Follow-back + follows nicho + likes/reposts on-topic.
-# Rate limits Bluesky (5000 likes/día) están muy por encima de 3× esta cadencia.
+# 5× al día (07:30, 10:30, 14:30, 18:30, 21:30 UTC = 09:30, 12:30, 16:30, 20:30, 23:30 CEST)
+# para tocar picos de actividad ES distintos: mañana, mediodía, tarde-café,
+# prime time y noche. Follow-back + follows nicho + likes/reposts on-topic.
+# Cada run: 20 follows + 35 likes + 5 reposts. Total diario ~100 follows, 175 likes.
+# Rate limit Bluesky = 5000 likes/día, seguimos bien por debajo.
 
 on:
   schedule:
-    - cron: "30 9,14,19 * * *"
+    - cron: "30 7,10,14,18,21 * * *"
   workflow_dispatch: {}
 
 concurrency:
