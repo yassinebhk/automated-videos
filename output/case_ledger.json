@@ -246,6 +246,15 @@
           "topic": "El caso Naseiro: la financiación ilegal del PP valenciano y la sentencia de 1994"
         }
       ]
+    },
+    "camboya_mallorca": {
+      "count": 1,
+      "history": [
+        {
+          "ts": "2026-09-09T12:48:04.517685+00:00",
+          "topic": "El fraude de 'Camboya Mallorca': El timo que desvió millones en los 90 en Mallorca"
+        }
+      ]
     }
   }
 }
