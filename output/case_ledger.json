@@ -1,7 +1,7 @@
 {
   "cases": {
     "kio": {
-      "count": 8,
+      "count": 9,
       "history": [
         {
           "ts": "2026-08-24T07:57:23.240427+00:00",
@@ -34,6 +34,10 @@
         {
           "ts": "2026-09-02T10:59:03.162784+00:00",
           "topic": "[CRIMEN] KIO Torres: el fraude bursátil de 300 millones de euros y la sentencia del Tribunal Supremo"
+        },
+        {
+          "ts": "2026-09-09T10:42:46.340065+00:00",
+          "topic": "[CRIMEN] KIO: el fraude de 300 millones de euros en bolsa que sacudió a España en los 90"
         }
       ]
     },
