@@ -100,3 +100,22 @@ def upload_video(
             pct = int(status.progress() * 100)
             print(f"  YT upload: {pct}%")
     return response["id"]
+
+
+def set_thumbnail(video_id: str, thumbnail_path: Path) -> bool:
+    """Sube un thumbnail custom (1280x720 PNG/JPG, <2MB) al video_id.
+    Requiere que la cuenta esté verificada (limite 10 uploads/día sin verificar).
+    """
+    if not thumbnail_path.exists():
+        print(f"  YT thumbnail: no existe {thumbnail_path}")
+        return False
+    try:
+        creds = _get_credentials()
+        youtube = googleapiclient.discovery.build("youtube", "v3", credentials=creds)
+        media = MediaFileUpload(str(thumbnail_path), mimetype="image/jpeg", resumable=False)
+        youtube.thumbnails().set(videoId=video_id, media_body=media).execute()
+        print(f"  YT thumbnail: ✅ set on {video_id}")
+        return True
+    except Exception as e:
+        print(f"  YT thumbnail: ❌ {type(e).__name__}: {e}")
+        return False

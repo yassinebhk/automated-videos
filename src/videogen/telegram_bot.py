@@ -1043,7 +1043,7 @@ def _shorts_published_today_count() -> int:
         return 0
 
 
-def _autogen_already_today(max_per_day: int = 1) -> bool:
+def _autogen_already_today(max_per_day: int = 2) -> bool:
     """¿Ya se alcanzó el tope diario de shorts? (default: 1/día).
 
     Bajado 2 → 1 el 02/09/26: la palanca C (2/día) saturaba el canal y
@@ -1731,9 +1731,21 @@ async def _run_autogen_daily(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> No
             f"PROHIBIDO meta-comentarios tipo 'AVISO:' o 'Este tema no es de...'. "
         )
     else:
+        # Palanca clickbait YT (09/09/26): el title debe TIRAR del scroll,
+        # no describir. YT premia CTR y este canal <1000 subs necesita
+        # ganchos agresivos. Elige aleatoriamente entre 4 patrones que
+        # funcionan en shorts virales españoles (Cristian Gálvez, Uy Albert!, etc).
         title_rule = (
-            f"El title DEBE seguir el patrón SEO 'Caso [NombreConocido] — [gancho] · #{episode_num}' "
-            f"(o fallback '[Persona] — [dato shock] · #{episode_num}' si el caso no tiene nombre 'Caso X'). "
+            f"El title debe MÁXIMIZAR el CTR. Elige el patrón más adecuado al caso entre:\n"
+            f"  A) 'Cobraron [CIFRA] y NADIE fue a la cárcel · #{episode_num}'\n"
+            f"  B) 'El caso que [ESPAÑA/TVE/tu política] NO te contó: [CIFRA] · #{episode_num}'\n"
+            f"  C) '[CIFRA] ROBADOS en [tiempo]: el caso [nombre] · #{episode_num}'\n"
+            f"  D) 'Caso [NombreConocido] — [dato shock brutal] · #{episode_num}'\n"
+            f"REGLAS:\n"
+            f"- La CIFRA en MAYÚSCULAS y con símbolo (300M€, 6.6M€, etc).\n"
+            f"- Palabras palanca permitidas: NADIE, ROBADOS, OCULTÓ, IMPUNE, DESAPARECIÓ.\n"
+            f"- PROHIBIDO 'brutal', 'increíble', 'no te lo vas a creer', 'ATENCIÓN', 'AVISO'.\n"
+            f"- Máx 70 chars total.\n"
         )
     topic_with_ep = (
         f"[Episodio #{episode_num} de la serie 'Estafas Españolas'. "

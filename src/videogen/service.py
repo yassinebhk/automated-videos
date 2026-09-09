@@ -411,6 +411,16 @@ def publish(
         ids[lang] = video_id
         progress(f"[{lang}] ✓ {url}")
 
+        # Thumbnail viral custom: extrae frame + overlay cifra amarilla + shock rojo.
+        # Requiere cuenta YT verificada (limit 10/día sin verificar).
+        try:
+            from . import thumbnail_viral
+            thumb_path = d / f"_thumb_{lang}.jpg"
+            if thumbnail_viral.build_viral_thumbnail(vid, loc.title, thumb_path):
+                upload_youtube.set_thumbnail(video_id, thumb_path)
+        except Exception as _te:
+            progress(f"[{lang}] thumbnail viral skip: {type(_te).__name__}: {_te}")
+
     # Persiste links + ids junto al video (para historial y stats)
     yt_path = d / "youtube.json"
     existing = {}
