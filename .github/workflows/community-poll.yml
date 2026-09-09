@@ -1,0 +1,33 @@
+name: Community poll (Bluesky)
+
+# DOMINGO 18 UTC (20 CEST) → publica encuesta con 4 casos candidatos
+# LUNES 11 UTC (13 CEST) → lee likes, elige ganador, escribe community_pick.json
+#
+# El autogen del lunes leerá community_pick.json y usará ese topic con
+# marca [COMMUNITY_PICK] "vosotros lo elegisteis" → fideliza a los 125
+# followers Bluesky, convierte follows en subs YT.
+
+on:
+  schedule:
+    - cron: "0 18 * * 0"   # DOMINGO 18 UTC — publica encuesta
+    - cron: "0 11 * * 1"   # LUNES 11 UTC — resuelve
+  workflow_dispatch:
+    inputs:
+      action:
+        type: choice
+        options: [create, resolve]
+        default: create
+        description: Fase manual del poll (create=publica, resolve=lee ganador)
+
+permissions:
+  contents: write
+
+jobs:
+  poll:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: >-
+        ${{ github.event.schedule == '0 11 * * 1' && 'community-poll-resolve'
+        || github.event.inputs.action == 'resolve' && 'community-poll-resolve'
+        || 'community-poll-create' }}
+    secrets: inherit

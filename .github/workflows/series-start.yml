@@ -1,0 +1,21 @@
+name: Series start (miniserie 5-partes)
+
+# MIÉRCOLES 10 UTC — inicia nueva miniserie si no hay activa.
+# Genera plan de 5 partes con cliffhangers para un caso gordo.
+# Las 5 partes se publican los siguientes 5 días automáticamente
+# vía el autogen normal (que prioriza serie activa > community > flujo normal).
+
+on:
+  schedule:
+    - cron: "0 10 * * 3"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  start:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: series-start
+    secrets: inherit

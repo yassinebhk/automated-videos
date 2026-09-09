@@ -834,6 +834,49 @@ def social_boost_cmd():
             print(f"tg notify fail: {e}")
 
 
+@cli.command(name="series-start")
+def series_start_cmd():
+    """Inicia nueva miniserie de 5 partes sobre un caso gordo aleatorio."""
+    from . import series_generator
+    result = series_generator.start_new_series()
+    if not result:
+        print("  ❌ no se pudo iniciar serie")
+        raise SystemExit(1)
+    print(json.dumps({"case": result["case_name"],
+                       "parts": len(result["parts"])}, indent=2, ensure_ascii=False))
+
+
+@cli.command(name="series-status")
+def series_status_cmd():
+    """Muestra estado de la miniserie activa."""
+    from . import series_generator
+    active = series_generator._load(series_generator.ACTIVE_SERIES, None)
+    if not active:
+        print("Sin miniserie activa")
+        return
+    print(json.dumps({
+        "case": active["case_name"],
+        "next_part": active["next_part"],
+        "last_published_at": active.get("last_published_at"),
+    }, indent=2, ensure_ascii=False))
+
+
+@cli.command(name="community-poll-create")
+def community_poll_create_cmd():
+    """DOMINGO: publica encuesta community en Bluesky con 4 casos candidatos."""
+    from . import community_poll
+    result = community_poll.create_poll()
+    print(json.dumps(result, indent=2, ensure_ascii=False))
+
+
+@cli.command(name="community-poll-resolve")
+def community_poll_resolve_cmd():
+    """LUNES: lee likes de la encuesta, elige ganador, escribe community_pick.json."""
+    from . import community_poll
+    result = community_poll.resolve_poll()
+    print(json.dumps(result, indent=2, ensure_ascii=False))
+
+
 @cli.command(name="newsjack-once")
 def newsjack_once_cmd():
     """Detecta noticia HOY de corrupción/juicio + genera Short en <2h.

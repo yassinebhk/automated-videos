@@ -1603,7 +1603,7 @@ async def _run_autogen_daily(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> No
     """Cuerpo del autogen diario (sin manejo de lock)."""
     import asyncio
     from datetime import datetime, timedelta, timezone
-    from . import ideas, compose, crosspost
+    from . import ideas, compose, crosspost, community_poll, series_generator
 
     # Sin mensaje "iniciada" — reduce ruido. Solo se manda el resumen al final.
     print("  autogen: iniciada")
@@ -1612,6 +1612,45 @@ async def _run_autogen_daily(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> No
     if not ok:
         await _send_yt_token_alert(chat_id, ctx, reason)
         return
+
+    # Prioridad #1: si hay miniserie activa con parte pendiente, publicar esa.
+    # Fideliza espectadores (retorno diario para completar la serie).
+    series_topic = series_generator.get_next_series_topic()
+    if series_topic:
+        print(f"  autogen: usando miniserie parte pendiente")
+        await ctx.bot.send_message(chat_id,
+            f"🎬 Autogen publica siguiente parte de miniserie activa:\n<i>{series_topic[:120]}</i>",
+            parse_mode="HTML")
+        try:
+            slug = await _run_blocking(lambda: service.generate(series_topic, ("es",),
+                lambda m: None, ai_hero=True))
+            series_generator.mark_part_published()
+            print(f"  autogen: miniserie parte publicada slug={slug}")
+            return
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            await ctx.bot.send_message(chat_id,
+                f"❌ Miniserie parte falló: {type(e).__name__}: {str(e)[:200]}\nContinúo con flujo normal.")
+
+    # Prioridad #2: community-pick de encuesta pendiente <36h
+    community_topic = community_poll.consume_pick_if_available()
+    if community_topic:
+        print(f"  autogen: usando community_pick «{community_topic[:80]}»")
+        await ctx.bot.send_message(chat_id,
+            f"🏆 Autogen usa el caso elegido por la community:\n<i>{community_topic[:120]}</i>",
+            parse_mode="HTML")
+        try:
+            slug = await _run_blocking(lambda: service.generate(community_topic, ("es",),
+                lambda m: None, ai_hero=True))
+            print(f"  autogen: community_pick short generado slug={slug}")
+            await ctx.bot.send_message(chat_id, f"✅ Community pick publicado: {slug}")
+            return
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            await ctx.bot.send_message(chat_id,
+                f"❌ Community pick falló: {type(e).__name__}: {str(e)[:200]}\nContinúo con flujo normal.")
 
     # Casos ya cubiertos → pasarlos a Gemini como exclusión explícita.
     # Sin esto Gemini insiste con los mismos 8 casos del inicio del brief
