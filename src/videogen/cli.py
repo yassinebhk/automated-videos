@@ -834,6 +834,37 @@ def social_boost_cmd():
             print(f"tg notify fail: {e}")
 
 
+@cli.command(name="newsjack-once")
+def newsjack_once_cmd():
+    """Detecta noticia HOY de corrupción/juicio + genera Short en <2h.
+    RSS de medios ES + Gemini scoring + autogen."""
+    from . import newsjack
+    import os, json, urllib.request
+    result = newsjack.run_once()
+    lines = ["🚨 <b>Newsjack</b>"]
+    if result.get("status") == "no_candidate":
+        lines.append("· sin candidato relevante hoy")
+    elif result.get("status") == "gen_fail":
+        lines.append(f"· ❌ {result.get('error','')[:100]}")
+    else:
+        lines.append(f"· ✅ {result.get('slug','')}")
+        lines.append(f"· topic: {result.get('topic','')[:100]}")
+    print("\n".join(lines))
+    tok = os.environ.get("TELEGRAM_BOT_TOKEN")
+    chat = os.environ.get("TELEGRAM_CHAT_ID")
+    if tok and chat:
+        try:
+            req = urllib.request.Request(
+                f"https://api.telegram.org/bot{tok}/sendMessage",
+                data=json.dumps({"chat_id": int(chat), "text": "\n".join(lines),
+                                  "parse_mode": "HTML"}).encode(),
+                headers={"Content-Type": "application/json"},
+            )
+            urllib.request.urlopen(req, timeout=30).read()
+        except Exception as e:
+            print(f"tg notify fail: {e}")
+
+
 @cli.command(name="narrative-post")
 def narrative_post_cmd():
     """Publica 1 hilo narrativo (5 posts encadenados) en Bluesky+Mastodon+Threads."""

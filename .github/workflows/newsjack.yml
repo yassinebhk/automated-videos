@@ -1,0 +1,27 @@
+name: Newsjack (short en <2h desde noticia)
+
+# Detecta noticias españolas HOY de corrupción/juicio/fraude relevante
+# y las convierte en Short YT. YT premia brutalmente frescura.
+#
+# Corre 2×/día en horas de picos de publicación de medios ES:
+# 09:00 UTC (11:00 CEST — sale la portada matutina)
+# 16:00 UTC (18:00 CEST — cierre tarde-noticias)
+#
+# El ledger dedupe por 30 días — misma noticia no repite.
+# Cadencia normal daily-short (1-2/día) sigue independiente, esto SUMA
+# cuando hay noticia buena; si no hay candidato, no publica nada.
+
+on:
+  schedule:
+    - cron: "0 9,16 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  newsjack:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: newsjack-once
+    secrets: inherit
