@@ -48,17 +48,41 @@ def _collect_video_ids() -> list[tuple[str, str, str]]:
     return out
 
 
-def fetch_channel_stats() -> dict | None:
-    """Stats del canal: suscriptores, views totales, nº de videos."""
+def _yt_client(channel_prefix: str = ""):
+    """Devuelve un cliente YT autenticado. Si channel_prefix (ej. 'YT_TAX'),
+    usa esas creds temporalmente (para canal alternativo TaxHack ES)."""
+    import os
     from googleapiclient.discovery import build
+    from .upload_youtube import _get_credentials, TOKEN_FILE
     from google.oauth2.credentials import Credentials
+    from .upload_youtube import SCOPES
 
-    from .upload_youtube import SCOPES, TOKEN_FILE
-
+    if channel_prefix:
+        prev = os.environ.get("YT_CHANNEL_PREFIX", "")
+        os.environ["YT_CHANNEL_PREFIX"] = channel_prefix
+        try:
+            creds = _get_credentials()
+        finally:
+            if prev:
+                os.environ["YT_CHANNEL_PREFIX"] = prev
+            else:
+                os.environ.pop("YT_CHANNEL_PREFIX", None)
+        return build("youtube", "v3", credentials=creds)
+    # Modo estándar (WaitWhy) — lee TOKEN_FILE
     if not TOKEN_FILE.exists():
         return None
     creds = Credentials.from_authorized_user_file(str(TOKEN_FILE), SCOPES)
-    yt = build("youtube", "v3", credentials=creds)
+    return build("youtube", "v3", credentials=creds)
+
+
+def fetch_channel_stats(channel_prefix: str = "") -> dict | None:
+    """Stats del canal: suscriptores, views totales, nº de videos.
+
+    channel_prefix='YT_TAX' → consulta canal TaxHack ES en vez del default.
+    """
+    yt = _yt_client(channel_prefix)
+    if not yt:
+        return None
     resp = yt.channels().list(part="statistics,snippet", mine=True).execute()
     items = resp.get("items", [])
     if not items:
@@ -123,8 +147,10 @@ def fetch_recent_titles(n: int = 20, days: int | None = None) -> list[str]:
             if it.get("snippet", {}).get("title")]
 
 
-def fetch_youtube_stats() -> list[dict]:
+def fetch_youtube_stats(channel_prefix: str = "") -> list[dict]:
     """Stats por video subido: views, likes, comments. [] si no hay nada.
+
+    channel_prefix='YT_TAX' → canal TaxHack ES.
 
     Fix bug 08-17: antes leía IDs de output/uploaded/*/youtube.json (filesystem
     local). En GH Actions ese dir está vacío tras cada run efímero → los
@@ -132,15 +158,9 @@ def fetch_youtube_stats() -> list[dict]:
     los charts salían en blanco. Ahora fetch la uploads playlist del canal
     vía YT API (fuente de verdad persistente).
     """
-    from googleapiclient.discovery import build
-    from google.oauth2.credentials import Credentials
-
-    from .upload_youtube import SCOPES, TOKEN_FILE
-
-    if not TOKEN_FILE.exists():
+    yt = _yt_client(channel_prefix)
+    if not yt:
         return []
-    creds = Credentials.from_authorized_user_file(str(TOKEN_FILE), SCOPES)
-    yt = build("youtube", "v3", credentials=creds)
 
     # 1) Obtener uploads playlist
     ch = yt.channels().list(part="contentDetails", mine=True).execute()

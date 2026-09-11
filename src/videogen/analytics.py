@@ -114,6 +114,37 @@ def snapshot_youtube() -> list[dict]:
     return rows
 
 
+def snapshot_youtube_tax() -> list[dict]:
+    """Captura estado del 2º canal TaxHack ES (misma cuenta Google,
+    creds via YT_TAX_*). platform='youtube_tax' para separar histórico."""
+    rows: list[dict] = []
+    try:
+        ch = stats.fetch_channel_stats(channel_prefix="YT_TAX") or {}
+        if ch:
+            rows.append({
+                "platform": "youtube_tax", "kind": "channel",
+                "subs": int(ch.get("subscribers", 0) or 0),
+                "views": int(ch.get("views", 0) or 0),
+                "likes": 0,
+                "videos": int(ch.get("videos", 0) or 0),
+                "title": ch.get("title", ""),
+                "source": "api",
+            })
+        for v in (stats.fetch_youtube_stats(channel_prefix="YT_TAX") or []):
+            rows.append({
+                "platform": "youtube_tax", "kind": "video",
+                "slug": v.get("slug"), "video_id": v.get("id"),
+                "lang": v.get("lang"),
+                "title": (v.get("title") or "")[:80],
+                "views": int(v.get("views", 0)),
+                "likes": int(v.get("likes", 0)),
+                "source": "api",
+            })
+    except Exception as e:
+        print(f"  snapshot_youtube_tax fail: {type(e).__name__}: {e}")
+    return rows
+
+
 def snapshot_instagram() -> list[dict]:
     """IG Graph API (Instagram Business Login). Requiere IG_TOKEN + IG_USER_ID.
     Fallback a legacy IG_ACCESS_TOKEN + IG_BUSINESS_ACCOUNT_ID."""
@@ -467,6 +498,7 @@ def snapshot_all(progress=lambda m: None) -> dict[str, int]:
     """Snapshot de todas las plataformas con API. Devuelve {plataforma: nº filas}."""
     counts: dict[str, int] = {}
     for platform, fn in [("youtube", snapshot_youtube),
+                          ("youtube_tax", snapshot_youtube_tax),
                           ("instagram", snapshot_instagram),
                           ("threads", snapshot_threads),
                           ("tiktok", snapshot_tiktok),
