@@ -1,0 +1,20 @@
+name: Motor 2ª mano daily (Motor60s)
+
+# Canal coches 2ª mano ES — CPM €8-15, material infinito.
+# 1 short/día 13:00 UTC (15:00 CEST — sobremesa/tarde).
+# DESACTIVADO hasta setup del user (canal YT + 3 secrets YT_MOTOR_*).
+
+on:
+  # schedule:
+  #   - cron: "0 13 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  motor:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: motor-once
+    secrets: inherit

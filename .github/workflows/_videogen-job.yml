@@ -69,11 +69,20 @@ jobs:
           YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
           YT_CLIENT_ID:     ${{ secrets.YT_CLIENT_ID }}
           YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
-          # Canal TaxHack ES (brand account misma cuenta) — usado cuando
-          # YT_CHANNEL_PREFIX=YT_TAX (setado por tax/pipeline.py).
-          YT_TAX_REFRESH_TOKEN: ${{ secrets.YT_TAX_REFRESH_TOKEN }}
-          YT_TAX_CLIENT_ID:     ${{ secrets.YT_TAX_CLIENT_ID }}
-          YT_TAX_CLIENT_SECRET: ${{ secrets.YT_TAX_CLIENT_SECRET }}
+          # Canales brand account paralelos (misma cuenta Google, misma
+          # OAuth client — solo refresh_token distinto por canal).
+          YT_TAX_REFRESH_TOKEN:    ${{ secrets.YT_TAX_REFRESH_TOKEN }}
+          YT_TAX_CLIENT_ID:        ${{ secrets.YT_TAX_CLIENT_ID }}
+          YT_TAX_CLIENT_SECRET:    ${{ secrets.YT_TAX_CLIENT_SECRET }}
+          YT_LEGAL_REFRESH_TOKEN:  ${{ secrets.YT_LEGAL_REFRESH_TOKEN }}
+          YT_LEGAL_CLIENT_ID:      ${{ secrets.YT_LEGAL_CLIENT_ID }}
+          YT_LEGAL_CLIENT_SECRET:  ${{ secrets.YT_LEGAL_CLIENT_SECRET }}
+          YT_AYUDAS_REFRESH_TOKEN: ${{ secrets.YT_AYUDAS_REFRESH_TOKEN }}
+          YT_AYUDAS_CLIENT_ID:     ${{ secrets.YT_AYUDAS_CLIENT_ID }}
+          YT_AYUDAS_CLIENT_SECRET: ${{ secrets.YT_AYUDAS_CLIENT_SECRET }}
+          YT_MOTOR_REFRESH_TOKEN:  ${{ secrets.YT_MOTOR_REFRESH_TOKEN }}
+          YT_MOTOR_CLIENT_ID:      ${{ secrets.YT_MOTOR_CLIENT_ID }}
+          YT_MOTOR_CLIENT_SECRET:  ${{ secrets.YT_MOTOR_CLIENT_SECRET }}
           REDDIT_CLIENT_ID:     ${{ secrets.REDDIT_CLIENT_ID }}
           REDDIT_CLIENT_SECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}
           REDDIT_USERNAME:      ${{ secrets.REDDIT_USERNAME }}
@@ -176,12 +185,21 @@ jobs:
           PYTHONUNBUFFERED: "1"
           AUTOGEN_PUBLISH_HOUR: ${{ inputs.publish_hour || '21' }}
           EXTRA_ENV: ${{ inputs.extra_env }}
-          # Canal TaxHack ES (leídos por upload_youtube._get_credentials
-          # cuando pipeline tax setea YT_CHANNEL_PREFIX=YT_TAX en runtime).
+          # Canales brand paralelos (leídos por upload_youtube._get_credentials
+          # cuando pipeline setea YT_CHANNEL_PREFIX en runtime).
           # Cada step tiene su propio env — hay que repetirlos aquí.
-          YT_TAX_REFRESH_TOKEN: ${{ secrets.YT_TAX_REFRESH_TOKEN }}
-          YT_TAX_CLIENT_ID:     ${{ secrets.YT_TAX_CLIENT_ID }}
-          YT_TAX_CLIENT_SECRET: ${{ secrets.YT_TAX_CLIENT_SECRET }}
+          YT_TAX_REFRESH_TOKEN:    ${{ secrets.YT_TAX_REFRESH_TOKEN }}
+          YT_TAX_CLIENT_ID:        ${{ secrets.YT_TAX_CLIENT_ID }}
+          YT_TAX_CLIENT_SECRET:    ${{ secrets.YT_TAX_CLIENT_SECRET }}
+          YT_LEGAL_REFRESH_TOKEN:  ${{ secrets.YT_LEGAL_REFRESH_TOKEN }}
+          YT_LEGAL_CLIENT_ID:      ${{ secrets.YT_LEGAL_CLIENT_ID }}
+          YT_LEGAL_CLIENT_SECRET:  ${{ secrets.YT_LEGAL_CLIENT_SECRET }}
+          YT_AYUDAS_REFRESH_TOKEN: ${{ secrets.YT_AYUDAS_REFRESH_TOKEN }}
+          YT_AYUDAS_CLIENT_ID:     ${{ secrets.YT_AYUDAS_CLIENT_ID }}
+          YT_AYUDAS_CLIENT_SECRET: ${{ secrets.YT_AYUDAS_CLIENT_SECRET }}
+          YT_MOTOR_REFRESH_TOKEN:  ${{ secrets.YT_MOTOR_REFRESH_TOKEN }}
+          YT_MOTOR_CLIENT_ID:      ${{ secrets.YT_MOTOR_CLIENT_ID }}
+          YT_MOTOR_CLIENT_SECRET:  ${{ secrets.YT_MOTOR_CLIENT_SECRET }}
         run: |
           set -x  # traza cada línea shell para ver dónde muere si aborta
           # Carga extra_env como env vars adicionales del proceso videogen
@@ -208,10 +226,10 @@ jobs:
           # Commiteamos: analytics snapshots + docs/ (podcast feed/MP3 + IG reels MP4).
           # docs/podcasts/*.mp3 = audios para Spotify. docs/reels/*.mp4 = videos para IG.
           # Ambos servidos vía GitHub Pages.
-          if [ -n "$(git status --porcelain output/stats_history.jsonl output/reddit_history.json output/pinned_summary_id.txt output/case_ledger.json output/social_boost_log.json output/narrative_post_log.json output/newsjack_log.json output/community_poll_state.json output/community_pick.json output/active_series.json output/series_history.json output/tax_ledger.json docs/ 2>/dev/null)" ]; then
+          if [ -n "$(git status --porcelain output/stats_history.jsonl output/reddit_history.json output/pinned_summary_id.txt output/case_ledger.json output/social_boost_log.json output/narrative_post_log.json output/newsjack_log.json output/community_poll_state.json output/community_pick.json output/active_series.json output/series_history.json output/tax_ledger.json output/legal_ledger.json output/ayudas_ledger.json output/motor_ledger.json docs/ 2>/dev/null)" ]; then
             git config user.name "videogen-bot"
             git config user.email "bot@videogen.local"
-            for f in output/stats_history.jsonl output/reddit_history.json output/pinned_summary_id.txt output/case_ledger.json output/social_boost_log.json output/narrative_post_log.json output/newsjack_log.json output/community_poll_state.json output/community_pick.json output/active_series.json output/series_history.json output/tax_ledger.json; do
+            for f in output/stats_history.jsonl output/reddit_history.json output/pinned_summary_id.txt output/case_ledger.json output/social_boost_log.json output/narrative_post_log.json output/newsjack_log.json output/community_poll_state.json output/community_pick.json output/active_series.json output/series_history.json output/tax_ledger.json output/legal_ledger.json output/ayudas_ledger.json output/motor_ledger.json; do
               [ -f "$f" ] && git add "$f" || true
             done
             # docs/ completo (podcast + reels + cualquier futuro asset servido)

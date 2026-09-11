@@ -1,0 +1,29 @@
+"""Pipeline canal Legal Laboral — TusDerechos ES.
+Instancia channel_pipeline genérico con config del nicho."""
+from __future__ import annotations
+
+from ..channel_pipeline import ChannelConfig, run_channel_once
+
+
+CONFIG = ChannelConfig(
+    slug="legal",
+    display_name="TusDerechos ES",
+    handle="@TusDerechos_es",
+    yt_prefix="YT_LEGAL",
+    system_prompt_file="legal_system.md",
+    topic_pool_module="videogen.legal.topic_pool",
+    ledger_filename="legal_ledger.json",
+    kokoro_voice_es="em_alex",
+    audience_emoji={
+        "trabajadores": "👷",
+        "autonomos": "👔",
+        "empresas": "🏢",
+        "_": "⚖️",
+    },
+    series_name="TusDerechos ES",
+    cooldown_days=90,
+)
+
+
+def run_once():
+    return run_channel_once(CONFIG)

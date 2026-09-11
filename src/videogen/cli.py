@@ -844,6 +844,36 @@ def tax_once_cmd():
         raise SystemExit(1)
 
 
+@cli.command(name="legal-once")
+def legal_once_cmd():
+    """Genera + sube 1 short legal-laboral al canal TusDerechos ES."""
+    from .legal import pipeline
+    result = pipeline.run_once()
+    print(json.dumps(result, indent=2, ensure_ascii=False))
+    if result.get("status") not in ("ok",):
+        raise SystemExit(1)
+
+
+@cli.command(name="ayudas-once")
+def ayudas_once_cmd():
+    """Genera + sube 1 short ayudas/subvenciones al canal AyudaGob."""
+    from .ayudas import pipeline
+    result = pipeline.run_once()
+    print(json.dumps(result, indent=2, ensure_ascii=False))
+    if result.get("status") not in ("ok",):
+        raise SystemExit(1)
+
+
+@cli.command(name="motor-once")
+def motor_once_cmd():
+    """Genera + sube 1 short coches 2ª mano al canal Motor60s."""
+    from .motor import pipeline
+    result = pipeline.run_once()
+    print(json.dumps(result, indent=2, ensure_ascii=False))
+    if result.get("status") not in ("ok",):
+        raise SystemExit(1)
+
+
 @cli.command(name="series-start")
 def series_start_cmd():
     """Inicia nueva miniserie de 5 partes sobre un caso gordo aleatorio."""

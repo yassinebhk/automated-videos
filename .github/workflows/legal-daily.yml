@@ -1,0 +1,20 @@
+name: Legal Laboral daily (TusDerechos ES)
+
+# Canal legal laboral ES blue-ocean CPM €10-25.
+# 1 short/día 09:00 UTC (11:00 CEST — hora oficina).
+# DESACTIVADO hasta setup del user (canal YT + 3 secrets YT_LEGAL_*).
+
+on:
+  # schedule:
+  #   - cron: "0 9 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  legal:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: legal-once
+    secrets: inherit
