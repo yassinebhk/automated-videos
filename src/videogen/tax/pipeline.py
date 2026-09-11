@@ -35,6 +35,7 @@ CONFIG = ChannelConfig(
     system_prompt_file="tax_system.md",
     topic_pool_module="videogen.tax.topic_pool",
     ledger_filename="tax_ledger.json",
+    topic_pool_long_module="videogen.tax.topic_pool_long",
     kokoro_voice_es="em_alex",
     audience_emoji={"autonomos": "👔", "particulares": "🧑",
                      "empresas": "🏢", "_": "💶"},

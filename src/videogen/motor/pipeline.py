@@ -12,6 +12,7 @@ CONFIG = ChannelConfig(
     system_prompt_file="motor_system.md",
     topic_pool_module="videogen.motor.topic_pool",
     ledger_filename="motor_ledger.json",
+    topic_pool_long_module="videogen.motor.topic_pool_long",
     kokoro_voice_es="em_alex",
     audience_emoji={
         "compradores": "🛒",

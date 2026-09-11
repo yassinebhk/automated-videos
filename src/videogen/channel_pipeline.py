@@ -42,6 +42,8 @@ class ChannelConfig:
     audience_emoji: dict = field(default_factory=lambda: {})  # {'autonomos': '👔', …}
     series_name: str = "Serie"       # 'TaxHack ES', 'TusDerechos ES'
     cooldown_days: int = 90
+    # Pool long-form específico (opcional). Si no está, long usa el short pool.
+    topic_pool_long_module: str = ""  # ej 'videogen.tax.topic_pool_long'
 
 
 def _load_ledger(path: Path) -> dict[str, str]:
@@ -72,22 +74,33 @@ def _recently_used(path: Path, key: str, days: int) -> bool:
     return (datetime.now(timezone.utc) - ts) < timedelta(days=days)
 
 
-def _pick_topic(cfg: ChannelConfig) -> dict | None:
+def _pick_topic(cfg: ChannelConfig, kind: str = "short") -> dict | None:
     """Elige topic del pool no usado en cooldown. Rota por audiencia.
-    Mergea pool estático con topics dinámicos (auto-refresh quincenal
-    según tendencias del nicho)."""
+    Mergea pool estático + topics dinámicos (auto-refresh según tendencias).
+
+    kind='short' → topic_pool_module (30 topics + dyn)
+    kind='long'  → topic_pool_long_module si existe (10 topics + dyn),
+                   fallback al short pool.
+    """
     import importlib
-    mod = importlib.import_module(cfg.topic_pool_module)
+    if kind == "long" and cfg.topic_pool_long_module:
+        pool_module = cfg.topic_pool_long_module
+    else:
+        pool_module = cfg.topic_pool_module
+    mod = importlib.import_module(pool_module)
     static_pool = mod.all_topics()
     # Merge con topics dinámicos (auto-refresh según tendencias)
     try:
         from . import topic_refresher
-        all_t = topic_refresher.get_all_topics_merged(static_pool, cfg.slug)
+        all_t = topic_refresher.get_all_topics_merged(static_pool, cfg.slug, kind=kind)
     except Exception as e:
-        print(f"  {cfg.slug}: dynamic topics fail ({e}), usando solo estáticos")
+        print(f"  {cfg.slug}-{kind}: dynamic topics fail ({e}), usando estáticos")
         all_t = static_pool
     ledger_path = ROOT / "output" / cfg.ledger_filename
-    fresh = [t for t in all_t if not _recently_used(ledger_path, t["key"], cfg.cooldown_days)]
+    # Ledger key para long usa sufijo _LONG (evita solapar con short)
+    def _key(t):
+        return t["key"] + ("_LONG" if kind == "long" else "")
+    fresh = [t for t in all_t if not _recently_used(ledger_path, _key(t), cfg.cooldown_days)]
     if not fresh:
         fresh = all_t
     # Balance por audiencia si el pool tiene esa clave
@@ -206,7 +219,7 @@ def run_channel_longform_once(cfg: ChannelConfig, target_minutes: int = 7) -> di
     """
     from . import service
 
-    topic = _pick_topic(cfg)
+    topic = _pick_topic(cfg, kind="long")
     if not topic:
         return {"status": "no_topic"}
 
@@ -229,6 +242,7 @@ def run_channel_longform_once(cfg: ChannelConfig, target_minutes: int = 7) -> di
         print(f"  {cfg.slug}-long: subiendo al canal {cfg.display_name}…")
         links = service.publish_long(slug, ("es",), privacy="public",
                                        progress=lambda m: print(f"  {m}"), notify=False)
+        # Ledger key con sufijo _LONG para NO colisionar con dedup shorts
         _mark_used(ROOT / "output" / cfg.ledger_filename, topic["key"] + "_LONG")
         url = links.get("es", "?")
         _notify(f"✅ <b>{cfg.display_name} · long-form</b>\n"

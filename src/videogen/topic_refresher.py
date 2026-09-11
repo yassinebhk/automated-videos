@@ -237,21 +237,137 @@ def refresh_topics_for(niche: str, n: int = 15) -> list[dict] | None:
         return None
 
 
-def get_all_topics_merged(static_pool: list[dict], niche: str) -> list[dict]:
+def get_all_topics_merged(static_pool: list[dict], niche: str,
+                            kind: str = "short") -> list[dict]:
     """Devuelve pool estático + dinámicos (dedup por key). Auto-refresca
-    si toca. Llamado desde channel_pipeline._pick_topic."""
-    if is_refresh_due(niche):
-        refresh_topics_for(niche)  # side-effect: guarda a disco
-    dyn = _load_dynamic(niche).get("topics", [])
+    si toca. Llamado desde channel_pipeline._pick_topic.
+
+    kind='short' → dynamic_topics_{niche}.json
+    kind='long'  → dynamic_topics_{niche}_long.json
+    """
+    key_suffix = "_long" if kind == "long" else ""
+    dyn_niche = f"{niche}{key_suffix}"
+    if is_refresh_due(dyn_niche):
+        if kind == "long":
+            refresh_longform_topics_for(niche)
+        else:
+            refresh_topics_for(niche)
+    dyn = _load_dynamic(dyn_niche).get("topics", [])
     seen_keys = {t.get("key") for t in static_pool}
     fresh = [t for t in dyn if t.get("key") not in seen_keys]
     return list(static_pool) + fresh
 
 
+def refresh_longform_topics_for(niche: str, n: int = 8) -> list[dict] | None:
+    """Genera N topics de PROFUNDIDAD (long-form 7min) para el nicho.
+    Prompt distinto — pide temas grandes con múltiples ángulos, no snacks.
+    Guarda en dynamic_topics_{niche}_long.json."""
+    ctx = _niche_context(niche)
+    if not ctx:
+        return None
+
+    rss_urls = NICHE_RSS.get(niche, [])
+    all_titles: list[str] = []
+    for url in rss_urls:
+        all_titles.extend(_fetch_rss_titles(url, limit=12))
+    trends_block = "\n".join(f"- {t[:120]}" for t in all_titles[:30]) if all_titles else "(sin RSS, usa conocimiento 2026)"
+
+    try:
+        from google import genai
+        from google.genai import types
+        from .config import gemini_key
+        key = gemini_key()
+        if not key:
+            return None
+        client = genai.Client(api_key=key)
+
+        schema = {
+            "type": "object",
+            "properties": {
+                "topics": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "key": {"type": "string"},
+                            "audiencia": {"type": "string"},
+                            "categoria": {"type": "string"},
+                            "titulo": {"type": "string"},
+                            "hook": {"type": "string"},
+                            "cifra_ancla": {"type": "string"},
+                        },
+                        "required": ["key", "audiencia", "categoria",
+                                      "titulo", "hook", "cifra_ancla"],
+                    },
+                }
+            },
+            "required": ["topics"],
+        }
+
+        prompt = (
+            f"Genera {n} topics LONG-FORM (~7 min video YT 16:9) para el canal "
+            f"'{ctx['canal']}' nicho: {niche}.\n"
+            f"Audiencias válidas: {ctx['audiencias']}.\n"
+            f"Categorías válidas: {ctx['categorias']}.\n\n"
+            f"IMPORTANTE: son temas de PROFUNDIDAD para 7 minutos con 3-5\n"
+            f"capítulos, NO shorts. Piensa en 'guía completa X', 'todo sobre Y',\n"
+            f"'historia de Z', 'análisis en profundidad de W'.\n\n"
+            f"Contexto trending esta quincena (titulares recientes):\n{trends_block}\n\n"
+            f"REGLAS VERACIDAD:\n"
+            f"- Normativa REAL vigente 2026\n"
+            f"- Cifras del BOE / {ctx['fuentes_oficiales']} — NO inventar\n"
+            f"- Ante duda: 'según último BOE' en cifra_ancla\n"
+            f"- Sin generalizaciones absolutas\n\n"
+            f"FORMATO:\n"
+            f"- key: slug snake_case ÚNICO (ej. 'long_reforma_laboral_2026_impacto')\n"
+            f"- audiencia/categoria: exactamente de las listadas\n"
+            f"- titulo: 'GUÍA/TODO/HISTORIA X · 7 min' (max 90 chars)\n"
+            f"- hook: qué se aprende (100 chars)\n"
+            f"- cifra_ancla: dato clave que aparecerá — verificable BOE\n\n"
+            f"Prioriza NOVEDADES 2026 y temas que quedan bien en 7min\n"
+            f"(no 30s). Cada topic debe tener contenido suficiente para\n"
+            f"3-5 capítulos distintos."
+        )
+        resp = client.models.generate_content(
+            model="gemini-2.5-flash-lite",
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                temperature=0.9,
+                max_output_tokens=4000,
+                response_mime_type="application/json",
+                response_schema=schema,
+            ),
+        )
+        text = (resp.text or "").strip()
+        try:
+            data = json.loads(text)
+        except Exception as je:
+            print(f"  refresher long {niche}: JSON parse fail — {je}")
+            return None
+        topics = data.get("topics") or []
+        if len(topics) < 3:
+            print(f"  refresher long {niche}: solo {len(topics)} topics")
+            return None
+
+        _save_dynamic(f"{niche}_long", {
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "trending_sources_count": len(all_titles),
+            "kind": "long",
+            "topics": topics,
+        })
+        print(f"  refresher long {niche}: ✅ {len(topics)} topics long-form")
+        return topics
+    except Exception as e:
+        print(f"  refresher long {niche} fail: {type(e).__name__}: {e}")
+        return None
+
+
 def refresh_all_niches() -> dict[str, int]:
-    """Refresca los 4 nichos económico-legales + motor. CLI entry."""
+    """Refresca short + long de los 4 nichos económico-legales. CLI entry."""
     result = {}
     for niche in ("tax", "legal", "ayudas", "motor"):
-        topics = refresh_topics_for(niche)
-        result[niche] = len(topics) if topics else 0
+        ts = refresh_topics_for(niche)
+        tl = refresh_longform_topics_for(niche)
+        result[f"{niche}_short"] = len(ts) if ts else 0
+        result[f"{niche}_long"] = len(tl) if tl else 0
     return result

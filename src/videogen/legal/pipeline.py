@@ -13,6 +13,7 @@ CONFIG = ChannelConfig(
     system_prompt_file="legal_system.md",
     topic_pool_module="videogen.legal.topic_pool",
     ledger_filename="legal_ledger.json",
+    topic_pool_long_module="videogen.legal.topic_pool_long",
     kokoro_voice_es="em_alex",
     audience_emoji={
         "trabajadores": "👷",

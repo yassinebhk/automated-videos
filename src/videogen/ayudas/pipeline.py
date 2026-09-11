@@ -12,6 +12,7 @@ CONFIG = ChannelConfig(
     system_prompt_file="ayudas_system.md",
     topic_pool_module="videogen.ayudas.topic_pool",
     ledger_filename="ayudas_ledger.json",
+    topic_pool_long_module="videogen.ayudas.topic_pool_long",
     kokoro_voice_es="em_alex",
     audience_emoji={
         "autonomos": "👔",
