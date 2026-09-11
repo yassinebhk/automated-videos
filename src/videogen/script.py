@@ -21,20 +21,22 @@ MODELS = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-flash-latest"]
 
 
 def _system_prompt() -> str:
-    """Reglas de formato + brief del nicho.
+    """Reglas técnicas de formato + brief del nicho.
 
-    Override via env SCRIPT_SYSTEM_PROMPT_FILE — permite que canales paralelos
-    (ej. tax) usen distinto prompt sin duplicar service.py. El niche.md se
-    salta si el override está activo (cada nicho autocontiene su prompt).
+    Override via env SCRIPT_SYSTEM_PROMPT_FILE — SUSTITUYE al niche.md para
+    canales paralelos (ej. tax). Las reglas técnicas de script_system.md
+    (estructura JSON pydantic) se preservan SIEMPRE — el override sólo
+    reemplaza el brief del nicho.
     """
     import os
+    base = SYSTEM_PROMPT_PATH.read_text(encoding="utf-8")
     override = os.environ.get("SCRIPT_SYSTEM_PROMPT_FILE", "").strip()
     if override:
         override_path = Path(override) if Path(override).is_absolute() else (PROMPTS_DIR / override)
         if override_path.exists():
-            return override_path.read_text(encoding="utf-8")
-        print(f"  script: WARNING override {override_path} no existe, fallback default")
-    base = SYSTEM_PROMPT_PATH.read_text(encoding="utf-8")
+            niche = override_path.read_text(encoding="utf-8")
+            return f"{niche}\n\n---\n\n{base}"
+        print(f"  script: WARNING override {override_path} no existe, fallback niche.md")
     if NICHE_PROMPT_PATH.exists():
         niche = NICHE_PROMPT_PATH.read_text(encoding="utf-8")
         return f"{niche}\n\n---\n\n{base}"
