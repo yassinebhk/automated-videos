@@ -916,6 +916,36 @@ def motor_longform_cmd():
         raise SystemExit(1)
 
 
+@cli.command(name="pov-once")
+def pov_once_cmd():
+    """Genera + sube 1 POV histórico al canal TiempoAtrás ES."""
+    from .pov import pipeline
+    result = pipeline.run_once()
+    print(json.dumps(result, indent=2, ensure_ascii=False))
+    if result.get("status") not in ("ok",):
+        raise SystemExit(1)
+
+
+@cli.command(name="pov-longform")
+def pov_longform_cmd():
+    """Genera + sube 1 long-form POV histórico (documental corto ~7min)."""
+    from .pov import pipeline
+    result = pipeline.run_longform()
+    print(json.dumps(result, indent=2, ensure_ascii=False))
+    if result.get("status") not in ("ok",):
+        raise SystemExit(1)
+
+
+@cli.command(name="ranking-once")
+def ranking_once_cmd():
+    """Genera + sube 1 bar chart race al canal TopRanking ES."""
+    from .ranking import pipeline
+    result = pipeline.run_once()
+    print(json.dumps(result, indent=2, ensure_ascii=False))
+    if result.get("status") not in ("ok",):
+        raise SystemExit(1)
+
+
 @cli.command(name="topics-refresh")
 def topics_refresh_cmd():
     """Regenera topic pool dinámico según tendencias RSS de cada nicho.

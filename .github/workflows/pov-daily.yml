@@ -1,0 +1,19 @@
+name: POV histórico daily (TiempoAtrás ES)
+
+# 1 short POV/día 14:00 UTC (16 CEST — tarde española).
+# DESACTIVADO hasta setup: canal YT + 3 secrets YT_POV_*.
+
+on:
+  # schedule:
+  #   - cron: "0 14 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  pov:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: pov-once
+    secrets: inherit

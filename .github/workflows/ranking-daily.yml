@@ -1,0 +1,19 @@
+name: Ranking daily (TopRanking ES)
+
+# 1 short ranking/día 15:00 UTC (17 CEST).
+# DESACTIVADO hasta setup: canal YT + 3 secrets YT_RANKING_*.
+
+on:
+  # schedule:
+  #   - cron: "0 15 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  ranking:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: ranking-once
+    secrets: inherit
