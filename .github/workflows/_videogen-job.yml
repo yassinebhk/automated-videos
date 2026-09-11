@@ -69,6 +69,11 @@ jobs:
           YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
           YT_CLIENT_ID:     ${{ secrets.YT_CLIENT_ID }}
           YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+          # Canal TaxHack ES (brand account misma cuenta) — usado cuando
+          # YT_CHANNEL_PREFIX=YT_TAX (setado por tax/pipeline.py).
+          YT_TAX_REFRESH_TOKEN: ${{ secrets.YT_TAX_REFRESH_TOKEN }}
+          YT_TAX_CLIENT_ID:     ${{ secrets.YT_TAX_CLIENT_ID }}
+          YT_TAX_CLIENT_SECRET: ${{ secrets.YT_TAX_CLIENT_SECRET }}
           REDDIT_CLIENT_ID:     ${{ secrets.REDDIT_CLIENT_ID }}
           REDDIT_CLIENT_SECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}
           REDDIT_USERNAME:      ${{ secrets.REDDIT_USERNAME }}
