@@ -124,8 +124,15 @@ def run_once() -> dict[str, Any]:
                                  progress=lambda m: print(f"  {m}"), notify=False)
         _mark_used(topic["key"])
         url = links.get("es", "?")
-        _notify(f"✅ <b>Tax short publicado</b>\nslug: <code>{slug}</code>\n{url}")
-        return {"status": "ok", "slug": slug, "url": url, "topic_key": topic["key"]}
+
+        # Cross-post RRSS con caption fiscal (distinguido de true crime WaitWhy)
+        crosspost_result = _crosspost_tax(slug, url, topic)
+        cross_summary = " · ".join(f"{k}{'✅' if v else '❌'}" for k, v in crosspost_result.items())
+
+        _notify(f"✅ <b>Tax short publicado</b>\nslug: <code>{slug}</code>\n"
+                f"{url}\n\nRRSS: {cross_summary}")
+        return {"status": "ok", "slug": slug, "url": url,
+                "topic_key": topic["key"], "crosspost": crosspost_result}
     except Exception as e:
         import traceback
         traceback.print_exc()
@@ -135,6 +142,67 @@ def run_once() -> dict[str, Any]:
         # Limpia env para no contaminar procesos concurrentes en mismo runner
         os.environ.pop("SCRIPT_SYSTEM_PROMPT_FILE", None)
         os.environ.pop("YT_CHANNEL_PREFIX", None)
+
+
+def _load_video_title(slug: str) -> str | None:
+    """Lee el título real del video subido desde output/uploaded/{slug}/scripts.json"""
+    from ..config import PENDING_DIR, UPLOADED_DIR
+    for base in (UPLOADED_DIR, PENDING_DIR):
+        p = base / slug / "scripts.json"
+        if p.exists():
+            try:
+                data = json.loads(p.read_text(encoding="utf-8"))
+                return (data.get("es") or {}).get("title")
+            except Exception:
+                pass
+    return None
+
+
+def _crosspost_tax(slug: str, url: str, topic: dict) -> dict[str, bool]:
+    """Cross-post del short fiscal a Bluesky/Mastodon/Threads/IG.
+
+    Caption con marca 💶 clara para distinguir del contenido true crime
+    de WaitWhy (compartimos cuentas — decisión user 11/09/26).
+    Horario tax = 10:15 CEST vs WaitWhy 08:15 CEST → 2h separación.
+    """
+    result: dict[str, bool] = {}
+    title = _load_video_title(slug) or topic.get("titulo", "")
+    if not title or not url or url == "?":
+        return result
+
+    # Teaser fiscal para clarificar audiencia
+    audiencia_emoji = {"autonomos": "👔", "particulares": "🧑",
+                        "empresas": "🏢"}.get(topic.get("audiencia", ""), "💶")
+    teaser = f"{audiencia_emoji} Truco fiscal para {topic.get('audiencia','')} — {topic.get('cifra_ancla', '')}"
+
+    # Bluesky
+    try:
+        from .. import bluesky_poster
+        r = bluesky_poster.post_short_to_bluesky(title, url, teaser=teaser)
+        result["🦋"] = bool(r)
+    except Exception as e:
+        print(f"  tax bluesky fail: {e}")
+        result["🦋"] = False
+
+    # Mastodon
+    try:
+        from .. import mastodon_poster
+        r = mastodon_poster.post_short_to_mastodon(title, url, teaser=teaser)
+        result["🐘"] = bool(r)
+    except Exception as e:
+        print(f"  tax mastodon fail: {e}")
+        result["🐘"] = False
+
+    # Threads
+    try:
+        from .. import threads_poster
+        r = threads_poster.post_short_to_threads(title, url, teaser=teaser)
+        result["🧵"] = bool(r)
+    except Exception as e:
+        print(f"  tax threads fail: {e}")
+        result["🧵"] = False
+
+    return result
 
 
 def _notify(text: str) -> None:
