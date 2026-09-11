@@ -117,9 +117,15 @@ def run_once() -> dict[str, Any]:
     try:
         slug = service.generate(topic_prompt, ("es",), lambda m: print(f"  {m}"),
                                  ai_hero=True)
+        print(f"  tax: video generado local, subiendo al canal TaxHack ES…")
+        # service.publish sube a YT — usa YT_CHANNEL_PREFIX=YT_TAX del env
+        # para elegir creds del canal correcto vía upload_youtube._get_credentials.
+        links = service.publish(slug, ("es",), privacy="public",
+                                 progress=lambda m: print(f"  {m}"), notify=False)
         _mark_used(topic["key"])
-        _notify(f"✅ <b>Tax short publicado</b>\nslug: <code>{slug}</code>")
-        return {"status": "ok", "slug": slug, "topic_key": topic["key"]}
+        url = links.get("es", "?")
+        _notify(f"✅ <b>Tax short publicado</b>\nslug: <code>{slug}</code>\n{url}")
+        return {"status": "ok", "slug": slug, "url": url, "topic_key": topic["key"]}
     except Exception as e:
         import traceback
         traceback.print_exc()
