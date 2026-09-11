@@ -68,17 +68,40 @@ def _generate_dataset_with_gemini(topic: dict, n_items: int = 10,
             f"- titulo_video: título SEO YT max 80 chars\n"
             f"- cierre_dato: frase cierre con dato clave y fuente\n"
         )
-        resp = client.models.generate_content(
-            model="gemini-2.5-flash-lite",
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                temperature=0.4,  # baja para precisión numérica
-                max_output_tokens=4000,
-                response_mime_type="application/json",
-                response_schema=schema,
-            ),
-        )
-        text = (resp.text or "").strip()
+        import time as _time
+        # Retry con backoff para 429 Gemini rate-limit
+        text = ""
+        for attempt in range(3):
+            try:
+                resp = client.models.generate_content(
+                    model="gemini-2.5-flash-lite",
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        temperature=0.4,
+                        max_output_tokens=4000,
+                        response_mime_type="application/json",
+                        response_schema=schema,
+                    ),
+                )
+                text = (resp.text or "").strip()
+                break
+            except Exception as e:
+                s = str(e)
+                if "429" in s or "RESOURCE_EXHAUSTED" in s:
+                    # Extrae retryDelay del error si está
+                    import re as _re
+                    m = _re.search(r"'retryDelay':\s*'(\d+)s'", s)
+                    wait_s = int(m.group(1)) + 2 if m else 30 * (attempt + 1)
+                    wait_s = min(wait_s, 120)
+                    print(f"  ranking: 429 rate-limit, retry en {wait_s}s (intento {attempt+1}/3)")
+                    _time.sleep(wait_s)
+                else:
+                    print(f"  ranking: Gemini fail attempt {attempt+1}: {type(e).__name__}: {s[:200]}")
+                    if attempt == 2:
+                        return None
+                    _time.sleep(10)
+        if not text:
+            return None
         try:
             data = json.loads(text)
         except Exception as je:
