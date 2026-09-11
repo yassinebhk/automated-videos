@@ -2146,26 +2146,32 @@ def _save_snapshot(subs: int, views: int, videos_n: int,
         f.write(_json.dumps(row) + "\n")
 
 
-def _fetch_taxhack_totals() -> dict | None:
-    """Stats canal TaxHack ES (segundo canal fiscal)."""
+def _fetch_channel_totals(yt_prefix: str, display: str) -> dict | None:
+    """Stats de cualquier canal (WaitWhy/Tax/Legal/Ayudas/Motor/Ambient)
+    usando prefix env YT_*. Retro-compatible con _fetch_taxhack_totals."""
     from . import stats
     try:
-        ch = stats.fetch_channel_stats(channel_prefix="YT_TAX")
+        ch = stats.fetch_channel_stats(channel_prefix=yt_prefix)
         if not ch:
             return None
         return {
-            "title": ch.get("title", "TaxHack ES"),
+            "title": ch.get("title", display),
             "subs": int(ch.get("subscribers", 0)),
             "views": int(ch.get("views", 0)),
             "videos": int(ch.get("videos", 0)),
         }
     except Exception as e:
-        print(f"  _fetch_taxhack_totals fail: {e}")
+        print(f"  _fetch_channel_totals({yt_prefix}) fail: {e}")
         return None
 
 
-def _prev_tax_snapshot() -> dict:
-    """Última fila platform=youtube_tax en stats_history (para deltas)."""
+def _fetch_taxhack_totals() -> dict | None:
+    return _fetch_channel_totals("YT_TAX", "TaxHack ES")
+
+
+def _prev_channel_snapshot(platform: str) -> dict:
+    """Última fila 'kind=channel' del platform dado (para deltas 24h).
+    Ej: youtube_tax, youtube_legal, youtube_ayudas, youtube_motor, youtube_ambient."""
     import json as _json, time
     from pathlib import Path
     hp = Path(__file__).parent.parent.parent / "output" / "stats_history.jsonl"
@@ -2180,7 +2186,7 @@ def _prev_tax_snapshot() -> dict:
             row = _json.loads(line)
         except Exception:
             continue
-        if row.get("platform") != "youtube_tax" or row.get("kind") != "channel":
+        if row.get("platform") != platform or row.get("kind") != "channel":
             continue
         ts = row.get("ts", 0)
         channels.append((ts, row))
@@ -2192,6 +2198,10 @@ def _prev_tax_snapshot() -> dict:
     if older:
         return older[-1]
     return channels[0][1] if channels else {}
+
+
+def _prev_tax_snapshot() -> dict:
+    return _prev_channel_snapshot("youtube_tax")
 
 
 def _read_pinned_id() -> int | None:
@@ -2420,32 +2430,39 @@ async def _build_daily_report(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> i
                 f"{v['comments']}💬 · {lr:.1f}%LR\n      <i>{title_short}</i>"
             )
         lines.append("")
-    # --- TaxHack ES (2º canal, blue-ocean CPM €10-25) ---
-    tax_lines: list[str] = []
-    try:
-        tax = await _run_blocking(_fetch_taxhack_totals)
-        if tax:
-            prev_tax = _prev_tax_snapshot()
-            dt_subs = _fmt_delta(tax["subs"], int(prev_tax.get("subs", tax["subs"])))
-            dt_views = _fmt_delta(tax["views"], int(prev_tax.get("views", tax["views"])))
-            dt_videos = _fmt_delta(tax["videos"], int(prev_tax.get("videos", tax["videos"])))
-            _save_snapshot(tax["subs"], tax["views"], tax["videos"], platform="youtube_tax")
-            tax_lines = [
-                "💶 <b>YouTube · @TaxHack_es</b>",
-                f"   👥 Subs: <b>{tax['subs']}</b> ({dt_subs})",
-                f"   👁 Views: <b>{tax['views']:,}</b> ({dt_views})",
-                f"   🎬 Videos: <b>{tax['videos']}</b> ({dt_videos})",
-                "",
+    # --- Canales blue-ocean (Tax/Legal/Ayudas/Motor/Ambient) ---
+    channel_lines: list[str] = []
+    CHANNELS = [
+        ("💶", "TaxHack ES",     "@TaxHack_es",     "YT_TAX",     "youtube_tax"),
+        ("⚖️", "TusDerechos ES", "@TusDerechos_ES", "YT_LEGAL",   "youtube_legal"),
+        ("🎁", "AyudaGob",       "@AyudaGob_es",    "YT_AYUDAS",  "youtube_ayudas"),
+        ("🚗", "Motor60s",       "@Motor60sES",     "YT_MOTOR",   "youtube_motor"),
+        ("🌙", "MenteEnCalma",   "MenteEnCalma",    "YT_AMBIENT", "youtube_ambient"),
+    ]
+    for emoji, name, handle, prefix, platform_key in CHANNELS:
+        try:
+            data = await _run_blocking(lambda p=prefix, n=name: _fetch_channel_totals(p, n))
+            if not data:
+                continue
+            prev = _prev_channel_snapshot(platform_key)
+            d_s = _fmt_delta(data["subs"], int(prev.get("subs", data["subs"])))
+            d_v = _fmt_delta(data["views"], int(prev.get("views", data["views"])))
+            d_vd = _fmt_delta(data["videos"], int(prev.get("videos", data["videos"])))
+            _save_snapshot(data["subs"], data["views"], data["videos"], platform=platform_key)
+            channel_lines += [
+                f"{emoji} <b>{name}</b> · {handle}",
+                f"   👥 {data['subs']} ({d_s}) · 👁 {data['views']:,} ({d_v}) · 🎬 {data['videos']} ({d_vd})",
             ]
-    except Exception as _e:
-        print(f"  daily: tax section fail {_e}")
+        except Exception as _e:
+            print(f"  daily: {name} section fail {_e}")
 
     lines += [bsky_line, "", masto_line, "", ig_line, "", threads_line, "", tt_line, ""]
-    lines += tax_lines
+    if channel_lines:
+        lines += ["━━━ <b>Ecosistema blue-ocean</b> ━━━"] + channel_lines + [""]
     lines += ["🤖 <b>Sistema</b>", f"   Token YT: {token_line}",
-              "   Cron: daily-short 08:00+13:00 CEST · tax-daily 10:00 · long-form dom 10:00",
+              "   Cron: WaitWhy 06 · TaxHack 08 · Legal 09 · Ayudas 11 · Motor 13 · Ambient 07 UTC",
               "",
-              '<a href="https://youtube.com/playlist?list=PLK08iO9LACck">📼 Playlist Estafas Españolas</a>']
+              '<a href="https://youtube.com/playlist?list=PLK08iO9LACck">📼 WaitWhy playlist</a>']
     text = "\n".join(lines)
 
     # Enviar y devolver message_id (compat PTB Message y HTTP dict runner)

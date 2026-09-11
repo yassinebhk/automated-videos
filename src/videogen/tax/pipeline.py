@@ -139,8 +139,7 @@ def run_once() -> dict[str, Any]:
           f"has_client_id={bool(os.environ.get('YT_TAX_CLIENT_ID'))} · "
           f"has_client_secret={bool(os.environ.get('YT_TAX_CLIENT_SECRET'))}")
 
-    _notify(f"💶 <b>Tax short arrancando</b>\n<i>{topic['titulo'][:80]}</i>")
-
+    # Sin notif previa (reduce ruido). Solo notifica al terminar.
     try:
         slug = service.generate(topic_prompt, ("es",), lambda m: print(f"  {m}"),
                                  ai_hero=True)
@@ -156,8 +155,8 @@ def run_once() -> dict[str, Any]:
         crosspost_result = _crosspost_tax(slug, url, topic)
         cross_summary = " · ".join(f"{k}{'✅' if v else '❌'}" for k, v in crosspost_result.items())
 
-        _notify(f"✅ <b>Tax short publicado</b>\nslug: <code>{slug}</code>\n"
-                f"{url}\n\nRRSS: {cross_summary}")
+        _notify(f"✅ <b>TaxHack ES</b> · {url}\n"
+                f"<i>{topic.get('titulo','')[:60]}</i> · RRSS {cross_summary}")
         return {"status": "ok", "slug": slug, "url": url,
                 "topic_key": topic["key"], "crosspost": crosspost_result}
     except Exception as e:

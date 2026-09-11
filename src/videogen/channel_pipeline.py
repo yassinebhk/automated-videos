@@ -221,9 +221,7 @@ def run_channel_longform_once(cfg: ChannelConfig, target_minutes: int = 7) -> di
     if not os.environ.get(voice_env):
         os.environ[voice_env] = cfg.kokoro_voice_es
 
-    _notify(f"{cfg.audience_emoji.get('_', '💼')} <b>{cfg.display_name} · long-form arrancando</b>\n"
-            f"<i>{topic['titulo'][:80]}</i>")
-
+    # Sin notif previa (reduce ruido). Solo notifica al terminar.
     try:
         slug = service.generate_long(topic_prompt, target_minutes=target_minutes,
                                        langs=("es",),
@@ -267,8 +265,8 @@ def run_channel_once(cfg: ChannelConfig) -> dict[str, Any]:
     if not os.environ.get(voice_env):
         os.environ[voice_env] = cfg.kokoro_voice_es
 
-    _notify(f"{cfg.audience_emoji.get('_', '💼')} <b>{cfg.display_name} arrancando</b>\n"
-            f"<i>{topic['titulo'][:80]}</i>")
+    # Sin notif "arrancando" — reduce ruido Telegram. Solo notifica al terminar
+    # (éxito o error). Toda la actividad se consolida en daily summary.
 
     try:
         slug = service.generate(topic_prompt, ("es",),
@@ -280,8 +278,8 @@ def run_channel_once(cfg: ChannelConfig) -> dict[str, Any]:
         url = links.get("es", "?")
         cross = _crosspost(cfg, slug, url, topic)
         cross_summary = " · ".join(f"{k}{'✅' if v else '❌'}" for k, v in cross.items())
-        _notify(f"✅ <b>{cfg.display_name}</b>\nslug: <code>{slug}</code>\n"
-                f"{url}\n\nRRSS: {cross_summary}")
+        _notify(f"✅ <b>{cfg.display_name}</b> · {url}\n"
+                f"<i>{topic.get('titulo','')[:60]}</i> · RRSS {cross_summary}")
         return {"status": "ok", "slug": slug, "url": url,
                 "topic_key": topic["key"], "crosspost": cross}
     except Exception as e:
