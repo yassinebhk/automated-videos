@@ -425,10 +425,19 @@ def publish(
             progress(f"[{lang}] sin video, omitido")
             continue
         progress(f"[{lang}] Subiendo a YouTube…")
+        # Fallback si Gemini devolvió título vacío (bug motor 11/09: slug
+        # en inglés + title vacío → YT 400 invalidTitle). Usar slug + hook.
+        safe_title = (loc.title or "").strip()
+        if not safe_title:
+            hook_text = (loc.hook.text if getattr(loc, "hook", None) else "") or ""
+            safe_title = f"{slug.replace('-',' ').title()} · {hook_text[:40]}".strip(" ·")
+            if not safe_title:
+                safe_title = slug.replace('-', ' ').title()
+            progress(f"[{lang}] ⚠ title vacío del guion, fallback: '{safe_title[:80]}'")
         video_id = upload_youtube.upload_video(
             vid,
-            title=loc.title,
-            description=_enrich_description_seo(loc.description, loc.title, loc.hashtags, is_short=True),
+            title=safe_title,
+            description=_enrich_description_seo(loc.description, safe_title, loc.hashtags, is_short=True),
             tags=[h.lstrip("#") for h in loc.hashtags],
             privacy=privacy,
             is_short=True,
