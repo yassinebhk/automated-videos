@@ -5,8 +5,8 @@ name: Motor 2ª mano daily (Motor60s)
 # DESACTIVADO hasta setup del user (canal YT + 3 secrets YT_MOTOR_*).
 
 on:
-  # schedule:
-  #   - cron: "0 13 * * *"
+  schedule:
+    - cron: "0 13 * * *"
   workflow_dispatch: {}
 
 permissions:

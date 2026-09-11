@@ -4,8 +4,8 @@ name: Motor long-form weekly (Motor60s)
 # DESACTIVADO hasta OAuth canal Motor.
 
 on:
-  # schedule:
-  #   - cron: "0 14 * * 0"
+  schedule:
+    - cron: "0 14 * * 0"
   workflow_dispatch: {}
 
 permissions:

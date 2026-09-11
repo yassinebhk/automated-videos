@@ -5,8 +5,8 @@ name: Legal Laboral daily (TusDerechos ES)
 # DESACTIVADO hasta setup del user (canal YT + 3 secrets YT_LEGAL_*).
 
 on:
-  # schedule:
-  #   - cron: "0 9 * * *"
+  schedule:
+    - cron: "0 9 * * *"
   workflow_dispatch: {}
 
 permissions:

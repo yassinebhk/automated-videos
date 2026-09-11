@@ -5,8 +5,8 @@ name: Ayudas y subvenciones daily (AyudaGob)
 # DESACTIVADO hasta setup del user (canal YT + 3 secrets YT_AYUDAS_*).
 
 on:
-  # schedule:
-  #   - cron: "0 11 * * *"
+  schedule:
+    - cron: "0 11 * * *"
   workflow_dispatch: {}
 
 permissions:
