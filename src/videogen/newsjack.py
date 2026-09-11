@@ -207,7 +207,7 @@ def score_with_gemini(items: list[dict], max_out: int = 3) -> list[dict]:
             "required": ["picks"],
         }
         resp = client.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-2.5-flash-lite",
             contents=prompt,
             config=types.GenerateContentConfig(
                 temperature=0.7,

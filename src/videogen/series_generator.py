@@ -118,7 +118,7 @@ def _generate_plan(case_name: str) -> list[dict] | None:
             f"Devuelve JSON con clave 'parts' = array de 5 objetos."
         )
         resp = client.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-2.5-flash-lite",
             contents=prompt,
             config=types.GenerateContentConfig(
                 temperature=1.0,

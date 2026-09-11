@@ -142,7 +142,7 @@ def _generate_thread(video: dict) -> list[str] | None:
         data = None
         for attempt in range(2):
             resp = client.models.generate_content(
-                model="gemini-2.5-flash",
+                model="gemini-2.5-flash-lite",
                 contents=prompt,
                 config=types.GenerateContentConfig(
                     temperature=1.1,
