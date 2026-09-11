@@ -24,7 +24,34 @@ CLIENT_SECRET = SECRETS_DIR / "youtube_client_secret.json"
 TOKEN_FILE = SECRETS_DIR / "youtube_token.json"
 
 
+def _channel_prefix() -> str:
+    """Prefijo del canal actual — permite tener múltiples canales YT
+    en el mismo pipeline. Set via env YT_CHANNEL_PREFIX (ej. 'YT_TAX').
+    Default = '' → usa YT_REFRESH_TOKEN estándar (WaitWhy)."""
+    import os
+    return os.environ.get("YT_CHANNEL_PREFIX", "").strip()
+
+
 def _get_credentials() -> Credentials:
+    import os
+    prefix = _channel_prefix()
+    if prefix:
+        # Modo multi-canal: creds desde env con prefijo (ej. YT_TAX_REFRESH_TOKEN)
+        refresh = os.environ.get(f"{prefix}_REFRESH_TOKEN") or os.environ.get("YT_REFRESH_TOKEN")
+        client_id = os.environ.get(f"{prefix}_CLIENT_ID") or os.environ.get("YT_CLIENT_ID")
+        client_secret = os.environ.get(f"{prefix}_CLIENT_SECRET") or os.environ.get("YT_CLIENT_SECRET")
+        if refresh and client_id and client_secret:
+            creds = Credentials(
+                token=None,
+                refresh_token=refresh,
+                client_id=client_id,
+                client_secret=client_secret,
+                token_uri="https://oauth2.googleapis.com/token",
+                scopes=SCOPES,
+            )
+            creds.refresh(Request())
+            return creds
+        print(f"  YT: prefix={prefix} sin creds completas, fallback a token file")
     creds: Credentials | None = None
     if TOKEN_FILE.exists():
         creds = Credentials.from_authorized_user_file(str(TOKEN_FILE), SCOPES)

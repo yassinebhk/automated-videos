@@ -834,6 +834,16 @@ def social_boost_cmd():
             print(f"tg notify fail: {e}")
 
 
+@cli.command(name="tax-once")
+def tax_once_cmd():
+    """Genera + sube 1 short fiscal al canal TaxHack ES (2º canal blue-ocean)."""
+    from .tax import pipeline
+    result = pipeline.run_once()
+    print(json.dumps(result, indent=2, ensure_ascii=False))
+    if result.get("status") not in ("ok",):
+        raise SystemExit(1)
+
+
 @cli.command(name="series-start")
 def series_start_cmd():
     """Inicia nueva miniserie de 5 partes sobre un caso gordo aleatorio."""

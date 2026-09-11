@@ -1,0 +1,27 @@
+name: Tax daily (Fiscalidad España — 2º canal)
+
+# Canal fiscalidad España blue-ocean (CPM €10-25 vs €2-4 True Crime).
+# 1 short/día 08:00 UTC (10:00 CEST — mañana laboral, público autónomo).
+# 100% gratis: mismo pipeline WaitWhy + prompt fiscal + canal YT separado.
+#
+# DESACTIVADO hasta setup del user:
+# 1. Crear canal YT nuevo (5 min, misma cuenta Google) — sugerencia nombre: TaxHack ES / MiIRPF / DedúceteEsto
+# 2. Crear OAuth Desktop client en Google Cloud Console (o reusar el actual si mismo proyecto)
+# 3. Correr flow OAuth para conseguir refresh_token del nuevo canal
+# 4. Añadir secrets: YT_TAX_REFRESH_TOKEN, YT_TAX_CLIENT_ID, YT_TAX_CLIENT_SECRET
+# 5. Descomentar el cron abajo
+
+on:
+  # schedule:
+  #   - cron: "0 8 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  tax:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: tax-once
+    secrets: inherit
