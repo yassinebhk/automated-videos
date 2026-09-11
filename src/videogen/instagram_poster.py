@@ -51,19 +51,47 @@ PUBLIC_REELS_BASE = "https://cdn.jsdelivr.net/gh/yassinebhk/automated-videos@mai
 IG_API_BASE = "https://graph.instagram.com/v21.0"
 
 
-def _prepare_public_reel(local_mp4: Path, slug: str) -> Optional[str]:
-    """Copia el vídeo a docs/reels/<slug>.mp4, commit + push a main para
-    que jsDelivr lo sirva, y devuelve la URL pública.
+def _reencode_for_ig(local_mp4: Path, dest: Path) -> bool:
+    """Re-encode strict H.264 + AAC + trim ≤90s para cumplir specs IG Reels 2026.
 
-    Sin commit+push, jsDelivr no ve el fichero (aún no está en el repo main),
-    IG hace fetch → 404 → container ERROR. Con commit inmediato + espera
-    corta, jsDelivr indexa en segundos."""
+    IG rechaza silenciosamente (container ERROR sin detalle) videos que no
+    tengan codec H.264 + audio AAC exactos. Kokoro/ffmpeg output puede
+    variar. Este re-encode garantiza compatibilidad.
+    """
+    import subprocess
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    cmd = [
+        "ffmpeg", "-y", "-i", str(local_mp4),
+        "-c:v", "libx264", "-preset", "fast", "-crf", "23",
+        "-pix_fmt", "yuv420p",
+        "-c:a", "aac", "-b:a", "128k", "-ar", "44100",
+        "-t", "89",  # cap 89s (IG max 90s)
+        "-movflags", "+faststart",  # streaming-friendly
+        str(dest),
+    ]
+    r = subprocess.run(cmd, capture_output=True, text=True, timeout=180)
+    if r.returncode != 0:
+        print(f"  ig re-encode fail: {r.stderr[-300:]}")
+        return False
+    return dest.exists() and dest.stat().st_size > 10000
+
+
+def _prepare_public_reel(local_mp4: Path, slug: str) -> Optional[str]:
+    """Re-encode strict IG + copia a docs/reels/<slug>.mp4, commit + push
+    para que jsDelivr lo sirva. Devuelve URL pública o None."""
     if not local_mp4.exists():
         return None
     REELS_HOST_DIR.mkdir(parents=True, exist_ok=True)
     dst = REELS_HOST_DIR / f"{slug}.mp4"
-    if not dst.exists() or dst.stat().st_size != local_mp4.stat().st_size:
-        shutil.copy2(local_mp4, dst)
+    # Re-encode STRICT antes de subir (fix container ERROR silencioso 2026).
+    # Si el codec no es exactamente H.264+AAC, IG lo rechaza sin detalle.
+    if _reencode_for_ig(local_mp4, dst):
+        print(f"  ig: re-encoded H.264+AAC · {dst.stat().st_size//1024}KB")
+    else:
+        # Fallback: copia directa (mejor que abortar)
+        print(f"  ig: re-encode falló, uso mp4 original")
+        if not dst.exists() or dst.stat().st_size != local_mp4.stat().st_size:
+            shutil.copy2(local_mp4, dst)
 
     # Commit + push del mp4 antes de que IG intente descargarlo. Silencioso
     # si falla — el flujo sigue y IG lo notificará como container ERROR.
@@ -129,24 +157,28 @@ def _wait_container_ready(access_token: str, container_id: str, max_wait: int = 
     last_status = None
     poll_count = 0
     while time.time() - start < max_wait:
+        # Campo 'status' (no solo status_code) da detalle específico del error
+        # en 2026. Ver postproxy.dev/blog/instagram-reels-api-publishing-guide
         r = requests.get(
             f"{IG_API_BASE}/{container_id}",
-            params={"fields": "status_code,status,error_message,video_title",
+            params={"fields": "status_code,status,error_message,video_title,video_status",
                     "access_token": access_token},
             timeout=20,
         )
         d = r.json()
         st = d.get("status_code", "").upper()
         poll_count += 1
-        # Log SIEMPRE la primera lectura + cambios de estado + cada 60s.
         if last_status is None or st != last_status or (poll_count % 12 == 0):
             elapsed = int(time.time() - start)
-            print(f"  ig: status@{elapsed}s = {st or '(vacío)'} · full={str(d)[:400]}")
+            print(f"  ig: status@{elapsed}s = {st or '(vacío)'} · full={str(d)[:500]}")
             last_status = st
         if st == "FINISHED":
             return True
         if st == "ERROR":
-            print(f"  ig: container ERROR — {d}")
+            # Log detallado del rechazo — 'status' extendido tiene la razón real
+            ext_status = d.get("status", "")
+            err_msg = d.get("error_message", "")
+            print(f"  ig: container ERROR · status='{ext_status}' · error_message='{err_msg}' · full={d}")
             return False
         time.sleep(5)
     print(f"  ig: container timeout tras {max_wait}s")
