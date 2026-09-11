@@ -1,7 +1,7 @@
 """Pipeline canal Motor 2ª mano — Motor60s."""
 from __future__ import annotations
 
-from ..channel_pipeline import ChannelConfig, run_channel_once
+from ..channel_pipeline import ChannelConfig, run_channel_once, run_channel_longform_once
 
 
 CONFIG = ChannelConfig(
@@ -22,6 +22,10 @@ CONFIG = ChannelConfig(
     series_name="Motor60s",
     cooldown_days=90,
 )
+
+
+def run_longform():
+    return run_channel_longform_once(CONFIG)
 
 
 def run_once():

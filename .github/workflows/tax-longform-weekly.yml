@@ -1,0 +1,19 @@
+name: Tax long-form weekly (TaxHack ES)
+
+# 1 long-form/semana DOMINGO 08 UTC (10 CEST). ~7 min, 16:9.
+# Complementa el short diario del canal — YT premia mix short+long.
+
+on:
+  schedule:
+    - cron: "0 8 * * 0"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  tax_long:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: tax-longform
+    secrets: inherit

@@ -1,0 +1,19 @@
+name: Motor long-form weekly (Motor60s)
+
+# 1 long-form/semana DOMINGO 14 UTC (16 CEST).
+# DESACTIVADO hasta OAuth canal Motor.
+
+on:
+  # schedule:
+  #   - cron: "0 14 * * 0"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  motor_long:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: motor-longform
+    secrets: inherit

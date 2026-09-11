@@ -170,6 +170,74 @@ def _notify(text: str) -> None:
         pass
 
 
+def _build_longform_topic_prompt(cfg: ChannelConfig, t: dict) -> str:
+    """Topic para long-form (~7 min). Amplía scope: 1 tema profundo con
+    subcasos/ejemplos, no lista superficial. Se acompaña de mismo prompt
+    del nicho (via SCRIPT_SYSTEM_PROMPT_FILE)."""
+    aud = t.get("audiencia", "")
+    cat = t.get("categoria", "")
+    hook = t.get("hook", "")
+    cifra = t.get("cifra_ancla", "")
+    return (
+        f"[LONG-FORM · Canal {cfg.display_name} · audiencia={aud} · categoria={cat}] "
+        f"Tema: {t['titulo']}. Amplía a explicación profunda ~7 min con 3-5 capítulos: "
+        f"contexto histórico + normativa vigente + casos reales + implicaciones prácticas + "
+        f"conclusión con recomendaciones. "
+        f"Hook central: {hook}. Cifra clave: {cifra}. "
+        f"El title formato: '[Tema completo] EXPLICADO en 7 minutos · [dato clave]'. "
+        f"Cierre obligatorio: 'Consulta con un profesional tu caso. Sígueme para más.'"
+    )
+
+
+def run_channel_longform_once(cfg: ChannelConfig, target_minutes: int = 7) -> dict[str, Any]:
+    """Genera + sube 1 LONG-FORM (~7 min, 16:9) del canal `cfg`.
+
+    NO cross-postea a RRSS (long-forms funcionan mejor por playlist YT
+    + descripción SEO que por teaser social — decisión de diseño).
+    """
+    from . import service
+
+    topic = _pick_topic(cfg)
+    if not topic:
+        return {"status": "no_topic"}
+
+    topic_prompt = _build_longform_topic_prompt(cfg, topic)
+    print(f"  {cfg.slug}-long: topic={topic['key']}")
+    print(f"  {cfg.slug}-long: prefix={cfg.yt_prefix} · "
+          f"has_refresh={bool(os.environ.get(cfg.yt_prefix + '_REFRESH_TOKEN'))}")
+
+    os.environ["SCRIPT_SYSTEM_PROMPT_FILE"] = cfg.system_prompt_file
+    os.environ["YT_CHANNEL_PREFIX"] = cfg.yt_prefix
+    voice_env = f"KOKORO_VOICE_ES_{cfg.yt_prefix[3:]}"
+    if not os.environ.get(voice_env):
+        os.environ[voice_env] = cfg.kokoro_voice_es
+
+    _notify(f"{cfg.audience_emoji.get('_', '💼')} <b>{cfg.display_name} · long-form arrancando</b>\n"
+            f"<i>{topic['titulo'][:80]}</i>")
+
+    try:
+        slug = service.generate_long(topic_prompt, target_minutes=target_minutes,
+                                       langs=("es",),
+                                       progress=lambda m: print(f"  {m}"))
+        print(f"  {cfg.slug}-long: subiendo al canal {cfg.display_name}…")
+        links = service.publish_long(slug, ("es",), privacy="public",
+                                       progress=lambda m: print(f"  {m}"), notify=False)
+        _mark_used(ROOT / "output" / cfg.ledger_filename, topic["key"] + "_LONG")
+        url = links.get("es", "?")
+        _notify(f"✅ <b>{cfg.display_name} · long-form</b>\n"
+                f"slug: <code>{slug}</code>\n{url}")
+        return {"status": "ok", "slug": slug, "url": url,
+                "topic_key": topic["key"], "kind": "long"}
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        _notify(f"❌ {cfg.display_name} long-form falló: {type(e).__name__}: {str(e)[:200]}")
+        return {"status": "gen_fail", "error": str(e), "topic_key": topic["key"]}
+    finally:
+        os.environ.pop("SCRIPT_SYSTEM_PROMPT_FILE", None)
+        os.environ.pop("YT_CHANNEL_PREFIX", None)
+
+
 def run_channel_once(cfg: ChannelConfig) -> dict[str, Any]:
     """Genera + sube + crosspostea 1 short del canal `cfg`."""
     from . import service

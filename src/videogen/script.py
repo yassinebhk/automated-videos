@@ -127,7 +127,17 @@ def _ensure_outro(data: dict, lang: str) -> None:
 
 
 def _long_system_prompt() -> str:
+    """Long-form system prompt. Acepta override SCRIPT_SYSTEM_PROMPT_FILE
+    igual que shorts (canales paralelos usan mismo prompt de nicho para
+    coherencia entre short y long)."""
+    import os
     base = LONG_PROMPT_PATH.read_text(encoding="utf-8")
+    override = os.environ.get("SCRIPT_SYSTEM_PROMPT_FILE", "").strip()
+    if override:
+        override_path = Path(override) if Path(override).is_absolute() else (PROMPTS_DIR / override)
+        if override_path.exists():
+            niche = override_path.read_text(encoding="utf-8")
+            return f"{niche}\n\n---\n\n{base}"
     if NICHE_PROMPT_PATH.exists():
         niche = NICHE_PROMPT_PATH.read_text(encoding="utf-8")
         return f"{niche}\n\n---\n\n{base}"

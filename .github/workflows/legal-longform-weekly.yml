@@ -1,0 +1,19 @@
+name: Legal long-form weekly (TusDerechos ES)
+
+# 1 long-form/semana DOMINGO 10 UTC (12 CEST).
+# DESACTIVADO hasta OAuth canal Legal.
+
+on:
+  # schedule:
+  #   - cron: "0 10 * * 0"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  legal_long:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: legal-longform
+    secrets: inherit

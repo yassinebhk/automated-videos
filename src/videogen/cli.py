@@ -874,6 +874,48 @@ def motor_once_cmd():
         raise SystemExit(1)
 
 
+# ─── LONG-FORM commands (1×/semana por canal) ───
+
+@cli.command(name="tax-longform")
+def tax_longform_cmd():
+    """Genera + sube 1 long-form (~7 min) al canal TaxHack ES."""
+    from .tax import pipeline
+    result = pipeline.run_longform()
+    print(json.dumps(result, indent=2, ensure_ascii=False))
+    if result.get("status") not in ("ok",):
+        raise SystemExit(1)
+
+
+@cli.command(name="legal-longform")
+def legal_longform_cmd():
+    """Genera + sube 1 long-form legal-laboral al canal TusDerechos ES."""
+    from .legal import pipeline
+    result = pipeline.run_longform()
+    print(json.dumps(result, indent=2, ensure_ascii=False))
+    if result.get("status") not in ("ok",):
+        raise SystemExit(1)
+
+
+@cli.command(name="ayudas-longform")
+def ayudas_longform_cmd():
+    """Genera + sube 1 long-form ayudas al canal AyudaGob."""
+    from .ayudas import pipeline
+    result = pipeline.run_longform()
+    print(json.dumps(result, indent=2, ensure_ascii=False))
+    if result.get("status") not in ("ok",):
+        raise SystemExit(1)
+
+
+@cli.command(name="motor-longform")
+def motor_longform_cmd():
+    """Genera + sube 1 long-form motor 2ª mano al canal Motor60s."""
+    from .motor import pipeline
+    result = pipeline.run_longform()
+    print(json.dumps(result, indent=2, ensure_ascii=False))
+    if result.get("status") not in ("ok",):
+        raise SystemExit(1)
+
+
 @cli.command(name="series-start")
 def series_start_cmd():
     """Inicia nueva miniserie de 5 partes sobre un caso gordo aleatorio."""

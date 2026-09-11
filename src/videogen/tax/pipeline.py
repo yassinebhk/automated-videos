@@ -22,7 +22,25 @@ from pathlib import Path
 from typing import Any
 
 from ..config import ROOT
+from ..channel_pipeline import ChannelConfig, run_channel_longform_once
 from . import topic_pool
+
+
+# Config compartida con channel_pipeline (para long-form)
+CONFIG = ChannelConfig(
+    slug="tax",
+    display_name="TaxHack ES",
+    handle="@TaxHack_es",
+    yt_prefix="YT_TAX",
+    system_prompt_file="tax_system.md",
+    topic_pool_module="videogen.tax.topic_pool",
+    ledger_filename="tax_ledger.json",
+    kokoro_voice_es="em_alex",
+    audience_emoji={"autonomos": "👔", "particulares": "🧑",
+                     "empresas": "🏢", "_": "💶"},
+    series_name="TaxHack ES",
+    cooldown_days=90,
+)
 
 TAX_LEDGER = ROOT / "output" / "tax_ledger.json"
 COOLDOWN_DAYS = 90
@@ -90,6 +108,10 @@ def _build_topic_prompt(t: dict) -> str:
         f"(AHORRA/DEDUCE/RECUPERA/EXENTO) en línea 2. "
         f"CIERRE OBLIGATORIO: 'Consulta con tu asesor. Sígueme para más trucos legales.'"
     )
+
+
+def run_longform():
+    return run_channel_longform_once(CONFIG)
 
 
 def run_once() -> dict[str, Any]:
