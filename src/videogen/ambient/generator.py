@@ -181,13 +181,20 @@ def _build_video(image: Path, audio: Path, out_dir: Path,
                   duration_seconds: int) -> Path | None:
     """ffmpeg: image loop + audio → mp4 1920x1080. Fade in/out 3s."""
     output = out_dir / "video.mp4"
+    # Optimizado para imagen estática 30-60min en runner 2-core:
+    # - framerate 1fps (imagen no cambia — YT lo mostrará normal, no truco).
+    #   Reduce load 30× vs 30fps default.
+    # - preset ultrafast → prioriza velocidad sobre tamaño.
+    # - -tune stillimage: optimizaciones específicas x264 para imagen fija.
+    # - audio copy (ya es AAC binaural o mp3 pixabay convertido a aac out).
     cmd = [
         "ffmpeg", "-y",
-        "-loop", "1", "-i", str(image),
+        "-loop", "1", "-framerate", "1", "-i", str(image),
         "-i", str(audio),
         "-c:v", "libx264",
         "-tune", "stillimage",
-        "-preset", "veryfast",
+        "-preset", "ultrafast",
+        "-r", "1",  # 1fps output
         "-c:a", "aac", "-b:a", "192k",
         "-pix_fmt", "yuv420p",
         "-vf", (
@@ -200,7 +207,8 @@ def _build_video(image: Path, audio: Path, out_dir: Path,
         "-t", str(duration_seconds),
         str(output),
     ]
-    r = subprocess.run(cmd, capture_output=True, text=True, timeout=1200)
+    # Timeout 40min max (60min video ambient tipo dormir requiere hasta ~2400s)
+    r = subprocess.run(cmd, capture_output=True, text=True, timeout=2400)
     if r.returncode != 0:
         print(f"  ambient: ffmpeg video fail — {r.stderr[-400:]}")
         return None
