@@ -114,15 +114,14 @@ def snapshot_youtube() -> list[dict]:
     return rows
 
 
-def snapshot_youtube_tax() -> list[dict]:
-    """Captura estado del 2º canal TaxHack ES (misma cuenta Google,
-    creds via YT_TAX_*). platform='youtube_tax' para separar histórico."""
+def _snapshot_channel_generic(yt_prefix: str, platform_key: str) -> list[dict]:
+    """Genérico multi-canal. yt_prefix='YT_TAX' → platform='youtube_tax'."""
     rows: list[dict] = []
     try:
-        ch = stats.fetch_channel_stats(channel_prefix="YT_TAX") or {}
+        ch = stats.fetch_channel_stats(channel_prefix=yt_prefix) or {}
         if ch:
             rows.append({
-                "platform": "youtube_tax", "kind": "channel",
+                "platform": platform_key, "kind": "channel",
                 "subs": int(ch.get("subscribers", 0) or 0),
                 "views": int(ch.get("views", 0) or 0),
                 "likes": 0,
@@ -130,9 +129,9 @@ def snapshot_youtube_tax() -> list[dict]:
                 "title": ch.get("title", ""),
                 "source": "api",
             })
-        for v in (stats.fetch_youtube_stats(channel_prefix="YT_TAX") or []):
+        for v in (stats.fetch_youtube_stats(channel_prefix=yt_prefix) or []):
             rows.append({
-                "platform": "youtube_tax", "kind": "video",
+                "platform": platform_key, "kind": "video",
                 "slug": v.get("slug"), "video_id": v.get("id"),
                 "lang": v.get("lang"),
                 "title": (v.get("title") or "")[:80],
@@ -141,8 +140,36 @@ def snapshot_youtube_tax() -> list[dict]:
                 "source": "api",
             })
     except Exception as e:
-        print(f"  snapshot_youtube_tax fail: {type(e).__name__}: {e}")
+        print(f"  snapshot {platform_key} fail: {type(e).__name__}: {e}")
     return rows
+
+
+def snapshot_youtube_tax() -> list[dict]:
+    return _snapshot_channel_generic("YT_TAX", "youtube_tax")
+
+
+def snapshot_youtube_legal() -> list[dict]:
+    return _snapshot_channel_generic("YT_LEGAL", "youtube_legal")
+
+
+def snapshot_youtube_ayudas() -> list[dict]:
+    return _snapshot_channel_generic("YT_AYUDAS", "youtube_ayudas")
+
+
+def snapshot_youtube_motor() -> list[dict]:
+    return _snapshot_channel_generic("YT_MOTOR", "youtube_motor")
+
+
+def snapshot_youtube_ambient() -> list[dict]:
+    return _snapshot_channel_generic("YT_AMBIENT", "youtube_ambient")
+
+
+def snapshot_youtube_pov() -> list[dict]:
+    return _snapshot_channel_generic("YT_POV", "youtube_pov")
+
+
+def snapshot_youtube_ranking() -> list[dict]:
+    return _snapshot_channel_generic("YT_RANKING", "youtube_ranking")
 
 
 def snapshot_instagram() -> list[dict]:
@@ -499,6 +526,12 @@ def snapshot_all(progress=lambda m: None) -> dict[str, int]:
     counts: dict[str, int] = {}
     for platform, fn in [("youtube", snapshot_youtube),
                           ("youtube_tax", snapshot_youtube_tax),
+                          ("youtube_legal", snapshot_youtube_legal),
+                          ("youtube_ayudas", snapshot_youtube_ayudas),
+                          ("youtube_motor", snapshot_youtube_motor),
+                          ("youtube_ambient", snapshot_youtube_ambient),
+                          ("youtube_pov", snapshot_youtube_pov),
+                          ("youtube_ranking", snapshot_youtube_ranking),
                           ("instagram", snapshot_instagram),
                           ("threads", snapshot_threads),
                           ("tiktok", snapshot_tiktok),

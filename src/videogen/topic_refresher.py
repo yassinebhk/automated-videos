@@ -46,6 +46,16 @@ NICHE_RSS = {
         "https://www.motor.es/rss/noticias/",
         "https://www.autopista.es/rss/",
     ],
+    "pov": [
+        # RSS históricos ES/general para inspiración eventos poco conocidos
+        "https://www.elmundo.es/rss/cultura.xml",
+        "https://elpais.com/rss/cultura.xml",
+    ],
+    "ranking": [
+        # RSS datos económicos/estadísticos
+        "https://www.bde.es/wbe/es/publicaciones/analisis-economico-investigacion/",
+        "https://www.ine.es/rss/rss_ine.xml",
+    ],
 }
 
 
@@ -131,6 +141,20 @@ def _niche_context(niche: str) -> dict:
             "categorias": "TOP modelos, fallos comunes, guía compra, mantenimiento, ITV, precios",
             "fuentes_oficiales": "coches.net, Ganvam, DGT, ITV, foros técnicos",
             "cifra_typical": "€X precio · €X reparación · N km",
+        },
+        "pov": {
+            "canal": "TiempoAtrás ES",
+            "audiencias": "general",
+            "categorias": "prehistoria, antigua, medieval, moderna, sxix, sxx, sxxi",
+            "fuentes_oficiales": "Wikipedia, RAH, Cervantes Virtual, ministerios cultura",
+            "cifra_typical": "fecha exacta + evento clave",
+        },
+        "ranking": {
+            "canal": "TopRanking ES",
+            "audiencias": "general, deporte, motor",
+            "categorias": "economia, demografia, empresas, cine, musica, deporte, españa",
+            "fuentes_oficiales": "World Bank, IMF, UN, INE, IFPI, Box Office Mojo",
+            "cifra_typical": "top 10 con valores numéricos",
         },
     }.get(niche, {})
 
@@ -363,11 +387,13 @@ def refresh_longform_topics_for(niche: str, n: int = 8) -> list[dict] | None:
 
 
 def refresh_all_niches() -> dict[str, int]:
-    """Refresca short + long de los 4 nichos económico-legales. CLI entry."""
+    """Refresca los 6 nichos con auto-refresh (short + long donde aplique)."""
     result = {}
-    for niche in ("tax", "legal", "ayudas", "motor"):
+    for niche in ("tax", "legal", "ayudas", "motor", "pov", "ranking"):
         ts = refresh_topics_for(niche)
-        tl = refresh_longform_topics_for(niche)
         result[f"{niche}_short"] = len(ts) if ts else 0
-        result[f"{niche}_long"] = len(tl) if tl else 0
+        # Long-form solo para los 4 con topic_pool_long
+        if niche in ("tax", "legal", "ayudas", "motor"):
+            tl = refresh_longform_topics_for(niche)
+            result[f"{niche}_long"] = len(tl) if tl else 0
     return result

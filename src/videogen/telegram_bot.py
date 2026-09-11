@@ -2438,6 +2438,8 @@ async def _build_daily_report(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> i
         ("🎁", "AyudaGob",       "@AyudaGob_es",    "YT_AYUDAS",  "youtube_ayudas"),
         ("🚗", "Motor60s",       "@Motor60sES",     "YT_MOTOR",   "youtube_motor"),
         ("🌙", "MenteEnCalma",   "MenteEnCalma",    "YT_AMBIENT", "youtube_ambient"),
+        ("⏳", "TiempoAtrás ES", "@TiempoAtras_ES", "YT_POV",     "youtube_pov"),
+        ("📊", "TopRanking ES",  "@TopRanking_ES",  "YT_RANKING", "youtube_ranking"),
     ]
     for emoji, name, handle, prefix, platform_key in CHANNELS:
         try:

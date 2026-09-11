@@ -116,7 +116,32 @@ def run_once() -> dict[str, Any]:
         return {"status": "upload_fail", "meta": meta}
 
     _mark_used(topic["key"])
+
+    # Cross-post RRSS
+    cross = _crosspost(meta["title"], up["url"], topic)
+    cross_summary = " · ".join(f"{k}{'✅' if v else '❌'}" for k, v in cross.items())
     _notify(f"✅ <b>TopRanking ES</b> · {up['url']}\n"
-            f"<i>{meta['title'][:60]}</i>")
+            f"<i>{meta['title'][:60]}</i> · RRSS {cross_summary}")
     return {"status": "ok", "slug": meta["slug"], "url": up["url"],
-            "topic_key": topic["key"]}
+            "topic_key": topic["key"], "crosspost": cross}
+
+
+def _crosspost(title: str, url: str, topic: dict) -> dict[str, bool]:
+    """Cross-post ranking a Bluesky/Mastodon/Threads con marca 📊."""
+    result: dict[str, bool] = {}
+    teaser = f"📊 Ranking · {topic.get('fuente','')} · dato clave: {topic.get('cifra_ancla','')}"
+    for name, poster_mod, icon in [
+        ("bluesky", "videogen.bluesky_poster", "🦋"),
+        ("mastodon", "videogen.mastodon_poster", "🐘"),
+        ("threads", "videogen.threads_poster", "🧵"),
+    ]:
+        try:
+            import importlib
+            mod = importlib.import_module(poster_mod)
+            fn = getattr(mod, f"post_short_to_{name}")
+            r = fn(title, url, teaser=teaser)
+            result[icon] = bool(r)
+        except Exception as e:
+            print(f"  ranking {name} fail: {e}")
+            result[icon] = False
+    return result
