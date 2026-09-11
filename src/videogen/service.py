@@ -425,15 +425,24 @@ def publish(
             progress(f"[{lang}] sin video, omitido")
             continue
         progress(f"[{lang}] Subiendo a YouTube…")
-        # Fallback si Gemini devolvió título vacío (bug motor 11/09: slug
-        # en inglés + title vacío → YT 400 invalidTitle). Usar slug + hook.
-        safe_title = (loc.title or "").strip()
-        if not safe_title:
+        # Sanitize y fallback título (bugs 11/09 motor: title vacío o solo
+        # caracteres inválidos → YT 400 invalidTitle).
+        import re as _re
+        raw_title = (loc.title or "").strip()
+        # Quitar chars problemáticos YT (<, >, control chars)
+        safe_title = _re.sub(r'[<>\x00-\x1f]', '', raw_title).strip()
+        # Contar chars alfanuméricos reales
+        alnum = _re.sub(r'[^\w]', '', safe_title, flags=_re.UNICODE)
+        if len(alnum) < 5:
             hook_text = (loc.hook.text if getattr(loc, "hook", None) else "") or ""
             safe_title = f"{slug.replace('-',' ').title()} · {hook_text[:40]}".strip(" ·")
-            if not safe_title:
-                safe_title = slug.replace('-', ' ').title()
-            progress(f"[{lang}] ⚠ title vacío del guion, fallback: '{safe_title[:80]}'")
+            if len(safe_title.strip()) < 5:
+                safe_title = slug.replace('-', ' ').title() or "Nuevo video"
+            progress(f"[{lang}] ⚠ title inválido ('{raw_title[:40]}'), fallback: '{safe_title[:80]}'")
+        else:
+            progress(f"[{lang}] title: '{safe_title[:80]}'")
+        # Trunca a 100 chars (límite YT)
+        safe_title = safe_title[:100]
         video_id = upload_youtube.upload_video(
             vid,
             title=safe_title,
