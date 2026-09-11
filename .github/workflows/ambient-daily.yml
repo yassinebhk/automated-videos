@@ -8,8 +8,8 @@ name: MenteEnCalma — daily long-form ambient
 # - PIXABAY_API_KEY (para música clásica/naturaleza/lofi CC0)
 
 on:
-  # schedule:
-  #   - cron: "0 7 * * *"
+  schedule:
+    - cron: "0 7 * * *"
   workflow_dispatch: {}
 
 concurrency:
