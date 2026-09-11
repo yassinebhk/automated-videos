@@ -106,6 +106,11 @@ def run_once() -> dict[str, Any]:
     # Env overrides: prompt fiscal + canal YT separado
     os.environ["SCRIPT_SYSTEM_PROMPT_FILE"] = "tax_system.md"
     os.environ["YT_CHANNEL_PREFIX"] = "YT_TAX"
+    # Diagnóstico: confirma que los secrets YT_TAX_* llegaron al proceso
+    print(f"  tax: YT_CHANNEL_PREFIX=YT_TAX · "
+          f"has_refresh={bool(os.environ.get('YT_TAX_REFRESH_TOKEN'))} · "
+          f"has_client_id={bool(os.environ.get('YT_TAX_CLIENT_ID'))} · "
+          f"has_client_secret={bool(os.environ.get('YT_TAX_CLIENT_SECRET'))}")
 
     _notify(f"💶 <b>Tax short arrancando</b>\n<i>{topic['titulo'][:80]}</i>")
 

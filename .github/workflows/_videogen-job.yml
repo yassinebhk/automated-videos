@@ -176,6 +176,12 @@ jobs:
           PYTHONUNBUFFERED: "1"
           AUTOGEN_PUBLISH_HOUR: ${{ inputs.publish_hour || '21' }}
           EXTRA_ENV: ${{ inputs.extra_env }}
+          # Canal TaxHack ES (leídos por upload_youtube._get_credentials
+          # cuando pipeline tax setea YT_CHANNEL_PREFIX=YT_TAX en runtime).
+          # Cada step tiene su propio env — hay que repetirlos aquí.
+          YT_TAX_REFRESH_TOKEN: ${{ secrets.YT_TAX_REFRESH_TOKEN }}
+          YT_TAX_CLIENT_ID:     ${{ secrets.YT_TAX_CLIENT_ID }}
+          YT_TAX_CLIENT_SECRET: ${{ secrets.YT_TAX_CLIENT_SECRET }}
         run: |
           set -x  # traza cada línea shell para ver dónde muere si aborta
           # Carga extra_env como env vars adicionales del proceso videogen
