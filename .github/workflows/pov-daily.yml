@@ -4,8 +4,8 @@ name: POV histórico daily (TiempoAtrás ES)
 # DESACTIVADO hasta setup: canal YT + 3 secrets YT_POV_*.
 
 on:
-  # schedule:
-  #   - cron: "0 14 * * *"
+  schedule:
+    - cron: "0 14 * * *"
   workflow_dispatch: {}
 
 permissions:

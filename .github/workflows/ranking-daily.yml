@@ -4,8 +4,8 @@ name: Ranking daily (TopRanking ES)
 # DESACTIVADO hasta setup: canal YT + 3 secrets YT_RANKING_*.
 
 on:
-  # schedule:
-  #   - cron: "0 15 * * *"
+  schedule:
+    - cron: "0 15 * * *"
   workflow_dispatch: {}
 
 permissions:
