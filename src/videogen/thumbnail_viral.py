@@ -81,25 +81,56 @@ def _draw_outlined_text(draw, xy, text, font, fill, outline="black", stroke_w=8)
               stroke_width=stroke_w, stroke_fill=outline)
 
 
+def _try_ai_face(dest_dir: Path, title: str) -> Path | None:
+    """Genera cara AI expresiva vía Pollinations para el thumbnail (canales
+    tax/finanzas): persona sorprendida/preocupada con documentos, oficina.
+    Rota entre estilos para variedad. Fallback silencioso si falla."""
+    try:
+        from . import aimages
+    except Exception:
+        return None
+    import random
+    styles = [
+        "spanish person shocked face looking at tax documents, office desk, dramatic lighting",
+        "worried spanish businesswoman with calculator and papers, office, cinematic",
+        "surprised spanish autonomo looking at phone, home office, warm light",
+        "spanish accountant frustrated with paperwork, calculator, dramatic pose",
+        "young spanish entrepreneur shocked expression pointing at laptop screen",
+    ]
+    prompt = random.choice(styles)
+    return aimages.generate_image(prompt, dest_dir, seed=random.randint(1, 999999),
+                                    width=720, height=720)
+
+
 def build_viral_thumbnail(
     video_path: Path,
     title: str,
     dest: Path,
+    use_ai_face: bool = False,
 ) -> Path | None:
-    """Compone thumbnail 1280x720 viral-style desde el video + título.
+    """Compone thumbnail 1280x720 viral-style.
 
-    Devuelve el path si OK, None si falla.
+    use_ai_face=True → intenta generar cara AI izquierda + cifra derecha
+    (patrón MrBeast / canales finanzas). Fallback = frame del video.
     """
     W, H = 1280, 720
-    # 1. Fondo: primer frame del video
+
+    ai_face_img: Image.Image | None = None
+    if use_ai_face:
+        face_path = _try_ai_face(dest.parent, title)
+        if face_path and face_path.exists():
+            try:
+                ai_face_img = Image.open(face_path).convert("RGB")
+            except Exception:
+                ai_face_img = None
+
+    # 1. Fondo: primer frame del video (o gris oscuro fallback)
     bg_frame = dest.parent / "_thumb_frame.jpg"
     frame = extract_first_frame(video_path, bg_frame, at_seconds=2.0)
     if not frame:
-        # Fallback: fondo gris oscuro
-        bg = Image.new("RGB", (W, H), (25, 25, 35))
+        bg = Image.new("RGB", (W, H), (20, 20, 30))
     else:
         bg = Image.open(frame).convert("RGB")
-        # Cover-resize a 1280x720
         src_w, src_h = bg.size
         ratio = max(W / src_w, H / src_h)
         new_w, new_h = int(src_w * ratio), int(src_h * ratio)
@@ -107,6 +138,27 @@ def build_viral_thumbnail(
         left = (new_w - W) // 2
         top = (new_h - H) // 2
         bg = bg.crop((left, top, left + W, top + H))
+
+    # Si hay cara AI, la pegamos ocupando el 45% izquierdo (canvas 720×720 → 576×576)
+    if ai_face_img:
+        face_size = 560
+        f_ratio = max(face_size / ai_face_img.width, face_size / ai_face_img.height)
+        f_w = int(ai_face_img.width * f_ratio)
+        f_h = int(ai_face_img.height * f_ratio)
+        ai_face_img = ai_face_img.resize((f_w, f_h), Image.LANCZOS)
+        # Crop cuadrado 560×560
+        fl = (f_w - face_size) // 2
+        ft = (f_h - face_size) // 2
+        ai_face_img = ai_face_img.crop((fl, ft, fl + face_size, ft + face_size))
+        # Vignette de la mitad derecha del fondo (donde va cifra) para dar contraste
+        bg_rgba = bg.convert("RGBA")
+        vg = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+        vd = ImageDraw.Draw(vg)
+        vd.rectangle([W // 2, 0, W, H], fill=(0, 0, 0, 140))
+        bg_rgba = Image.alpha_composite(bg_rgba, vg)
+        # Pega cara con margen 80px izq y centrada vertical
+        bg = bg_rgba.convert("RGB")
+        bg.paste(ai_face_img, (80, (H - face_size) // 2))
 
     # 2. Vignette oscuro para contraste con texto
     overlay = Image.new("RGBA", (W, H), (0, 0, 0, 0))

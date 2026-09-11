@@ -103,9 +103,14 @@ def run_once() -> dict[str, Any]:
     topic_prompt = _build_topic_prompt(topic)
     print(f"  tax: topic={topic['key']} audiencia={topic['audiencia']}")
 
-    # Env overrides: prompt fiscal + canal YT separado
+    # Env overrides: prompt fiscal + canal YT separado + voz más profesional
     os.environ["SCRIPT_SYSTEM_PROMPT_FILE"] = "tax_system.md"
     os.environ["YT_CHANNEL_PREFIX"] = "YT_TAX"
+    # Voz Kokoro más asertiva/masculina profesional para nicho fiscal
+    # (em_alex es default WaitWhy — mantenemos por ahora; user puede override
+    # via secret KOKORO_VOICE_ES_TAX si quiere otra).
+    if not os.environ.get("KOKORO_VOICE_ES_TAX"):
+        os.environ["KOKORO_VOICE_ES_TAX"] = "em_alex"  # default sano
     # Diagnóstico: confirma que los secrets YT_TAX_* llegaron al proceso
     print(f"  tax: YT_CHANNEL_PREFIX=YT_TAX · "
           f"has_refresh={bool(os.environ.get('YT_TAX_REFRESH_TOKEN'))} · "

@@ -21,11 +21,35 @@ def voice_engine() -> str:
     return os.environ.get("VOICE_ENGINE", "edge").strip().lower()
 
 
+def _kokoro_voice(lang: str) -> str:
+    """Voz Kokoro respetando canal actual (YT_CHANNEL_PREFIX).
+    Permite tener voces distintas por canal — ej. tax quiere una voz
+    más asertiva/profesional que true crime.
+
+    Overrides por canal: KOKORO_VOICE_{LANG}_{PREFIX_SIN_YT_}
+    Ej: YT_CHANNEL_PREFIX=YT_TAX → busca KOKORO_VOICE_ES_TAX primero.
+    """
+    prefix = os.environ.get("YT_CHANNEL_PREFIX", "").strip()
+    if prefix.startswith("YT_"):
+        suffix = prefix[3:]  # YT_TAX → TAX
+        override = os.environ.get(f"KOKORO_VOICE_{lang.upper()}_{suffix}")
+        if override:
+            return override
+    defaults = {"es": "em_alex", "en": "am_michael"}
+    return os.environ.get(f"KOKORO_VOICE_{lang.upper()}", defaults.get(lang, ""))
+
+
 # Voces Kokoro por defecto — españolas (ef_/em_ prefijo = spanish female/male)
-KOKORO_VOICES = {
-    "es": os.environ.get("KOKORO_VOICE_ES", "em_alex"),
-    "en": os.environ.get("KOKORO_VOICE_EN", "am_michael"),
-}
+# Dynamic property vía _kokoro_voice() en runtime para soportar canales.
+class _KokoroVoicesMap:
+    def get(self, lang, default=""):
+        v = _kokoro_voice(lang)
+        return v or default
+    def __getitem__(self, lang):
+        return _kokoro_voice(lang) or ""
+
+
+KOKORO_VOICES = _KokoroVoicesMap()
 
 
 def _clean_for_tts(text: str) -> str:

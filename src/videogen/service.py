@@ -119,6 +119,34 @@ def generate(
                 if k + 1 < len(person_clips):
                     timed[bi].clips = [person_clips[k + 1]] + timed[bi].clips
 
+        # TaxHack (o cualquier canal con YT_CHANNEL_PREFIX): 1 imagen AI custom
+        # por punto del script (body segments) — patrón listas top N con visual
+        # cambiante por punto. Insertada al inicio del segmento.
+        import os as _os
+        if _os.environ.get("YT_CHANNEL_PREFIX") == "YT_TAX" and timed:
+            try:
+                from . import aimages
+                body_idx = [i for i, s in enumerate(timed) if s.label.startswith("body")]
+                progress(f"[{lang}] Generando {len(body_idx)} imágenes AI por punto…")
+                for k, bi in enumerate(body_idx):
+                    seg = timed[bi]
+                    kws = " ".join(seg.visual_keywords[:5]) if seg.visual_keywords else seg.text[:60]
+                    prompt = (f"cinematic vertical photo, {kws}, spanish office style, "
+                              f"warm lighting, professional composition, big numbers visible")
+                    img = aimages.generate_image(prompt, work_dir / "tax_hero",
+                                                   seed=1000 + k, width=1080, height=1920)
+                    if img:
+                        try:
+                            seg_dur = max(2.0, (seg.end - seg.start) * 0.6)
+                            clip = graphics.scene_to_clip(img, seg_dur,
+                                                            work_dir / "tax_hero" / f"pt{k}.mp4")
+                            seg.clips = [clip] + seg.clips
+                        except Exception as _ce:
+                            progress(f"  ⚠ tax hero pt{k} clip fail: {_ce}")
+                progress(f"  ✓ imágenes AI insertadas en {len(body_idx)} puntos")
+            except Exception as _ie:
+                progress(f"[{lang}] tax hero múltiple skip: {type(_ie).__name__}: {_ie}")
+
         # Imagen IA como primer frame del teaser (cuando no hay famoso)
         if hero_clip and timed:
             timed[0].clips = [hero_clip] + timed[0].clips
@@ -412,11 +440,17 @@ def publish(
         progress(f"[{lang}] ✓ {url}")
 
         # Thumbnail viral custom: extrae frame + overlay cifra amarilla + shock rojo.
+        # Para canales fiscales/finanzas (YT_CHANNEL_PREFIX=YT_TAX), añade
+        # cara AI generada (Pollinations) izquierda + cifra derecha estilo
+        # canales top ES tipo Cristian Gálvez / TaxDown.
         # Requiere cuenta YT verificada (limit 10/día sin verificar).
         try:
+            import os as _os
             from . import thumbnail_viral
             thumb_path = d / f"_thumb_{lang}.jpg"
-            if thumbnail_viral.build_viral_thumbnail(vid, loc.title, thumb_path):
+            use_face = _os.environ.get("YT_CHANNEL_PREFIX", "") == "YT_TAX"
+            if thumbnail_viral.build_viral_thumbnail(vid, loc.title, thumb_path,
+                                                     use_ai_face=use_face):
                 upload_youtube.set_thumbnail(video_id, thumb_path)
         except Exception as _te:
             progress(f"[{lang}] thumbnail viral skip: {type(_te).__name__}: {_te}")
