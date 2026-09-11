@@ -290,8 +290,19 @@ def generate_ambient_video() -> dict[str, Any] | None:
 
     print(f"  ambient: topic={topic['key']} duración={duration_min}min slug={slug}")
 
-    # 1. Música
-    audio = _fetch_music(topic, duration_sec, work_dir)
+    # 1. Audio: binaural (generado ffmpeg) o música Pixabay CC0
+    if topic.get("mood_type") == "binaural":
+        from . import binaural
+        audio_path = work_dir / "binaural.m4a"
+        audio = binaural.generate_binaural(
+            audio_path,
+            duration_seconds=duration_sec,
+            carrier_hz=topic.get("carrier_hz", 200),
+            beat_hz=topic.get("beat_hz", 8),
+            volume=0.3,
+        )
+    else:
+        audio = _fetch_music(topic, duration_sec, work_dir)
     if not audio:
         return None
 

@@ -13,21 +13,31 @@ from . import generator, uploader
 
 
 def run_once() -> dict[str, Any] | None:
-    """Genera 1 video ambient + sube a YT + notifica Telegram."""
-    print("=== AMBIENT · start ===")
+    """Genera 1 video ambient (MenteEnCalma) + sube a YT + notifica Telegram."""
+    print("=== MenteEnCalma · start ===")
     meta = generator.generate_ambient_video()
     if not meta:
-        _notify("❌ Ambient: generación falló")
+        _notify("❌ MenteEnCalma: generación falló")
         return None
 
-    print(f"  ambient: video listo {meta['duration_seconds']}s → uploading...")
+    # Disclaimer legal en descripción — NO claims médicos falsos (política veracidad)
+    disclaimer = (
+        "\n\n⚠️ Este audio es solo para acompañar tu momento de relax/estudio/sueño. "
+        "NO sustituye a tratamiento médico ni psicológico. Si tienes problemas de "
+        "ansiedad/insomnio persistentes, consulta con un profesional sanitario. "
+        "Los efectos de ondas binaurales/música varían por persona — usa con "
+        "auriculares (binaurales) y a volumen moderado."
+    )
+    meta["description"] = meta.get("description", "") + disclaimer
+
+    print(f"  MenteEnCalma: video listo {meta['duration_seconds']}s → uploading...")
     up = uploader.upload_ambient(meta)
     if not up:
-        _notify(f"⚠️ Ambient: '{meta['title'][:60]}' generado pero upload falló")
+        _notify(f"⚠️ MenteEnCalma: '{meta['title'][:60]}' generado pero upload falló")
         return {"generated": meta, "uploaded": None}
 
     _notify(
-        f"🌙 <b>Ambient upload OK</b>\n"
+        f"🌙 <b>MenteEnCalma upload OK</b>\n"
         f"<i>{meta['title'][:80]}</i>\n"
         f"⏱ {meta['duration_seconds']//60} min · tema: {meta['topic_key']}\n"
         f"{up['url']}"

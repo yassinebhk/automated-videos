@@ -21,9 +21,11 @@ def _get_yt_client():
     from google.oauth2.credentials import Credentials
     from googleapiclient.discovery import build
 
-    refresh = os.environ.get("YT_AMBIENT_REFRESH_TOKEN") or os.environ.get("YT_REFRESH_TOKEN")
-    client_id = os.environ.get("YT_AMBIENT_CLIENT_ID") or os.environ.get("YT_CLIENT_ID")
-    client_secret = os.environ.get("YT_AMBIENT_CLIENT_SECRET") or os.environ.get("YT_CLIENT_SECRET")
+    # Prefiere YT_AMBIENT_* (canal MenteEnCalma). NO fallback a YT_REFRESH_TOKEN
+    # para NO subir por error al canal WaitWhy.
+    refresh = os.environ.get("YT_AMBIENT_REFRESH_TOKEN")
+    client_id = os.environ.get("YT_AMBIENT_CLIENT_ID")
+    client_secret = os.environ.get("YT_AMBIENT_CLIENT_SECRET")
     if not (refresh and client_id and client_secret):
         return None
 

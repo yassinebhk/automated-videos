@@ -83,6 +83,10 @@ jobs:
           YT_MOTOR_REFRESH_TOKEN:  ${{ secrets.YT_MOTOR_REFRESH_TOKEN }}
           YT_MOTOR_CLIENT_ID:      ${{ secrets.YT_MOTOR_CLIENT_ID }}
           YT_MOTOR_CLIENT_SECRET:  ${{ secrets.YT_MOTOR_CLIENT_SECRET }}
+          YT_AMBIENT_REFRESH_TOKEN: ${{ secrets.YT_AMBIENT_REFRESH_TOKEN }}
+          YT_AMBIENT_CLIENT_ID:     ${{ secrets.YT_AMBIENT_CLIENT_ID }}
+          YT_AMBIENT_CLIENT_SECRET: ${{ secrets.YT_AMBIENT_CLIENT_SECRET }}
+          PIXABAY_API_KEY:          ${{ secrets.PIXABAY_API_KEY }}
           REDDIT_CLIENT_ID:     ${{ secrets.REDDIT_CLIENT_ID }}
           REDDIT_CLIENT_SECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}
           REDDIT_USERNAME:      ${{ secrets.REDDIT_USERNAME }}
