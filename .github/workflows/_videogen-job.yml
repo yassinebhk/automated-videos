@@ -226,10 +226,10 @@ jobs:
           # Commiteamos: analytics snapshots + docs/ (podcast feed/MP3 + IG reels MP4).
           # docs/podcasts/*.mp3 = audios para Spotify. docs/reels/*.mp4 = videos para IG.
           # Ambos servidos vía GitHub Pages.
-          if [ -n "$(git status --porcelain output/stats_history.jsonl output/reddit_history.json output/pinned_summary_id.txt output/case_ledger.json output/social_boost_log.json output/narrative_post_log.json output/newsjack_log.json output/community_poll_state.json output/community_pick.json output/active_series.json output/series_history.json output/tax_ledger.json output/legal_ledger.json output/ayudas_ledger.json output/motor_ledger.json docs/ 2>/dev/null)" ]; then
+          if [ -n "$(git status --porcelain output/stats_history.jsonl output/reddit_history.json output/pinned_summary_id.txt output/case_ledger.json output/social_boost_log.json output/narrative_post_log.json output/newsjack_log.json output/community_poll_state.json output/community_pick.json output/active_series.json output/series_history.json output/tax_ledger.json output/legal_ledger.json output/ayudas_ledger.json output/motor_ledger.json output/dynamic_topics_tax.json output/dynamic_topics_legal.json output/dynamic_topics_ayudas.json output/dynamic_topics_motor.json docs/ 2>/dev/null)" ]; then
             git config user.name "videogen-bot"
             git config user.email "bot@videogen.local"
-            for f in output/stats_history.jsonl output/reddit_history.json output/pinned_summary_id.txt output/case_ledger.json output/social_boost_log.json output/narrative_post_log.json output/newsjack_log.json output/community_poll_state.json output/community_pick.json output/active_series.json output/series_history.json output/tax_ledger.json output/legal_ledger.json output/ayudas_ledger.json output/motor_ledger.json; do
+            for f in output/stats_history.jsonl output/reddit_history.json output/pinned_summary_id.txt output/case_ledger.json output/social_boost_log.json output/narrative_post_log.json output/newsjack_log.json output/community_poll_state.json output/community_pick.json output/active_series.json output/series_history.json output/tax_ledger.json output/legal_ledger.json output/ayudas_ledger.json output/motor_ledger.json output/dynamic_topics_tax.json output/dynamic_topics_legal.json output/dynamic_topics_ayudas.json output/dynamic_topics_motor.json; do
               [ -f "$f" ] && git add "$f" || true
             done
             # docs/ completo (podcast + reels + cualquier futuro asset servido)

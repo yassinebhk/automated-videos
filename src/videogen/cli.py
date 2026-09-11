@@ -916,6 +916,15 @@ def motor_longform_cmd():
         raise SystemExit(1)
 
 
+@cli.command(name="topics-refresh")
+def topics_refresh_cmd():
+    """Regenera topic pool dinámico según tendencias RSS de cada nicho.
+    Se ejecuta cada 14 días automáticamente vía el propio pipeline, o manualmente."""
+    from . import topic_refresher
+    result = topic_refresher.refresh_all_niches()
+    print(json.dumps(result, indent=2, ensure_ascii=False))
+
+
 @cli.command(name="series-start")
 def series_start_cmd():
     """Inicia nueva miniserie de 5 partes sobre un caso gordo aleatorio."""

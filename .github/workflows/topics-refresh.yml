@@ -1,0 +1,23 @@
+name: Topics refresh (dynamic pool)
+
+# Regenera topic pools de los 4 canales blue-ocean según tendencias:
+# lee RSS del nicho (BOE, agenciatributaria, cinco días, motor.es…)
+# + Gemini genera 15 topics frescos por canal.
+#
+# Corre quincenalmente (LUN 1 y 15 del mes 05:00 UTC), pero cada pipeline
+# también invoca refresh si detecta que toca (>14 días desde última).
+
+on:
+  schedule:
+    - cron: "0 5 1,15 * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: topics-refresh
+    secrets: inherit

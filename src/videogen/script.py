@@ -16,6 +16,15 @@ SYSTEM_PROMPT_PATH = PROMPTS_DIR / "script_system.md"
 LONG_PROMPT_PATH = PROMPTS_DIR / "long_form_system.md"
 TT_NATIVE_PROMPT_PATH = PROMPTS_DIR / "tt_native_system.md"
 NICHE_PROMPT_PATH = PROMPTS_DIR / "niche.md"
+VERACITY_PATH = PROMPTS_DIR / "veracity_snippet.md"
+
+
+def _veracity_preamble() -> str:
+    """Bloque de veracidad obligatorio en TODOS los prompts (per user policy).
+    Riesgo legal si no está — nunca hacer skip."""
+    if VERACITY_PATH.exists():
+        return VERACITY_PATH.read_text(encoding="utf-8") + "\n\n---\n\n"
+    return ""
 # Cadena de modelos: si el primario da 503/429, cae al siguiente.
 MODELS = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-flash-latest"]
 
@@ -23,24 +32,24 @@ MODELS = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-flash-latest"]
 def _system_prompt() -> str:
     """Reglas técnicas de formato + brief del nicho.
 
+    Prefija SIEMPRE el bloque de veracidad (política de proyecto).
     Override via env SCRIPT_SYSTEM_PROMPT_FILE — SUSTITUYE al niche.md para
-    canales paralelos (ej. tax). Las reglas técnicas de script_system.md
-    (estructura JSON pydantic) se preservan SIEMPRE — el override sólo
-    reemplaza el brief del nicho.
+    canales paralelos (ej. tax).
     """
     import os
+    veracity = _veracity_preamble()
     base = SYSTEM_PROMPT_PATH.read_text(encoding="utf-8")
     override = os.environ.get("SCRIPT_SYSTEM_PROMPT_FILE", "").strip()
     if override:
         override_path = Path(override) if Path(override).is_absolute() else (PROMPTS_DIR / override)
         if override_path.exists():
             niche = override_path.read_text(encoding="utf-8")
-            return f"{niche}\n\n---\n\n{base}"
+            return f"{veracity}{niche}\n\n---\n\n{base}"
         print(f"  script: WARNING override {override_path} no existe, fallback niche.md")
     if NICHE_PROMPT_PATH.exists():
         niche = NICHE_PROMPT_PATH.read_text(encoding="utf-8")
-        return f"{niche}\n\n---\n\n{base}"
-    return base
+        return f"{veracity}{niche}\n\n---\n\n{base}"
+    return f"{veracity}{base}"
 
 
 def _slugify(text: str, max_len: int = 40) -> str:
@@ -127,21 +136,20 @@ def _ensure_outro(data: dict, lang: str) -> None:
 
 
 def _long_system_prompt() -> str:
-    """Long-form system prompt. Acepta override SCRIPT_SYSTEM_PROMPT_FILE
-    igual que shorts (canales paralelos usan mismo prompt de nicho para
-    coherencia entre short y long)."""
+    """Long-form system prompt con bloque de veracidad prefijo."""
     import os
+    veracity = _veracity_preamble()
     base = LONG_PROMPT_PATH.read_text(encoding="utf-8")
     override = os.environ.get("SCRIPT_SYSTEM_PROMPT_FILE", "").strip()
     if override:
         override_path = Path(override) if Path(override).is_absolute() else (PROMPTS_DIR / override)
         if override_path.exists():
             niche = override_path.read_text(encoding="utf-8")
-            return f"{niche}\n\n---\n\n{base}"
+            return f"{veracity}{niche}\n\n---\n\n{base}"
     if NICHE_PROMPT_PATH.exists():
         niche = NICHE_PROMPT_PATH.read_text(encoding="utf-8")
-        return f"{niche}\n\n---\n\n{base}"
-    return base
+        return f"{veracity}{niche}\n\n---\n\n{base}"
+    return f"{veracity}{base}"
 
 
 def generate_long_scripts(topic: str, target_minutes: int = 7) -> GeneratedLongScripts:

@@ -73,10 +73,19 @@ def _recently_used(path: Path, key: str, days: int) -> bool:
 
 
 def _pick_topic(cfg: ChannelConfig) -> dict | None:
-    """Elige topic del pool no usado en cooldown. Rota por audiencia."""
+    """Elige topic del pool no usado en cooldown. Rota por audiencia.
+    Mergea pool estático con topics dinámicos (auto-refresh quincenal
+    según tendencias del nicho)."""
     import importlib
     mod = importlib.import_module(cfg.topic_pool_module)
-    all_t = mod.all_topics()
+    static_pool = mod.all_topics()
+    # Merge con topics dinámicos (auto-refresh según tendencias)
+    try:
+        from . import topic_refresher
+        all_t = topic_refresher.get_all_topics_merged(static_pool, cfg.slug)
+    except Exception as e:
+        print(f"  {cfg.slug}: dynamic topics fail ({e}), usando solo estáticos")
+        all_t = static_pool
     ledger_path = ROOT / "output" / cfg.ledger_filename
     fresh = [t for t in all_t if not _recently_used(ledger_path, t["key"], cfg.cooldown_days)]
     if not fresh:

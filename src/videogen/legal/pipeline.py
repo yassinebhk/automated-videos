@@ -8,7 +8,7 @@ from ..channel_pipeline import ChannelConfig, run_channel_once, run_channel_long
 CONFIG = ChannelConfig(
     slug="legal",
     display_name="TusDerechos ES",
-    handle="@TusDerechos_es",
+    handle="@TusDerechos_ES",
     yt_prefix="YT_LEGAL",
     system_prompt_file="legal_system.md",
     topic_pool_module="videogen.legal.topic_pool",

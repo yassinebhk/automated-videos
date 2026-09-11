@@ -7,7 +7,7 @@ from ..channel_pipeline import ChannelConfig, run_channel_once, run_channel_long
 CONFIG = ChannelConfig(
     slug="motor",
     display_name="Motor60s",
-    handle="@Motor60s_es",
+    handle="@Motor60sES",
     yt_prefix="YT_MOTOR",
     system_prompt_file="motor_system.md",
     topic_pool_module="videogen.motor.topic_pool",
