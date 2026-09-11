@@ -20,7 +20,8 @@ from typing import Any
 
 
 GEMINI_MODELS = ["gemini-2.5-flash", "gemini-2.5-flash-lite"]
-GROQ_MODEL = "llama-3.3-70b-versatile"  # free tier Groq
+GROQ_MODEL = "openai/gpt-oss-120b"  # free tier Groq — 131k ctx, alta calidad
+GROQ_MODEL_FAST = "openai/gpt-oss-20b"  # fallback más rápido
 
 
 def _try_gemini_json(prompt: str, schema: dict | None,
@@ -83,54 +84,74 @@ def _try_gemini_json(prompt: str, schema: dict | None,
 
 def _try_groq_json(prompt: str, schema: dict | None,
                      max_tokens: int, temperature: float) -> tuple[dict | None, str]:
-    """Fallback a Groq (Llama 3.3 70B free). JSON mode via prompt eng."""
+    """Fallback a Groq (gpt-oss-120b free). Con retry a modelo más rápido."""
     key = os.environ.get("GROQ_API_KEY", "").strip()
     if not key:
         return None, "no GROQ_API_KEY"
-    try:
-        import requests
-        # Enriquece prompt con instrucción JSON si hay schema
-        if schema:
-            schema_str = json.dumps(schema, ensure_ascii=False)
-            sys_prompt = (
-                "Devuelve SOLO JSON válido siguiendo este schema. "
-                "Sin comentarios, sin markdown fences, sin texto extra.\n"
-                f"Schema:\n{schema_str}"
+
+    def _call(model: str) -> tuple[dict | None, str]:
+        try:
+            import requests
+            if schema:
+                schema_str = json.dumps(schema, ensure_ascii=False)
+                sys_prompt = (
+                    "Devuelve SOLO JSON válido siguiendo este schema. "
+                    "Sin comentarios, sin markdown fences, sin texto extra.\n"
+                    f"Schema:\n{schema_str}"
+                )
+                body = {
+                    "model": model,
+                    "messages": [
+                        {"role": "system", "content": sys_prompt},
+                        {"role": "user", "content": prompt},
+                    ],
+                    "temperature": temperature,
+                    "max_tokens": max_tokens,
+                    "response_format": {"type": "json_object"},
+                }
+            else:
+                body = {
+                    "model": model,
+                    "messages": [{"role": "user", "content": prompt}],
+                    "temperature": temperature,
+                    "max_tokens": max_tokens,
+                }
+            r = requests.post(
+                "https://api.groq.com/openai/v1/chat/completions",
+                headers={"Authorization": f"Bearer {key}",
+                          "Content-Type": "application/json"},
+                json=body, timeout=60,
             )
-            body = {
-                "model": GROQ_MODEL,
-                "messages": [
-                    {"role": "system", "content": sys_prompt},
-                    {"role": "user", "content": prompt},
-                ],
-                "temperature": temperature,
-                "max_tokens": max_tokens,
-                "response_format": {"type": "json_object"},
-            }
+            if r.status_code >= 300:
+                return None, f"HTTP {r.status_code}: {r.text[:150]}"
+            content = r.json()["choices"][0]["message"]["content"]
+            if schema:
+                try:
+                    return json.loads(content), ""
+                except Exception as je:
+                    return None, f"JSON parse: {je}"
+            return {"text": content.strip()}, ""
+        except Exception as e:
+            return None, f"{type(e).__name__}: {e}"
+
+    # Para JSON usa el grande (calidad), para texto plano el rápido (menos
+    # reasoning tokens que dejan content vacío en gpt-oss-120b)
+    primary = GROQ_MODEL if schema else GROQ_MODEL_FAST
+    secondary = GROQ_MODEL_FAST if schema else GROQ_MODEL
+    data, err = _call(primary)
+    # Detecta content vacío (reasoning consumió todo) → fallback
+    if data is not None:
+        if not schema and not data.get("text"):
+            print(f"  groq {primary}: content vacío (reasoning) → intento {secondary}")
         else:
-            body = {
-                "model": GROQ_MODEL,
-                "messages": [{"role": "user", "content": prompt}],
-                "temperature": temperature,
-                "max_tokens": max_tokens,
-            }
-        r = requests.post(
-            "https://api.groq.com/openai/v1/chat/completions",
-            headers={"Authorization": f"Bearer {key}",
-                      "Content-Type": "application/json"},
-            json=body, timeout=60,
-        )
-        if r.status_code >= 300:
-            return None, f"groq HTTP {r.status_code}: {r.text[:200]}"
-        content = r.json()["choices"][0]["message"]["content"]
-        if schema:
-            try:
-                return json.loads(content), ""
-            except Exception as je:
-                return None, f"groq JSON parse: {je}"
-        return {"text": content.strip()}, ""
-    except Exception as e:
-        return None, f"groq: {type(e).__name__}: {e}"
+            return data, ""
+    else:
+        print(f"  groq {primary} fail ({err[:80]}) → intento {secondary}")
+    data2, err2 = _call(secondary)
+    if data2 is not None:
+        if schema or data2.get("text"):
+            return data2, ""
+    return None, f"{primary}={err[:60]} · {secondary}={err2[:60]}"
 
 
 def generate_json(prompt: str, schema: dict | None = None,
