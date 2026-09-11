@@ -133,13 +133,7 @@ def _hook_for(video: dict) -> str:
         f"Corrupción española que sigue marcando la ley.\n\n{title}\n\n{yt_url}",
     ]
     try:
-        from google import genai
-        from google.genai import types
-        from .config import gemini_key
-        key = gemini_key()
-        if not key:
-            return random.choice(fallback_hooks)
-        client = genai.Client(api_key=key)
+        from .llm_fallback import generate_text
         prompt = (
             f"Escribe UN post corto (150-250 chars) para redes sobre este video de un caso español real.\n\n"
             f"ÁNGULO OBLIGATORIO: {angle}\n"
@@ -161,12 +155,7 @@ def _hook_for(video: dict) -> str:
             f"Link: {yt_url}\n\n"
             f"Devuelve SOLO el post, sin comillas ni encabezado."
         )
-        resp = client.models.generate_content(
-            model="gemini-2.5-flash-lite",
-            contents=prompt,
-            config=types.GenerateContentConfig(temperature=1.2, max_output_tokens=250),
-        )
-        text = (resp.text or "").strip().strip('"')
+        text = generate_text(prompt, max_tokens=250, temperature=1.2).strip().strip('"')
         # Rechaza si empieza con clichés
         lower = text.lower()
         if any(lower.startswith(bad) for bad in ("¿sabías", "sabías", "¿recuerdas", "todos hemos", "increíble")):

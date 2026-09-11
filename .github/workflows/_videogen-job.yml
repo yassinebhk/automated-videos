@@ -60,6 +60,7 @@ jobs:
           TELEGRAM_BOT_TOKEN:    ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID:      ${{ secrets.TELEGRAM_CHAT_ID }}
           GEMINI_API_KEY:        ${{ secrets.GEMINI_API_KEY }}
+          GROQ_API_KEY:          ${{ secrets.GROQ_API_KEY }}
           PEXELS_API_KEY:        ${{ secrets.PEXELS_API_KEY }}
           YOUTUBE_CHANNEL_ID_ES: ${{ secrets.YOUTUBE_CHANNEL_ID_ES }}
           YOUTUBE_CHANNEL_ID_EN: ${{ secrets.YOUTUBE_CHANNEL_ID_EN }}
@@ -153,6 +154,7 @@ jobs:
             printf 'TELEGRAM_BOT_TOKEN=%s\n'    "$TELEGRAM_BOT_TOKEN"
             printf 'TELEGRAM_CHAT_ID=%s\n'      "$TELEGRAM_CHAT_ID"
             printf 'GEMINI_API_KEY=%s\n'        "$GEMINI_API_KEY"
+            [ -n "$GROQ_API_KEY" ] && printf 'GROQ_API_KEY=%s\n' "$GROQ_API_KEY"
             printf 'PEXELS_API_KEY=%s\n'        "$PEXELS_API_KEY"
             printf 'YOUTUBE_CHANNEL_ID_ES=%s\n' "$YOUTUBE_CHANNEL_ID_ES"
             printf 'YOUTUBE_CHANNEL_ID_EN=%s\n' "$YOUTUBE_CHANNEL_ID_EN"

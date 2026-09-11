@@ -25,14 +25,7 @@ def _generate_dataset_with_gemini(topic: dict, n_items: int = 10,
     Devuelve {'years': [2000,...], 'items': ['USA','China',...],
              'data': [[val_2000_USA, val_2000_China,...], [...]] }"""
     try:
-        from google import genai
-        from google.genai import types
-        from ..config import gemini_key
-        key = gemini_key()
-        if not key:
-            return None
-        client = genai.Client(api_key=key)
-
+        from ..llm_fallback import generate_json
         schema = {
             "type": "object",
             "properties": {
@@ -68,44 +61,10 @@ def _generate_dataset_with_gemini(topic: dict, n_items: int = 10,
             f"- titulo_video: título SEO YT max 80 chars\n"
             f"- cierre_dato: frase cierre con dato clave y fuente\n"
         )
-        import time as _time
-        # Retry con backoff para 429 Gemini rate-limit
-        text = ""
-        for attempt in range(3):
-            try:
-                resp = client.models.generate_content(
-                    model="gemini-2.5-flash-lite",
-                    contents=prompt,
-                    config=types.GenerateContentConfig(
-                        temperature=0.4,
-                        max_output_tokens=4000,
-                        response_mime_type="application/json",
-                        response_schema=schema,
-                    ),
-                )
-                text = (resp.text or "").strip()
-                break
-            except Exception as e:
-                s = str(e)
-                if "429" in s or "RESOURCE_EXHAUSTED" in s:
-                    # Extrae retryDelay del error si está
-                    import re as _re
-                    m = _re.search(r"'retryDelay':\s*'(\d+)s'", s)
-                    wait_s = int(m.group(1)) + 2 if m else 30 * (attempt + 1)
-                    wait_s = min(wait_s, 120)
-                    print(f"  ranking: 429 rate-limit, retry en {wait_s}s (intento {attempt+1}/3)")
-                    _time.sleep(wait_s)
-                else:
-                    print(f"  ranking: Gemini fail attempt {attempt+1}: {type(e).__name__}: {s[:200]}")
-                    if attempt == 2:
-                        return None
-                    _time.sleep(10)
-        if not text:
-            return None
-        try:
-            data = json.loads(text)
-        except Exception as je:
-            print(f"  ranking: JSON parse fail — {je}")
+        # Con fallback Gemini→Groq
+        data = generate_json(prompt, schema=schema, max_tokens=4000, temperature=0.4)
+        if not data:
+            print(f"  ranking: ambos LLMs fallaron")
             return None
         # Validación mínima
         if len(data.get("data", [])) != len(data.get("years", [])):

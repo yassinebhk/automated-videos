@@ -156,13 +156,7 @@ def score_with_gemini(items: list[dict], max_out: int = 3) -> list[dict]:
     if not items:
         return []
     try:
-        from google import genai
-        from google.genai import types
-        from .config import gemini_key
-        key = gemini_key()
-        if not key:
-            return items[:max_out]
-        client = genai.Client(api_key=key)
+        from .llm_fallback import generate_json
         # Build compact input
         input_lines = []
         for i, it in enumerate(items[:30]):
@@ -206,37 +200,11 @@ def score_with_gemini(items: list[dict], max_out: int = 3) -> list[dict]:
             },
             "required": ["picks"],
         }
-        resp = client.models.generate_content(
-            model="gemini-2.5-flash-lite",
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                temperature=0.7,
-                max_output_tokens=5000,
-                response_mime_type="application/json",
-                response_schema=schema,
-            ),
-        )
-        text = (resp.text or "").strip()
-        try:
-            data = json.loads(text)
-        except Exception as je:
-            print(f"  newsjack: gemini JSON fail ({je}) — trying truncate recovery")
-            # Recupera JSON truncado buscando último } válido
-            data = None
-            for cut in range(len(text) - 1, 100, -1):
-                for closer in (']}', '"}]}'):
-                    try:
-                        candidate = text[:cut].rstrip(',') + closer
-                        data = json.loads(candidate)
-                        print(f"  newsjack: recuperado tras truncar en char {cut}")
-                        break
-                    except Exception:
-                        continue
-                if data:
-                    break
-            if not data:
-                print(f"  newsjack: JSON irrecuperable — text[:300]={text[:300]}")
-                return items[:max_out]
+        # Fallback Gemini→Groq
+        data = generate_json(prompt, schema=schema, max_tokens=5000, temperature=0.7)
+        if not data:
+            print(f"  newsjack: ambos LLMs fallaron — retorno top {max_out} sin scoring")
+            return items[:max_out]
         picks = data.get("picks", [])
         out = []
         for p in picks[:max_out]:
