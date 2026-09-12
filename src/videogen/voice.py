@@ -263,17 +263,37 @@ def _synthesize_kokoro(script: LocalizedScript, dest_dir: Path) -> VoiceTrack:
 
 
 # ---------------------------------------------------------------- Edge TTS
+# Voces "safe fallback" — probadas 100% estables (SIN NoAudioReceived
+# intermitente reportado con voces menos comunes tipo Dario/Teo).
+_EDGE_SAFE_FALLBACKS = {
+    "es": ["es-ES-AlvaroNeural", "es-ES-ElviraNeural", "es-MX-JorgeNeural"],
+    "en": ["en-US-GuyNeural", "en-US-JennyNeural", "en-GB-RyanNeural"],
+}
+
+
 def _synthesize_edge(script: LocalizedScript, dest_dir: Path) -> VoiceTrack:
+    """Edge TTS con retry + fallback a voces safe si NoAudioReceived.
+
+    NoAudioReceived en Edge suele deberse a:
+      - Filtro contenido Azure (violencia, palabras sensibles) devuelve
+        stream vacío. Común en POV (guerras) y Motor (accidentes).
+      - Rate limit intermitente desde IPs GH Actions.
+      - Bug ocasional con voces menos usadas (Dario/Teo/Nil…).
+
+    Estrategia: reintentar con voz original + jitter, y si falla,
+    caer a Alvaro (masculina) / Elvira (femenina) — voces estándar
+    que Microsoft mantiene siempre operativas.
+    """
     import edge_tts
 
     dest_dir.mkdir(parents=True, exist_ok=True)
-    voice = EDGE_VOICES.get(script.lang, EDGE_VOICES["en"])
+    primary_voice = EDGE_VOICES.get(script.lang, EDGE_VOICES["en"])
     text = _clean_for_tts(script.full_text())
     audio_path = dest_dir / f"voice_{script.lang}.mp3"
 
     rate = os.environ.get("EDGE_RATE", "+10%")  # ágil pero natural
 
-    async def _run() -> list[WordTimestamp]:
+    async def _run(voice: str) -> list[WordTimestamp]:
         communicate = edge_tts.Communicate(
             text, voice, rate=rate, boundary="WordBoundary"
         )
@@ -290,7 +310,34 @@ def _synthesize_edge(script: LocalizedScript, dest_dir: Path) -> VoiceTrack:
                     )
         return words
 
-    words = asyncio.run(_run())
+    # Cadena de intentos: [primary, primary retry, safe fallbacks…]
+    fallbacks = _EDGE_SAFE_FALLBACKS.get(script.lang, [])
+    voice_chain: list[str] = [primary_voice, primary_voice]
+    for fb in fallbacks:
+        if fb != primary_voice:
+            voice_chain.append(fb)
+
+    import time as _time
+    last_err: Exception | None = None
+    words: list[WordTimestamp] = []
+    for i, v in enumerate(voice_chain):
+        try:
+            words = asyncio.run(_run(v))
+            if words:
+                if v != primary_voice:
+                    print(f"  edge: ⚠️ voz {primary_voice} falló, rescatado con {v}")
+                break
+            # Sin audio pero sin excepción → tratar como fallo
+            raise RuntimeError("NoAudioReceived — stream vacío")
+        except Exception as e:
+            last_err = e
+            print(f"  edge: intento {i+1}/{len(voice_chain)} con {v} falló: "
+                     f"{type(e).__name__}: {str(e)[:100]}")
+            if i < len(voice_chain) - 1:
+                _time.sleep(2 * (i + 1))  # backoff progresivo
+    if not words:
+        raise last_err or RuntimeError("Edge TTS: agotados todos los reintentos")
+
     duration = words[-1].end if words else 0.0
 
     track = VoiceTrack(
