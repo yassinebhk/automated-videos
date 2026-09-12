@@ -37,6 +37,7 @@ CONFIG = ChannelConfig(
     ledger_filename="tax_ledger.json",
     topic_pool_long_module="videogen.tax.topic_pool_long",
     kokoro_voice_es="em_alex",
+    edge_voice_es="es-ES-XimenaNeural",
     audience_emoji={"autonomos": "👔", "particulares": "🧑",
                      "empresas": "🏢", "_": "💶"},
     series_name="TaxHack ES",

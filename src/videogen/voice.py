@@ -69,10 +69,29 @@ def _clean_for_tts(text: str) -> str:
 
 
 # Voces Edge por defecto (neuronales, buena calidad ES/EN)
-EDGE_VOICES = {
-    "es": os.environ.get("EDGE_VOICE_ES", "es-ES-AlvaroNeural"),
-    "en": os.environ.get("EDGE_VOICE_EN", "en-US-GuyNeural"),
-}
+def _edge_voice(lang: str) -> str:
+    """Voz Edge respetando canal actual (YT_CHANNEL_PREFIX).
+    Override por canal: EDGE_VOICE_{LANG}_{PREFIX_SIN_YT_}
+    Ej: YT_CHANNEL_PREFIX=YT_TAX → EDGE_VOICE_ES_TAX primero.
+    """
+    prefix = os.environ.get("YT_CHANNEL_PREFIX", "").strip()
+    if prefix.startswith("YT_"):
+        suffix = prefix[3:]  # YT_TAX → TAX
+        override = os.environ.get(f"EDGE_VOICE_{lang.upper()}_{suffix}")
+        if override:
+            return override
+    defaults = {"es": "es-ES-AlvaroNeural", "en": "en-US-GuyNeural"}
+    return os.environ.get(f"EDGE_VOICE_{lang.upper()}", defaults.get(lang, ""))
+
+
+class _EdgeVoicesMap:
+    def get(self, lang, default=""):
+        return _edge_voice(lang) or default
+    def __getitem__(self, lang):
+        return _edge_voice(lang) or ""
+
+
+EDGE_VOICES = _EdgeVoicesMap()
 
 
 def synthesize(script: LocalizedScript, dest_dir: Path) -> VoiceTrack:

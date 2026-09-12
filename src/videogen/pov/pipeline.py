@@ -13,6 +13,7 @@ CONFIG = ChannelConfig(
     topic_pool_module="videogen.pov.topic_pool",
     ledger_filename="pov_ledger.json",
     kokoro_voice_es="em_alex",
+    edge_voice_es="es-ES-TeoNeural",
     audience_emoji={
         "general": "⏳",
         "_": "⏳",

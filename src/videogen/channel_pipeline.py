@@ -39,6 +39,7 @@ class ChannelConfig:
     topic_pool_module: str          # 'videogen.tax.topic_pool'
     ledger_filename: str            # 'tax_ledger.json'
     kokoro_voice_es: str = "em_alex"
+    edge_voice_es: str = "es-ES-AlvaroNeural"  # Edge TTS neural (default masculino ES)
     audience_emoji: dict = field(default_factory=lambda: {})  # {'autonomos': '👔', …}
     series_name: str = "Serie"       # 'TaxHack ES', 'TusDerechos ES'
     cooldown_days: int = 90
@@ -253,9 +254,12 @@ def run_channel_longform_once(cfg: ChannelConfig, target_minutes: int = 7) -> di
 
     os.environ["SCRIPT_SYSTEM_PROMPT_FILE"] = cfg.system_prompt_file
     os.environ["YT_CHANNEL_PREFIX"] = cfg.yt_prefix
-    voice_env = f"KOKORO_VOICE_ES_{cfg.yt_prefix[3:]}"
-    if not os.environ.get(voice_env):
-        os.environ[voice_env] = cfg.kokoro_voice_es
+    kk_env = f"KOKORO_VOICE_ES_{cfg.yt_prefix[3:]}"
+    if not os.environ.get(kk_env):
+        os.environ[kk_env] = cfg.kokoro_voice_es
+    edge_env = f"EDGE_VOICE_ES_{cfg.yt_prefix[3:]}"
+    if not os.environ.get(edge_env):
+        os.environ[edge_env] = cfg.edge_voice_es
 
     # Sin notif previa (reduce ruido). Solo notifica al terminar.
     try:
@@ -298,9 +302,12 @@ def run_channel_once(cfg: ChannelConfig) -> dict[str, Any]:
     # Env overrides per-channel
     os.environ["SCRIPT_SYSTEM_PROMPT_FILE"] = cfg.system_prompt_file
     os.environ["YT_CHANNEL_PREFIX"] = cfg.yt_prefix
-    voice_env = f"KOKORO_VOICE_ES_{cfg.yt_prefix[3:]}"  # YT_TAX → TAX
-    if not os.environ.get(voice_env):
-        os.environ[voice_env] = cfg.kokoro_voice_es
+    kk_env = f"KOKORO_VOICE_ES_{cfg.yt_prefix[3:]}"
+    if not os.environ.get(kk_env):
+        os.environ[kk_env] = cfg.kokoro_voice_es
+    edge_env = f"EDGE_VOICE_ES_{cfg.yt_prefix[3:]}"
+    if not os.environ.get(edge_env):
+        os.environ[edge_env] = cfg.edge_voice_es
 
     # Sin notif "arrancando" — reduce ruido Telegram. Solo notifica al terminar
     # (éxito o error). Toda la actividad se consolida en daily summary.

@@ -14,6 +14,7 @@ CONFIG = ChannelConfig(
     ledger_filename="motor_ledger.json",
     topic_pool_long_module="videogen.motor.topic_pool_long",
     kokoro_voice_es="em_alex",
+    edge_voice_es="es-ES-DarioNeural",
     audience_emoji={
         "compradores": "🛒",
         "propietarios": "🚗",

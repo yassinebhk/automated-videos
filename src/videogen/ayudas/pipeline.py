@@ -14,6 +14,7 @@ CONFIG = ChannelConfig(
     ledger_filename="ayudas_ledger.json",
     topic_pool_long_module="videogen.ayudas.topic_pool_long",
     kokoro_voice_es="em_alex",
+    edge_voice_es="es-ES-ElviraNeural",
     audience_emoji={
         "autonomos": "👔",
         "familias": "👨‍👩‍👧",

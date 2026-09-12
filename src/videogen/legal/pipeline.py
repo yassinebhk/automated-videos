@@ -15,6 +15,7 @@ CONFIG = ChannelConfig(
     ledger_filename="legal_ledger.json",
     topic_pool_long_module="videogen.legal.topic_pool_long",
     kokoro_voice_es="em_alex",
+    edge_voice_es="es-ES-AlvaroNeural",
     audience_emoji={
         "trabajadores": "👷",
         "autonomos": "👔",
