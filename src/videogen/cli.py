@@ -955,6 +955,23 @@ def topics_refresh_cmd():
     print(json.dumps(result, indent=2, ensure_ascii=False))
 
 
+@cli.command(name="playlists-refresh")
+@click.option("--channel", default=None,
+              help="Prefix del canal (YT_TAX, YT_LEGAL...). Vacío = todos.")
+def playlists_refresh_cmd(channel: str | None):
+    """Agrupa uploads por sub-tema en playlists YT. Cron semanal domingo 06:00 UTC.
+
+    +40% session watch time según YT Algorithm 2026 (palanca #1 tras
+    desacople Shorts/long-form late 2025).
+    """
+    from . import playlists
+    if channel:
+        result = playlists.refresh_channel(channel if channel != "MAIN" else "")
+    else:
+        result = playlists.refresh_all()
+    print(json.dumps(result, indent=2, ensure_ascii=False))
+
+
 @cli.command(name="series-start")
 def series_start_cmd():
     """Inicia nueva miniserie de 5 partes sobre un caso gordo aleatorio."""

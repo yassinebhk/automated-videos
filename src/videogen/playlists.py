@@ -1,169 +1,295 @@
-"""Auto-gestión de playlists segmentadas por categoría de caso.
+"""Auto-playlists YT: agrupa uploads del canal por sub-tema y crea/actualiza
+playlists YT via API. Objetivo: +40% session watch time (palanca #1 algoritmo
+YT 2026 tras el desacople Shorts/long-form de late 2025).
 
-Estrategia (auditoría 08-07): un solo "Estafas Españolas" en flat no da
-binge-watching. YouTube recomienda videos de la MISMA playlist cuando el user
-termina el actual → 3× watch time en la sesión. Con 3 sub-playlists (Bancarios,
-Políticos, Empresariales), cada tribu (finanzas / política / consumidor)
-encuentra su racha inmediata.
+Uso:
+    videogen playlists-refresh         # todos los canales
+    videogen playlists-refresh --channel YT_TAX
 
-Este módulo:
-1. Mantiene un JSON persistente con {categoría: playlist_id} en secrets/.
-2. Al primer uso, si una playlist no existe → la crea vía YT API y persiste
-   el ID. Idempotente entre runs.
-3. Clasifica un topic (string) → categoría en base a keywords conocidos.
-4. Añade un video (id) a la playlist correcta.
+Cron semanal: .github/workflows/playlists-weekly.yml (domingo 06:00 UTC).
 
-No depende de nada manual: la primera vez que corre en Actions, crea las 3
-playlists en el canal automáticamente.
+Persistencia: `output/playlists_ledger.json` mapea
+    {"<yt_prefix>": {"<playlist_title>": "<playlist_id>"}}
+para idempotencia (evita crear la misma playlist 2 veces).
 """
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
-from typing import Optional
+from typing import Any
 
-import requests
+import googleapiclient.discovery
 
-from .config import SECRETS_DIR
+from .config import ROOT
+from .upload_youtube import _get_credentials
+
+PLAYLIST_LEDGER = ROOT / "output" / "playlists_ledger.json"
 
 
-CATEGORIES = {
-    "bancarios": {
-        "title": "Estafas Bancarias Españolas",
-        "description": (
-            "Casos reales de fraudes bancarios en España — Bankia, Fórum Filatélico, "
-            "Preferentes, Banco Popular, RUMASA. Todo con sentencia judicial firme."
-        ),
-        "keywords": [
-            "bankia", "popular", "banco popular", "preferentes", "fórum", "forum",
-            "filatélico", "filatelico", "afinsa", "nummers", "rumasa", "ruiz-mateos",
-            "ruiz mateos", "banesto", "mario conde", "gescartera",
-        ],
+# Sub-temas por canal. Cada playlist agrupa videos cuyos títulos/tags matchen
+# CUALQUIER keyword del listado (lowercase, substring match).
+# Un video puede estar en múltiples playlists — no pasa nada.
+CHANNEL_PLAYLISTS: dict[str, dict[str, list[str]]] = {
+    "YT_TAX": {
+        "Autónomos 2026 — Deducciones e IRPF": [
+            "autónomo", "autonomo", "irpf", "deducci", "iva", "cuota"],
+        "Obligaciones fiscales (modelos)": [
+            "modelo 130", "modelo 303", "modelo 100", "modelo 349", "modelo 111",
+            "trimestral", "declaración"],
+        "Trucos y ahorros fiscales": [
+            "truco", "ahorro", "hack", "ayuda", "planificación", "optimizar"],
+        "Novedades Hacienda 2026": [
+            "2026", "nueva", "novedad", "reforma", "cambio"],
     },
-    "politicos": {
-        "title": "Corrupción Política en España",
-        "description": (
-            "Los grandes escándalos políticos con sentencia firme — Gürtel, Bárcenas, "
-            "ERE Andalucía, Púnica, Villarejo. Cómo la clase política saqueó España."
-        ),
-        "keywords": [
-            "bárcenas", "barcenas", "gürtel", "gurtel", "correa", "púnica", "punica",
-            "ere andalucía", "ere andalucia", "villarejo", "filesa",
-            "urdangarin", "nóos", "noos", "mariano rubio", "marta domínguez",
-        ],
+    "YT_LEGAL": {
+        "Derechos del trabajador ES": [
+            "trabajador", "empleado", "jornada", "vacaciones", "salario",
+            "despido", "indemnización", "baja"],
+        "Contratos y nóminas": [
+            "contrato", "nómina", "nomina", "temporal", "indefinido"],
+        "Autónomos y freelance": [
+            "autónomo", "autonomo", "freelance"],
+        "Protección al consumidor": [
+            "consumidor", "reclamación", "reclamacion", "garantía", "devolución"],
     },
-    "empresariales": {
-        "title": "Fraudes Empresariales Españoles",
-        "description": (
-            "Las grandes estafas del mundo empresarial español — Aceite de Colza, iDental, "
-            "Pescanova, Arbistar, MATESA. Víctimas reales, fortunas robadas."
-        ),
-        "keywords": [
-            "colza", "aceite de colza", "idental", "i-dental", "arbistar",
-            "kuailian", "pescanova", "matesa", "toni kamo", "airtel", "terra networks",
-            "malaya", "marbella", "juan antonio roca", "palma arena", "ibercorp",
-        ],
+    "YT_AYUDAS": {
+        "Ayudas familias ES 2026": [
+            "familia", "hijo", "menor", "cheque", "conciliación"],
+        "Ayudas vivienda y alquiler": [
+            "vivienda", "alquiler", "hipoteca", "bono alquiler"],
+        "Ayudas autónomos y empleo": [
+            "autónomo", "autonomo", "empleo", "paro", "formación"],
+        "Subvenciones y bonos 2026": [
+            "subvención", "subvencion", "bono", "kit digital"],
+    },
+    "YT_MOTOR": {
+        "Comprar coche de segunda mano": [
+            "segunda mano", "usado", "km0", "km 0"],
+        "Precios y valoración coches": [
+            "precio", "valor", "valoración", "cuánto vale"],
+        "Cochazos por poco dinero": [
+            "por poco", "barato", "bajo presupuesto", "€", "menos de"],
+        "Trucos motor y consejos compra": [
+            "truco", "consejo", "evita", "no compres", "revisar"],
+    },
+    "YT_POV": {
+        "Grandes hitos históricos": [
+            "descubrimiento", "guerra", "batalla", "revolución"],
+        "Personajes históricos": [
+            "napoleón", "julio césar", "franco", "isabel", "colón",
+            "quijote"],
+        "Historia de España": [
+            "españa", "español", "hispano", "conquistador"],
+        "Historia universal": [
+            "mundo", "universal", "civilización", "imperio"],
+    },
+    "YT_RANKING": {
+        "Rankings riqueza y millonarios": [
+            "millonario", "billonario", "riqueza", "ricos", "forbes",
+            "fortunas"],
+        "Rankings deportivos": [
+            "goleador", "champions", "mundial", "olimpiada", "récord",
+            "campeón"],
+        "Rankings tecnología y empresas": [
+            "empresas", "startup", "unicorn", "tech", "silicon",
+            "capitalización"],
+        "Rankings países y ciudades": [
+            "país", "pais", "ciudad", "población", "pib", "índice"],
+    },
+    "YT_AMBIENT": {
+        "Sonidos naturaleza para relajarse": [
+            "lluvia", "olas", "río", "rio", "bosque", "naturaleza"],
+        "Ambientes para estudiar y concentrarse": [
+            "estudio", "estudiar", "concentración", "focus", "trabajo"],
+        "Sonidos para dormir": [
+            "dormir", "sueño", "insomnio", "noche"],
+        "Ruido blanco y meditación": [
+            "ruido blanco", "meditación", "meditacion", "mindfulness"],
+    },
+    # WaitWhy (default sin prefijo) — true crime
+    "": {
+        "Estafas famosas de España": [
+            "estafa", "fraude", "engaño", "pirámide"],
+        "Casos de asesinato reales ES": [
+            "asesinato", "crimen", "homicidio", "muerte"],
+        "Casos sin resolver": [
+            "sin resolver", "cold case", "misterio", "desaparición"],
+        "Grandes robos españoles": [
+            "robo", "atraco", "hurto"],
     },
 }
 
 
-_PLAYLIST_MAP_FILE = SECRETS_DIR / "playlists_map.json"
+def _load_ledger() -> dict[str, dict[str, str]]:
+    if not PLAYLIST_LEDGER.exists():
+        return {}
+    try:
+        return json.loads(PLAYLIST_LEDGER.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
 
 
-def _load_map() -> dict[str, str]:
-    if _PLAYLIST_MAP_FILE.exists():
+def _save_ledger(led: dict[str, dict[str, str]]) -> None:
+    PLAYLIST_LEDGER.parent.mkdir(parents=True, exist_ok=True)
+    PLAYLIST_LEDGER.write_text(
+        json.dumps(led, indent=2, ensure_ascii=False), encoding="utf-8",
+    )
+
+
+def _list_uploads(youtube: Any, max_results: int = 50) -> list[dict]:
+    """Devuelve últimos N uploads del canal autenticado, con id/title."""
+    ch = youtube.channels().list(part="contentDetails", mine=True).execute()
+    items = ch.get("items", [])
+    if not items:
+        return []
+    uploads_pl = items[0]["contentDetails"]["relatedPlaylists"]["uploads"]
+
+    out: list[dict] = []
+    next_page = None
+    while len(out) < max_results:
+        req = youtube.playlistItems().list(
+            part="snippet,contentDetails", playlistId=uploads_pl,
+            maxResults=min(50, max_results - len(out)), pageToken=next_page,
+        )
+        resp = req.execute()
+        for it in resp.get("items", []):
+            out.append({
+                "id": it["contentDetails"]["videoId"],
+                "title": it["snippet"]["title"],
+            })
+        next_page = resp.get("nextPageToken")
+        if not next_page:
+            break
+    return out
+
+
+def _ensure_playlist(youtube: Any, ledger_ch: dict[str, str],
+                       title: str, description: str) -> str | None:
+    """Devuelve el id de la playlist. Crea si no existe."""
+    pid = ledger_ch.get(title)
+    if pid:
+        # Verifica que aún existe (podría estar borrada)
         try:
-            return json.loads(_PLAYLIST_MAP_FILE.read_text())
+            resp = youtube.playlists().list(part="id", id=pid).execute()
+            if resp.get("items"):
+                return pid
         except Exception:
-            return {}
-    return {}
-
-
-def _save_map(m: dict[str, str]) -> None:
-    _PLAYLIST_MAP_FILE.parent.mkdir(parents=True, exist_ok=True)
-    _PLAYLIST_MAP_FILE.write_text(json.dumps(m, ensure_ascii=False, indent=2))
-
-
-def _get_access_token() -> Optional[str]:
-    tok_path = SECRETS_DIR / "youtube_token.json"
-    if not tok_path.exists():
+            pass
+    # Crea nueva
+    try:
+        resp = youtube.playlists().insert(
+            part="snippet,status",
+            body={
+                "snippet": {"title": title[:150], "description": description[:5000]},
+                "status": {"privacyStatus": "public"},
+            },
+        ).execute()
+        return resp["id"]
+    except Exception as e:
+        print(f"  playlist create fail ({title[:40]}): {e}")
         return None
-    tok = json.loads(tok_path.read_text())
-    r = requests.post("https://oauth2.googleapis.com/token", data={
-        "client_id": tok["client_id"], "client_secret": tok["client_secret"],
-        "refresh_token": tok["refresh_token"], "grant_type": "refresh_token",
-    }, timeout=15).json()
-    return r.get("access_token")
 
 
-def classify_topic(topic: str) -> str:
-    """Devuelve 'bancarios' | 'politicos' | 'empresariales' según el topic.
-    Fallback: 'politicos' (por defecto el nicho más amplio en el canal).
-    """
-    tl = (topic or "").lower()
-    for cat, meta in CATEGORIES.items():
-        if any(k in tl for k in meta["keywords"]):
-            return cat
-    return "politicos"
+def _existing_items(youtube: Any, playlist_id: str) -> set[str]:
+    ids: set[str] = set()
+    next_page = None
+    while True:
+        req = youtube.playlistItems().list(
+            part="contentDetails", playlistId=playlist_id,
+            maxResults=50, pageToken=next_page,
+        )
+        resp = req.execute()
+        for it in resp.get("items", []):
+            ids.add(it["contentDetails"]["videoId"])
+        next_page = resp.get("nextPageToken")
+        if not next_page:
+            break
+    return ids
 
 
-def _create_playlist(access_token: str, title: str, description: str) -> Optional[str]:
-    """Crea una playlist en el canal. Devuelve el playlist_id o None si falla."""
-    H = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
-    body = {
-        "snippet": {"title": title, "description": description[:5000],
-                    "defaultLanguage": "es"},
-        "status": {"privacyStatus": "public"},
-    }
-    r = requests.post("https://www.googleapis.com/youtube/v3/playlists",
-                      params={"part": "snippet,status"},
-                      headers=H, json=body, timeout=20)
-    if r.status_code == 200:
-        return r.json()["id"]
-    print(f"  playlists: create fail {r.status_code} — {r.text[:200]}")
-    return None
+def _add_to_playlist(youtube: Any, playlist_id: str, video_id: str) -> bool:
+    try:
+        youtube.playlistItems().insert(
+            part="snippet",
+            body={"snippet": {"playlistId": playlist_id,
+                                "resourceId": {"kind": "youtube#video",
+                                                "videoId": video_id}}},
+        ).execute()
+        return True
+    except Exception as e:
+        print(f"  playlist add {video_id} fail: {e}")
+        return False
 
 
-def ensure_playlists() -> dict[str, str]:
-    """Devuelve {categoria: playlist_id}. Crea las que falten. Idempotente."""
-    m = _load_map()
-    missing = [c for c in CATEGORIES if c not in m]
-    if not missing:
-        return m
-    tok = _get_access_token()
-    if not tok:
-        print("  playlists: sin token YT, salto creación")
-        return m
-    for cat in missing:
-        meta = CATEGORIES[cat]
-        pid = _create_playlist(tok, meta["title"], meta["description"])
-        if pid:
-            m[cat] = pid
-            print(f"  playlists: ✅ creada '{meta['title']}' → {pid}")
-    _save_map(m)
-    return m
+def refresh_channel(yt_prefix: str) -> dict[str, Any]:
+    """Refresca playlists de un canal. yt_prefix='' → default WaitWhy."""
+    playlists_map = CHANNEL_PLAYLISTS.get(yt_prefix)
+    if not playlists_map:
+        return {"status": "no_config", "prefix": yt_prefix}
+
+    prev_prefix = os.environ.get("YT_CHANNEL_PREFIX", "")
+    if yt_prefix:
+        os.environ["YT_CHANNEL_PREFIX"] = yt_prefix
+    else:
+        os.environ.pop("YT_CHANNEL_PREFIX", None)
+
+    try:
+        creds = _get_credentials()
+        youtube = googleapiclient.discovery.build("youtube", "v3", credentials=creds)
+        uploads = _list_uploads(youtube, max_results=50)
+        if not uploads:
+            return {"status": "no_uploads", "prefix": yt_prefix}
+
+        ledger = _load_ledger()
+        ledger_ch = ledger.setdefault(yt_prefix, {})
+        summary: dict[str, dict] = {}
+
+        for pl_title, keywords in playlists_map.items():
+            kws = [k.lower() for k in keywords]
+            matching = [
+                v for v in uploads
+                if any(k in v["title"].lower() for k in kws)
+            ]
+            if len(matching) < 3:
+                continue  # No vale la pena playlist con <3 items
+            pid = _ensure_playlist(
+                youtube, ledger_ch, pl_title,
+                f"Vídeos del canal agrupados: {pl_title}. "
+                f"Actualizado automáticamente.",
+            )
+            if not pid:
+                continue
+            ledger_ch[pl_title] = pid
+            existing = _existing_items(youtube, pid)
+            added = 0
+            for v in matching:
+                if v["id"] in existing:
+                    continue
+                if _add_to_playlist(youtube, pid, v["id"]):
+                    added += 1
+            summary[pl_title] = {
+                "playlist_id": pid, "matched": len(matching),
+                "existing": len(existing), "added": added,
+            }
+            print(f"  ✓ '{pl_title}' matched={len(matching)} +{added}")
+
+        _save_ledger(ledger)
+        return {"status": "ok", "prefix": yt_prefix, "summary": summary}
+    except Exception as e:
+        return {"status": "error", "prefix": yt_prefix, "error": str(e)[:200]}
+    finally:
+        if prev_prefix:
+            os.environ["YT_CHANNEL_PREFIX"] = prev_prefix
+        else:
+            os.environ.pop("YT_CHANNEL_PREFIX", None)
 
 
-def add_video_to_category(video_id: str, topic: str) -> Optional[str]:
-    """Añade un video a la playlist correspondiente según topic.
-    Devuelve categoría usada o None si falla."""
-    cat = classify_topic(topic)
-    m = ensure_playlists()
-    playlist_id = m.get(cat)
-    if not playlist_id:
-        print(f"  playlists: sin playlist_id para categoría '{cat}'")
-        return None
-    tok = _get_access_token()
-    if not tok:
-        return None
-    H = {"Authorization": f"Bearer {tok}", "Content-Type": "application/json"}
-    body = {"snippet": {"playlistId": playlist_id,
-                        "resourceId": {"kind": "youtube#video", "videoId": video_id}}}
-    r = requests.post("https://www.googleapis.com/youtube/v3/playlistItems",
-                      params={"part": "snippet"}, headers=H, json=body, timeout=15)
-    if r.status_code == 200:
-        cat_title = CATEGORIES[cat]["title"]
-        print(f"  playlists: ✅ '{video_id}' → «{cat_title}»")
-        return cat
-    print(f"  playlists: add fail {r.status_code} — {r.text[:200]}")
-    return None
+def refresh_all() -> dict[str, Any]:
+    """Refresca playlists de todos los canales configurados."""
+    results: dict[str, Any] = {}
+    for prefix in CHANNEL_PLAYLISTS.keys():
+        label = prefix or "YT_MAIN"
+        print(f"\n─── {label} ───")
+        results[label] = refresh_channel(prefix)
+    return results

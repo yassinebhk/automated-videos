@@ -1,0 +1,22 @@
+name: Auto-playlists refresh (semanal)
+
+# Agrupa uploads por sub-tema en playlists YT de cada canal.
+# +40% session watch time según YT Algorithm 2026 (palanca #1 tras el
+# desacople Shorts/long-form de late 2025). Idempotente vía ledger.
+#
+# Domingo 06:00 UTC (08:00 CEST) — antes del cron principal 07:00 UTC.
+
+on:
+  schedule:
+    - cron: "0 6 * * 0"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: playlists-refresh
+    secrets: inherit
