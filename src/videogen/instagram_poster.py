@@ -116,9 +116,21 @@ def _prepare_public_reel(local_mp4: Path, slug: str) -> Optional[str]:
                 p = subprocess.run(["git", "push", "origin", "HEAD:main"],
                                     cwd=ROOT, capture_output=True, timeout=30)
                 if p.returncode == 0:
-                    print(f"  ig: mp4 pushed → esperando 120s para GH Pages rebuild")
-                    # GH Pages rebuilda entre 30s-2min tras cada push.
-                    time.sleep(120)
+                    print(f"  ig: mp4 pushed → poll activo GH Pages")
+                    # Poll hasta que GH Pages devuelva 200 (rebuild puede
+                    # tardar 30s-5min). Max 6 min total.
+                    url_check = f"{PUBLIC_REELS_BASE}/{dst.stem}.mp4"
+                    for i in range(36):
+                        time.sleep(10)
+                        try:
+                            head = requests.head(url_check, timeout=10)
+                            if head.status_code == 200:
+                                print(f"  ig: ✓ GH Pages OK tras {(i+1)*10}s")
+                                break
+                        except Exception:
+                            pass
+                    else:
+                        print(f"  ig: ⚠ GH Pages no respondió 200 tras 360s")
                     break
     except Exception as e:
         print(f"  ig: commit mp4 falló ({type(e).__name__}: {e}) — IG puede fallar")
