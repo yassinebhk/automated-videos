@@ -66,14 +66,54 @@ def _send_message_now(text: str) -> None:
         pass
 
 
+# Hashtags TT curados por nicho — mezcla generales (parati/fyp) + específicos.
+# El user los copia junto al título al subir a TikTok. TT sigue distribuyendo
+# por hashtags parcialmente en 2026 aunque menos que antes.
+TT_HASHTAGS: dict[str, str] = {
+    "WaitWhy":         "#parati #fyp #foryou #truecrime #españa #estafa #curiosidades #viral #misterio",
+    "TaxHack ES":      "#parati #fyp #españa #dinero #impuestos #autonomos #ahorrar #hacienda #finanzas",
+    "TusDerechos ES":  "#parati #fyp #españa #derechoslaborales #trabajo #trabajador #consejos #legal",
+    "AyudaGob":        "#parati #fyp #españa #ayudas #subvenciones #gobierno #familia #dinero",
+    "Motor60s":        "#parati #fyp #coches #cochesegundamano #motor #españa #comprarcoche #trucos",
+    "TiempoAtrás ES":  "#parati #fyp #historia #españa #curiosidades #sabiasque #cultura #aprende",
+    "TopRanking ES":   "#parati #fyp #ranking #top10 #dinero #famosos #curiosidades #comparación",
+    "MenteEnCalma":    "#parati #fyp #relax #dormir #meditar #calma #ansiedad #descanso",
+    "IA Autónomos ES": "#parati #fyp #ia #chatgpt #autonomos #productividad #tecnologia #españa #trucos",
+}
+
+
+def _tt_caption(channel_display: str, title: str, url_yt: str = "") -> str:
+    """Compone caption completo para el sendVideo — copy-paste friendly.
+    Incluye título sugerido + hashtags TT + tip de retention."""
+    # `channel_display` puede venir como "TaxHack ES · motivo…" — extraemos
+    # el nombre puro para buscar hashtags
+    canal_pure = channel_display.split("·")[0].strip()
+    hashtags = TT_HASHTAGS.get(canal_pure, "#parati #fyp #foryou #españa #curiosidades")
+    parts = [
+        f"📱 <b>TikTok · {channel_display}</b>",
+        "",
+        "📝 <b>TÍTULO</b> (copia/pega):",
+        title[:150],
+        "",
+        "#️⃣ <b>HASHTAGS</b>:",
+        hashtags,
+        "",
+        "⏱ Primeros 3s = 40% retention TT. Si no engancha, avisa y regenero.",
+    ]
+    if url_yt:
+        parts.append(f"🔗 YT: {url_yt}")
+    caption = "\n".join(parts)
+    return caption[:1024]  # límite Telegram sendVideo caption
+
+
 def send_video_for_tiktok(mp4_path: str | Path, channel_display: str,
                               title: str, url_yt: str = "") -> bool:
     """Envía el MP4 vertical del Short al chat Telegram para que el user
-    lo descargue y lo suba manualmente a TikTok.
+    lo descargue y lo suba manualmente a TikTok. El caption ya incluye
+    título sugerido + hashtags TT + tip retention → subida en 30s.
 
     Telegram sendVideo acepta hasta 50MB por bot API. Shorts <60s con
-    bitrate razonable = 5-15MB → siempre cabe. Si el archivo excede
-    ese límite, se hace skip silencioso (no rompe pipeline).
+    bitrate razonable = 5-15MB → suele caber. Si excede, skip con aviso.
     """
     tok = os.environ.get("TELEGRAM_BOT_TOKEN")
     chat = os.environ.get("TELEGRAM_CHAT_ID")
@@ -89,17 +129,11 @@ def send_video_for_tiktok(mp4_path: str | Path, channel_display: str,
         return False
     try:
         import requests
-        caption = (
-            f"📱 <b>TikTok · {channel_display}</b>\n"
-            f"<i>{title[:180]}</i>\n"
-            f"↓ Descarga este MP4 y súbelo a la app TikTok manualmente."
-        )
-        if url_yt:
-            caption += f"\nYT: {url_yt}"
+        caption = _tt_caption(channel_display, title, url_yt)
         with open(p, "rb") as f:
             r = requests.post(
                 f"https://api.telegram.org/bot{tok}/sendVideo",
-                data={"chat_id": chat, "caption": caption[:1024],
+                data={"chat_id": chat, "caption": caption,
                         "parse_mode": "HTML", "supports_streaming": True},
                 files={"video": (p.name, f, "video/mp4")},
                 timeout=180,
