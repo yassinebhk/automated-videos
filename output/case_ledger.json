@@ -1,12 +1,8 @@
 {
   "cases": {
     "kio": {
-      "count": 11,
+      "count": 12,
       "history": [
-        {
-          "ts": "2026-08-24T08:54:20.025553+00:00",
-          "topic": "[CRIMEN] El caso KIO: 300 millones de euros de fraude bursátil y la caída de los hermanos Al-Zayat"
-        },
         {
           "ts": "2026-08-25T20:46:24.703672+00:00",
           "topic": "[CRIMEN] KIO y el expolio de la bolsa: 300 millones de euros defraudados en la caída de un imperio"
@@ -42,6 +38,10 @@
         {
           "ts": "2026-09-11T10:32:40.489482+00:00",
           "topic": "[CRIMEN] El Caso KIO: la justicia sentenció a 6 años a los responsables del fraude millonario que vació la bolsa española en los 90"
+        },
+        {
+          "ts": "2026-09-12T10:23:14.832606+00:00",
+          "topic": "[CRIMEN] KIO: el fraude en bolsa que costó 300 millones de euros y salpicó a la familia real saudí"
         }
       ]
     },
