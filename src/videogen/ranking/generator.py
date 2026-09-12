@@ -83,10 +83,31 @@ def _generate_dataset_with_gemini(topic: dict, n_items: int = 10,
         if not data:
             print(f"  ranking: ambos LLMs fallaron")
             return None
-        # Validación mínima
-        if len(data.get("data", [])) != len(data.get("years", [])):
-            print(f"  ranking: dataset dimensions mismatch")
+        # Validación + reparación defensiva (LLM a veces devuelve mismatch)
+        years = data.get("years", [])
+        items = data.get("items", [])
+        matrix = data.get("data", [])
+        if not years or not items or not matrix:
+            print(f"  ranking: dataset incompleto years={len(years)} items={len(items)} data={len(matrix)}")
             return None
+        # Truncar a la dimensión menor si mismatch (no fallar)
+        if len(matrix) != len(years):
+            m = min(len(matrix), len(years))
+            print(f"  ranking: dims mismatch (years={len(years)} vs data={len(matrix)}) → truncando a {m}")
+            data["years"] = years[:m]
+            data["data"] = matrix[:m]
+            matrix = matrix[:m]
+        # Cada fila debe tener len(items) valores — pad con 0 si faltan, trunca si sobran
+        n_items = len(items)
+        fixed_matrix = []
+        for row in matrix:
+            row = list(row)
+            if len(row) < n_items:
+                row = row + [0] * (n_items - len(row))
+            elif len(row) > n_items:
+                row = row[:n_items]
+            fixed_matrix.append(row)
+        data["data"] = fixed_matrix
         return data
     except Exception as e:
         print(f"  ranking: Gemini fail {type(e).__name__}: {e}")
