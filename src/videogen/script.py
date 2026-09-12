@@ -106,7 +106,30 @@ def generate_scripts(topic: str) -> GeneratedScripts:
                 else:
                     raise
         print(f"  {model} no disponible, probando siguiente modelo...")
-    raise RuntimeError(f"Ningún modelo Gemini devolvió script válido: {last_err}")
+
+    # FALLBACK GROQ — cuando TODOS los modelos Gemini fallan (503/429),
+    # intenta Groq (openai/gpt-oss-120b free) con el mismo prompt+system.
+    print(f"  script: todos los Gemini fallaron ({last_err}) → intento GROQ fallback")
+    try:
+        from .llm_fallback import generate_json as _llm_json
+        combined_prompt = f"{system}\n\n---\n\n{contents}"
+        data = _llm_json(combined_prompt, schema=None, max_tokens=8000,
+                          temperature=0.85)
+        if data and data.get("text"):
+            raw = data["text"].strip()
+            if raw.startswith("```"):
+                raw = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw, flags=re.MULTILINE)
+            try:
+                parsed = json.loads(raw)
+                if not parsed.get("slug"):
+                    parsed["slug"] = _slugify(topic)
+                return GeneratedScripts.model_validate(parsed)
+            except Exception as gpe:
+                print(f"  script: GROQ devolvió texto no-JSON válido: {gpe}")
+    except Exception as ge:
+        print(f"  script: GROQ fallback fail: {ge}")
+
+    raise RuntimeError(f"Ningún LLM devolvió script válido (Gemini+Groq): {last_err}")
 
 
 def _ensure_outro(data: dict, lang: str) -> None:
