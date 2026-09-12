@@ -144,5 +144,11 @@ def set_thumbnail(video_id: str, thumbnail_path: Path) -> bool:
         print(f"  YT thumbnail: ✅ set on {video_id}")
         return True
     except Exception as e:
-        print(f"  YT thumbnail: ❌ {type(e).__name__}: {e}")
+        # Canal sin verificación SMS → 403 forbidden (limit YT 2 verifs/año/número).
+        # No es error crítico: YT usa frame automático como thumbnail. Log silencioso.
+        err = str(e)
+        if "403" in err or "forbidden" in err.lower():
+            print(f"  YT thumbnail: skip (canal sin SMS verify — frame automático)")
+        else:
+            print(f"  YT thumbnail: ❌ {type(e).__name__}: {err[:150]}")
         return False
