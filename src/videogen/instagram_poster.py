@@ -157,11 +157,13 @@ def _wait_container_ready(access_token: str, container_id: str, max_wait: int = 
     last_status = None
     poll_count = 0
     while time.time() - start < max_wait:
-        # Campo 'status' (no solo status_code) da detalle específico del error
-        # en 2026. Ver postproxy.dev/blog/instagram-reels-api-publishing-guide
+        # graph.instagram.com/v21.0 (IG Business Login) SOLO soporta:
+        # status_code, status, error_message. Pedir video_title/video_status
+        # rompe la respuesta entera (IGApiException code 100). Con Facebook
+        # Login for Business endpoint sí funcionan pero usamos IG BL.
         r = requests.get(
             f"{IG_API_BASE}/{container_id}",
-            params={"fields": "status_code,status,error_message,video_title,video_status",
+            params={"fields": "status_code,status,error_message",
                     "access_token": access_token},
             timeout=20,
         )
