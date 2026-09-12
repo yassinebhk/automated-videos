@@ -95,13 +95,98 @@ EDGE_VOICES = _EdgeVoicesMap()
 
 
 def synthesize(script: LocalizedScript, dest_dir: Path) -> VoiceTrack:
-    """Sintetiza la voz del script según el motor configurado."""
+    """Sintetiza la voz del script según el motor configurado.
+
+    Motores: edge (default), kokoro, chatterbox, elevenlabs.
+    Chatterbox y Kokoro requieren download primera vez (~1-2GB modelo).
+    """
     eng = voice_engine()
     if eng == "elevenlabs":
         return _synthesize_elevenlabs(script, dest_dir)
     if eng == "kokoro":
         return _synthesize_kokoro(script, dest_dir)
+    if eng == "chatterbox":
+        try:
+            return _synthesize_chatterbox(script, dest_dir)
+        except Exception as e:
+            print(f"  chatterbox fail ({type(e).__name__}: {str(e)[:120]}) → fallback edge")
+            return _synthesize_edge(script, dest_dir)
     return _synthesize_edge(script, dest_dir)
+
+
+# ------------------------------------------------------------ Chatterbox TTS
+def _chatterbox_voice_ref(lang: str) -> str | None:
+    """Path a WAV de referencia de voz para clonado (6-10s). Opcional:
+    si no hay referencia, Chatterbox usa voz por defecto del modelo.
+
+    Override por canal: CHATTERBOX_REF_{LANG}_{PREFIX_SIN_YT_}
+    Ej: YT_CHANNEL_PREFIX=YT_TAX → CHATTERBOX_REF_ES_TAX
+    """
+    prefix = os.environ.get("YT_CHANNEL_PREFIX", "").strip()
+    if prefix.startswith("YT_"):
+        suffix = prefix[3:]
+        p = os.environ.get(f"CHATTERBOX_REF_{lang.upper()}_{suffix}")
+        if p and Path(p).exists():
+            return p
+    p = os.environ.get(f"CHATTERBOX_REF_{lang.upper()}")
+    if p and Path(p).exists():
+        return p
+    return None
+
+
+def _synthesize_chatterbox(script: LocalizedScript, dest_dir: Path) -> VoiceTrack:
+    """Chatterbox multilingual (Resemble AI, MIT, gratis). 23 idiomas ES incl.
+    Ventaja vs Edge: 65% preferido vs ElevenLabs en blind test (fuente
+    Resemble AI). Clonado zero-shot si hay referencia WAV.
+
+    CPU-only viable (Nano 110M ~3× realtime en 8 cores). Modelo se descarga
+    la primera vez desde Hugging Face (~1-1.5 GB, cacheado en ~/.cache/huggingface).
+    """
+    import torchaudio as ta  # dep transitiva chatterbox
+    from chatterbox.tts import ChatterboxMultilingualTTS
+    import subprocess
+
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    text = _clean_for_tts(script.full_text())
+    wav_path = dest_dir / f"voice_{script.lang}.wav"
+    audio_path = dest_dir / f"voice_{script.lang}.mp3"
+
+    device = os.environ.get("CHATTERBOX_DEVICE", "cpu")
+    model = ChatterboxMultilingualTTS.from_pretrained(device=device)
+
+    ref = _chatterbox_voice_ref(script.lang)
+    kwargs = {"language_id": script.lang}
+    if ref:
+        kwargs["audio_prompt_path"] = ref
+    wav = model.generate(text, **kwargs)
+    ta.save(str(wav_path), wav, model.sr)
+    total_dur = wav.shape[-1] / model.sr
+
+    subprocess.run(
+        ["ffmpeg", "-y", "-loglevel", "error", "-i", str(wav_path),
+         "-codec:a", "libmp3lame", "-b:a", "128k", str(audio_path)],
+        check=True,
+    )
+    wav_path.unlink(missing_ok=True)
+
+    # Timestamps aproximados (Chatterbox no expone alineamiento por palabra)
+    words_text = text.split()
+    total_chars = sum(len(w) for w in words_text) or 1
+    words: list[WordTimestamp] = []
+    t = 0.0
+    for w in words_text:
+        w_dur = total_dur * (len(w) / total_chars)
+        words.append(WordTimestamp(word=w, start=t, end=t + w_dur))
+        t += w_dur
+
+    track = VoiceTrack(
+        lang=script.lang, audio_path=str(audio_path),
+        duration_seconds=total_dur, words=words,
+    )
+    (dest_dir / f"voice_{script.lang}.json").write_text(
+        track.model_dump_json(indent=2), encoding="utf-8",
+    )
+    return track
 
 
 # ---------------------------------------------------------------- Kokoro TTS

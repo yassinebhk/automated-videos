@@ -27,6 +27,15 @@ dependencies = [
     "yt-dlp>=2025.1.15",
 ]
 
+# Chatterbox TTS opcional (~1.5GB torch + modelo). Instalar solo cuando se
+# active VOICE_ENGINE=chatterbox: `pip install -e '.[chatterbox]'`
+[project.optional-dependencies]
+chatterbox = [
+    "chatterbox-tts>=0.1.0",
+    "torch>=2.0.0",
+    "torchaudio>=2.0.0",
+]
+
 [project.scripts]
 videogen = "videogen.cli:cli"
 
