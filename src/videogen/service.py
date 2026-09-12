@@ -492,7 +492,62 @@ def publish(
     except Exception as e:
         print(f"  service: TT tg video fail — {e}")
 
+    # Auto-crosspost RRSS (cierra gap 12/09/26: WaitWhy solo posteaba vía
+    # social_boost cron independiente → email inactividad Threads). Ahora
+    # cada upload dispara Bluesky+Mastodon+Threads+IG como los otros
+    # 7 canales blue-ocean.
+    if notify and links.get("es"):
+        _crosspost_waitwhy(dst, getattr(scripts, "es").title, links["es"])
+
     return links
+
+
+def _crosspost_waitwhy(dst_dir: Path, title: str, yt_url: str) -> dict[str, bool]:
+    """Auto-crosspost RRSS WaitWhy tras subir un Short.
+    Errores en cada plataforma no rompen las otras (best-effort)."""
+    result: dict[str, bool] = {}
+    teaser = "🔎 Nuevo caso true crime ES — cifras verificadas, disclaimer legal"
+
+    try:
+        from . import bluesky_poster
+        r = bluesky_poster.post_short_to_bluesky(title, yt_url, teaser=teaser)
+        result["🦋"] = bool(r)
+    except Exception as e:
+        print(f"  waitwhy bluesky fail: {e}")
+        result["🦋"] = False
+
+    try:
+        from . import mastodon_poster
+        r = mastodon_poster.post_short_to_mastodon(title, yt_url, teaser=teaser)
+        result["🐘"] = bool(r)
+    except Exception as e:
+        print(f"  waitwhy mastodon fail: {e}")
+        result["🐘"] = False
+
+    try:
+        from . import threads_poster
+        r = threads_poster.post_short_to_threads(title, yt_url, teaser=teaser)
+        result["🧵"] = bool(r and not (isinstance(r, dict) and r.get("dry_run")))
+    except Exception as e:
+        print(f"  waitwhy threads fail: {e}")
+        result["🧵"] = False
+
+    try:
+        from . import instagram_poster
+        mp4 = dst_dir / "video_es_vertical.mp4"
+        if mp4.exists():
+            slug = dst_dir.name
+            r = instagram_poster.post_reel_to_instagram(title, yt_url, mp4, slug, teaser=teaser)
+            result["📸"] = bool(r)
+        else:
+            result["📸"] = False
+    except Exception as e:
+        print(f"  waitwhy ig fail: {e}")
+        result["📸"] = False
+
+    summary = " · ".join(f"{k}{'✅' if v else '❌'}" for k, v in result.items())
+    _notify_telegram(f"🕵 <b>WaitWhy · RRSS</b> {summary}")
+    return result
 
 
 def generate_tt_native(
