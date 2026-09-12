@@ -1,0 +1,22 @@
+name: Shorts audit semanal (retention underperformers)
+
+# Audita rendimiento últimos 20 shorts de todos los canales.
+# Notifica Telegram con los que rinden <mediana/3 views por día.
+# Umbrales YT Shorts 2026 SocialPilot: 65% retention <30s, 50% 30-60s.
+#
+# Sábado 09:00 UTC (11:00 CEST — user activo tarde de sábado).
+
+on:
+  schedule:
+    - cron: "0 9 * * 6"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: shorts-audit
+    secrets: inherit

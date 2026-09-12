@@ -956,6 +956,28 @@ def ia_autonomos_once_cmd():
         raise SystemExit(1)
 
 
+@cli.command(name="shorts-audit")
+@click.option("--channel", default=None,
+              help="Prefix del canal. Vacío = todos.")
+@click.option("--n", default=20, type=int, help="Últimos N Shorts.")
+@click.option("--notify/--no-notify", default=True,
+              help="Envía notificación Telegram con underperformers.")
+def shorts_audit_cmd(channel: str | None, n: int, notify: bool):
+    """Audita rendimiento Shorts últimos N — marca underperformers.
+
+    Umbrales YT Shorts 2026: 65% retention <30s, 50% en 30-60s.
+    Sin scope yt-analytics.readonly usamos proxy views/día vs mediana.
+    """
+    from . import shorts_audit
+    if channel:
+        result = shorts_audit.audit_channel(
+            channel if channel != "MAIN" else "", n=n, notify=notify,
+        )
+    else:
+        result = shorts_audit.audit_all(n=n)
+    print(json.dumps(result, indent=2, ensure_ascii=False))
+
+
 @cli.command(name="topics-refresh")
 def topics_refresh_cmd():
     """Regenera topic pool dinámico según tendencias RSS de cada nicho.
