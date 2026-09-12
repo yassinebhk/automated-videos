@@ -39,11 +39,12 @@ from .config import ROOT
 
 
 REELS_HOST_DIR = ROOT / "docs" / "reels"
-# jsDelivr sirve con Content-Type: video/mp4 correcto (IG requiere media
-# type reconocible). raw.githubusercontent.com devuelve
-# application/octet-stream que Meta puede rechazar silenciosamente. Espera
-# 90s tras push para que jsDelivr indexe.
-PUBLIC_REELS_BASE = "https://cdn.jsdelivr.net/gh/yassinebhk/automated-videos@main/docs/reels"
+# GitHub Pages sirve docs/ como https://<user>.github.io/<repo>/
+# CT correcto (video/mp4), sin rate-limit al User-Agent de Meta.
+# jsDelivr devolvía 403 Forbidden al fetch de Meta (User-Agent bloqueado).
+# GH Pages es más confiable para IG API. Espera 60s para que Pages
+# rebuilde tras push.
+PUBLIC_REELS_BASE = "https://yassinebhk.github.io/automated-videos/reels"
 
 # Instagram Business Login usa graph.instagram.com (v21+).
 # El endpoint clásico graph.facebook.com/v21.0 es para "Facebook Login for
@@ -115,11 +116,9 @@ def _prepare_public_reel(local_mp4: Path, slug: str) -> Optional[str]:
                 p = subprocess.run(["git", "push", "origin", "HEAD:main"],
                                     cwd=ROOT, capture_output=True, timeout=30)
                 if p.returncode == 0:
-                    print(f"  ig: mp4 pushed → esperando 90s para jsDelivr")
-                    # jsDelivr suele indexar commits nuevos en 30-60s.
-                    # 90s es margen holgado. Si IG sigue fallando tras esto,
-                    # el problema no es propagación → es la URL o el video.
-                    time.sleep(90)
+                    print(f"  ig: mp4 pushed → esperando 120s para GH Pages rebuild")
+                    # GH Pages rebuilda entre 30s-2min tras cada push.
+                    time.sleep(120)
                     break
     except Exception as e:
         print(f"  ig: commit mp4 falló ({type(e).__name__}: {e}) — IG puede fallar")
