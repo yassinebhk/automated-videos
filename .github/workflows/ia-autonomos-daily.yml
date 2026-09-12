@@ -1,0 +1,30 @@
+name: IA Autónomos daily (9º canal — micronicho blue-ocean 2026)
+
+# Canal "IA para Autónomos ES" — herramientas IA gratis para
+# autónomos/pymes. Micronicho blue-ocean (hueco confirmado deep
+# research 09-2026, CepymeNews micronichos rentables ES).
+# CPM tech ES $8-15. Cruce natural con TaxHack.
+#
+# 1 short/día 11:00 UTC (13:00 CEST — hora comida, público
+# autónomo revisa móvil). Separado de tax-daily (08:00 UTC).
+#
+# PREREQUISITO: crear canal YT + añadir secrets:
+#   - YT_IA_REFRESH_TOKEN
+#   - YT_IA_CLIENT_ID
+#   - YT_IA_CLIENT_SECRET
+# Si faltan → pipeline aborta silenciosamente con notif Telegram.
+
+on:
+  schedule:
+    - cron: "0 11 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  ia_autonomos:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: ia-autonomos-once
+    secrets: inherit

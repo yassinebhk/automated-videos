@@ -946,6 +946,16 @@ def ranking_once_cmd():
         raise SystemExit(1)
 
 
+@cli.command(name="ia-autonomos-once")
+def ia_autonomos_once_cmd():
+    """Genera + sube 1 short 'IA para autónomos ES' al canal YT_IA."""
+    from .ia_autonomos import pipeline
+    result = pipeline.run_once()
+    print(json.dumps(result, indent=2, ensure_ascii=False))
+    if result.get("status") not in ("ok", "no_secrets"):
+        raise SystemExit(1)
+
+
 @cli.command(name="topics-refresh")
 def topics_refresh_cmd():
     """Regenera topic pool dinámico según tendencias RSS de cada nicho.
