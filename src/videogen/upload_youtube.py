@@ -72,6 +72,14 @@ def _get_credentials() -> Credentials:
     return creds
 
 
+AI_DISCLAIMER_ES = (
+    "\n\n— — —\n"
+    "🤖 Contenido creado con asistencia de IA (voz sintética + imágenes generativas). "
+    "Todos los datos son verificables con fuentes públicas. "
+    "Este vídeo no sustituye asesoramiento profesional."
+)
+
+
 def upload_video(
     video_path: Path,
     title: str,
@@ -82,6 +90,7 @@ def upload_video(
     made_for_kids: bool = False,
     is_short: bool = True,
     publish_at: str | None = None,
+    contains_synthetic_media: bool = True,
 ) -> str:
     """Sube el video. Devuelve el video_id de YouTube.
 
@@ -91,16 +100,24 @@ def upload_video(
     publish_at: si se pasa (RFC3339, ej. "2026-05-28T20:00:00Z"), el video se
     sube PRIVADO y YouTube lo hace público automáticamente a esa hora
     (publicación programada). Ignora `privacy` en ese caso.
+
+    contains_synthetic_media: setea status.containsSyntheticMedia (API v3 oct
+    2024) — cumplimiento YT AI disclosure + EU AI Act Art. 50 (vigor 2 ago 2026,
+    multa hasta €15M). Default True porque TODO nuestro contenido usa TTS
+    sintético + imágenes IA generativas.
     """
     creds = _get_credentials()
     youtube = googleapiclient.discovery.build("youtube", "v3", credentials=creds)
 
     if is_short and "#shorts" not in description.lower():
         description = f"{description}\n\n#Shorts"
+    if contains_synthetic_media and "creado con asistencia de ia" not in description.lower():
+        description = f"{description}{AI_DISCLAIMER_ES}"
 
     status = {
         "privacyStatus": privacy,
         "selfDeclaredMadeForKids": made_for_kids,
+        "containsSyntheticMedia": contains_synthetic_media,
     }
     if publish_at:
         # YouTube exige que el video esté privado para programar su publicación.
