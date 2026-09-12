@@ -199,21 +199,31 @@ def _crosspost(cfg: ChannelConfig, slug: str, url: str, topic: dict) -> dict[str
     return result
 
 
-def _notify(text: str) -> None:
-    tok = os.environ.get("TELEGRAM_BOT_TOKEN")
-    chat = os.environ.get("TELEGRAM_CHAT_ID")
-    if not (tok and chat):
-        return
+def _notify(text: str, urgent: bool = False) -> None:
+    """Encola notificación (batched al final del proceso).
+    urgent=True → envía inmediatamente (fallos críticos)."""
+    from .notify_batch import add
+    add(text, urgent=urgent)
+
+
+def _send_tt_video(cfg: ChannelConfig, slug: str, title: str, url: str) -> None:
+    """Envía MP4 vertical del Short a Telegram → descarga manual → TikTok.
+
+    Workaround: subir a draft TT vía API sigue sin funcionar por review
+    de Sandbox → mandamos el MP4 y el user lo sube manual en 30s."""
     try:
-        req = urllib.request.Request(
-            f"https://api.telegram.org/bot{tok}/sendMessage",
-            data=json.dumps({"chat_id": int(chat), "text": text,
-                              "parse_mode": "HTML"}).encode(),
-            headers={"Content-Type": "application/json"},
-        )
-        urllib.request.urlopen(req, timeout=30).read()
-    except Exception:
-        pass
+        from .config import UPLOADED_DIR, PENDING_DIR
+        from .notify_batch import send_video_for_tiktok
+        mp4 = None
+        for base in (UPLOADED_DIR, PENDING_DIR):
+            p = base / slug / "video_es_vertical.mp4"
+            if p.exists():
+                mp4 = p
+                break
+        if mp4:
+            send_video_for_tiktok(mp4, cfg.display_name, title, url)
+    except Exception as e:
+        print(f"  {cfg.slug}: TT tg video fail — {e}")
 
 
 def _build_longform_topic_prompt(cfg: ChannelConfig, t: dict) -> str:
@@ -324,12 +334,15 @@ def run_channel_once(cfg: ChannelConfig) -> dict[str, Any]:
         cross_summary = " · ".join(f"{k}{'✅' if v else '❌'}" for k, v in cross.items())
         _notify(f"✅ <b>{cfg.display_name}</b> · {url}\n"
                 f"<i>{topic.get('titulo','')[:60]}</i> · RRSS {cross_summary}")
+        # Envía MP4 vertical a Telegram para descarga manual → TikTok
+        _send_tt_video(cfg, slug, topic.get("titulo", ""), url)
         return {"status": "ok", "slug": slug, "url": url,
                 "topic_key": topic["key"], "crosspost": cross}
     except Exception as e:
         import traceback
         traceback.print_exc()
-        _notify(f"❌ {cfg.display_name} falló: {type(e).__name__}: {str(e)[:200]}")
+        _notify(f"❌ {cfg.display_name} falló: {type(e).__name__}: {str(e)[:200]}",
+                 urgent=True)
         return {"status": "gen_fail", "error": str(e), "topic_key": topic["key"]}
     finally:
         # Limpia env para no contaminar procesos concurrentes

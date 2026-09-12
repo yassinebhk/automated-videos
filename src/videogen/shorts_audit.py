@@ -73,21 +73,11 @@ def _days_since(iso_ts: str) -> float:
     return max(delta.total_seconds() / 86400.0, 0.5)
 
 
-def _notify(text: str) -> None:
-    tok = os.environ.get("TELEGRAM_BOT_TOKEN")
-    chat = os.environ.get("TELEGRAM_CHAT_ID")
-    if not (tok and chat):
-        return
-    try:
-        req = urllib.request.Request(
-            f"https://api.telegram.org/bot{tok}/sendMessage",
-            data=json.dumps({"chat_id": int(chat), "text": text,
-                                "parse_mode": "HTML"}).encode(),
-            headers={"Content-Type": "application/json"},
-        )
-        urllib.request.urlopen(req, timeout=30).read()
-    except Exception:
-        pass
+def _notify(text: str, urgent: bool = False) -> None:
+    """Encola notificación (batched al final del proceso).
+    urgent=True → envía inmediatamente (fallos críticos)."""
+    from .notify_batch import add
+    add(text, urgent=urgent)
 
 
 def audit_channel(yt_prefix: str = "", n: int = 20,

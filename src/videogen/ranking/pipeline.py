@@ -77,21 +77,11 @@ def _upload_ranking(meta: dict) -> dict | None:
             os.environ.pop("YT_CHANNEL_PREFIX", None)
 
 
-def _notify(text: str) -> None:
-    tok = os.environ.get("TELEGRAM_BOT_TOKEN")
-    chat = os.environ.get("TELEGRAM_CHAT_ID")
-    if not (tok and chat):
-        return
-    try:
-        req = urllib.request.Request(
-            f"https://api.telegram.org/bot{tok}/sendMessage",
-            data=json.dumps({"chat_id": int(chat), "text": text,
-                              "parse_mode": "HTML"}).encode(),
-            headers={"Content-Type": "application/json"},
-        )
-        urllib.request.urlopen(req, timeout=30).read()
-    except Exception:
-        pass
+def _notify(text: str, urgent: bool = False) -> None:
+    """Encola notificación (batched al final del proceso).
+    urgent=True → envía inmediatamente (fallos críticos)."""
+    from ..notify_batch import add
+    add(text, urgent=urgent)
 
 
 def run_once() -> dict[str, Any]:
@@ -106,13 +96,14 @@ def run_once() -> dict[str, Any]:
         duration_seconds=55, vertical=True,
     )
     if not meta:
-        _notify(f"❌ Ranking falló generación · {topic['key']}")
+        _notify(f"❌ Ranking falló generación · {topic['key']}", urgent=True)
         return {"status": "gen_fail", "topic_key": topic["key"]}
 
     print(f"  ranking: video generado · uploading canal TopRanking ES…")
     up = _upload_ranking(meta)
     if not up:
-        _notify(f"⚠️ Ranking {topic['key']} generado pero upload falló")
+        _notify(f"⚠️ Ranking {topic['key']} generado pero upload falló",
+                 urgent=True)
         return {"status": "upload_fail", "meta": meta}
 
     _mark_used(topic["key"])
@@ -122,6 +113,14 @@ def run_once() -> dict[str, Any]:
     cross_summary = " · ".join(f"{k}{'✅' if v else '❌'}" for k, v in cross.items())
     _notify(f"✅ <b>TopRanking ES</b> · {up['url']}\n"
             f"<i>{meta['title'][:60]}</i> · RRSS {cross_summary}")
+    # MP4 → Telegram para subir manual a TikTok
+    try:
+        from ..notify_batch import send_video_for_tiktok
+        vp = meta.get("video_path")
+        if vp:
+            send_video_for_tiktok(vp, "TopRanking ES", meta.get("title", ""), up["url"])
+    except Exception as e:
+        print(f"  ranking: TT tg video fail — {e}")
     return {"status": "ok", "slug": meta["slug"], "url": up["url"],
             "topic_key": topic["key"], "crosspost": cross}
 

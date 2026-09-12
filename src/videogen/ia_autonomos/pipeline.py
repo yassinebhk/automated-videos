@@ -100,21 +100,11 @@ def _build_topic_prompt(t: dict) -> str:
     )
 
 
-def _notify(text: str) -> None:
-    tok = os.environ.get("TELEGRAM_BOT_TOKEN")
-    chat = os.environ.get("TELEGRAM_CHAT_ID")
-    if not (tok and chat):
-        return
-    try:
-        req = urllib.request.Request(
-            f"https://api.telegram.org/bot{tok}/sendMessage",
-            data=json.dumps({"chat_id": int(chat), "text": text,
-                                "parse_mode": "HTML"}).encode(),
-            headers={"Content-Type": "application/json"},
-        )
-        urllib.request.urlopen(req, timeout=30).read()
-    except Exception:
-        pass
+def _notify(text: str, urgent: bool = False) -> None:
+    """Encola notificación (batched al final del proceso).
+    urgent=True → envía inmediatamente (fallos críticos)."""
+    from ..notify_batch import add
+    add(text, urgent=urgent)
 
 
 def run_longform():
@@ -156,12 +146,24 @@ def run_once() -> dict[str, Any]:
                                        for k, v in cross.items())
         _notify(f"✅ <b>IA Autónomos ES</b> · {url}\n"
                  f"<i>{topic.get('titulo','')[:60]}</i> · RRSS {cross_summary}")
+        try:
+            from ..config import UPLOADED_DIR, PENDING_DIR
+            from ..notify_batch import send_video_for_tiktok
+            for base in (UPLOADED_DIR, PENDING_DIR):
+                p = base / slug / "video_es_vertical.mp4"
+                if p.exists():
+                    send_video_for_tiktok(p, "IA Autónomos ES",
+                                              topic.get("titulo",""), url)
+                    break
+        except Exception as e:
+            print(f"  ia_autonomos: TT tg video fail — {e}")
         return {"status": "ok", "slug": slug, "url": url,
                  "topic_key": topic["key"], "crosspost": cross}
     except Exception as e:
         import traceback
         traceback.print_exc()
-        _notify(f"❌ IA Autónomos short falló: {type(e).__name__}: {str(e)[:200]}")
+        _notify(f"❌ IA Autónomos short falló: {type(e).__name__}: {str(e)[:200]}",
+                 urgent=True)
         return {"status": "gen_fail", "error": str(e), "topic_key": topic["key"]}
     finally:
         os.environ.pop("SCRIPT_SYSTEM_PROMPT_FILE", None)

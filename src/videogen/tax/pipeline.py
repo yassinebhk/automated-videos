@@ -159,12 +159,14 @@ def run_once() -> dict[str, Any]:
 
         _notify(f"✅ <b>TaxHack ES</b> · {url}\n"
                 f"<i>{topic.get('titulo','')[:60]}</i> · RRSS {cross_summary}")
+        _send_tt_video_tax(slug, topic.get("titulo", ""), url)
         return {"status": "ok", "slug": slug, "url": url,
                 "topic_key": topic["key"], "crosspost": crosspost_result}
     except Exception as e:
         import traceback
         traceback.print_exc()
-        _notify(f"❌ Tax short falló: {type(e).__name__}: {str(e)[:200]}")
+        _notify(f"❌ Tax short falló: {type(e).__name__}: {str(e)[:200]}",
+                 urgent=True)
         return {"status": "gen_fail", "error": str(e), "topic_key": topic["key"]}
     finally:
         # Limpia env para no contaminar procesos concurrentes en mismo runner
@@ -252,18 +254,22 @@ def _crosspost_tax(slug: str, url: str, topic: dict) -> dict[str, bool]:
     return result
 
 
-def _notify(text: str) -> None:
-    tok = os.environ.get("TELEGRAM_BOT_TOKEN")
-    chat = os.environ.get("TELEGRAM_CHAT_ID")
-    if not (tok and chat):
-        return
+def _notify(text: str, urgent: bool = False) -> None:
+    """Encola notificación (batched al final del proceso).
+    urgent=True → envía inmediatamente (fallos críticos)."""
+    from ..notify_batch import add
+    add(text, urgent=urgent)
+
+
+def _send_tt_video_tax(slug: str, title: str, url: str) -> None:
+    """MP4 vertical → Telegram para subida manual a TikTok."""
     try:
-        req = urllib.request.Request(
-            f"https://api.telegram.org/bot{tok}/sendMessage",
-            data=json.dumps({"chat_id": int(chat), "text": text,
-                              "parse_mode": "HTML"}).encode(),
-            headers={"Content-Type": "application/json"},
-        )
-        urllib.request.urlopen(req, timeout=30).read()
-    except Exception:
-        pass
+        from ..config import UPLOADED_DIR, PENDING_DIR
+        from ..notify_batch import send_video_for_tiktok
+        for base in (UPLOADED_DIR, PENDING_DIR):
+            p = base / slug / "video_es_vertical.mp4"
+            if p.exists():
+                send_video_for_tiktok(p, "TaxHack ES", title, url)
+                return
+    except Exception as e:
+        print(f"  tax: TT tg video fail — {e}")

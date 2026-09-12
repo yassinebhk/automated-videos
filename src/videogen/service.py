@@ -302,26 +302,10 @@ def get_meta(slug: str) -> dict:
     return {"slug": slug}
 
 
-def _notify_telegram(text: str) -> None:
-    """Envía una notificación a Telegram (best-effort, no falla si no hay config)."""
-    import os
-
-    import requests
-
-    from .config import telegram_chat_id
-
-    token = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
-    chat = telegram_chat_id()
-    if not token or not chat:
-        return
-    try:
-        requests.post(
-            f"https://api.telegram.org/bot{token}/sendMessage",
-            json={"chat_id": chat, "text": text},
-            timeout=15,
-        )
-    except Exception:
-        pass
+def _notify_telegram(text: str, urgent: bool = False) -> None:
+    """Encola notificación al buffer batched (o urgent → envío inmediato)."""
+    from .notify_batch import add
+    add(text, urgent=urgent)
 
 
 CHANNEL_HANDLE = "@waitwhy_ybb"
@@ -495,8 +479,18 @@ def publish(
         msg = f"{head}: {title}\n" + "\n".join(
             f"{k.upper()}: {v}" for k, v in links.items()
         )
-        msg += "\n\n🎵 Para TikTok: usa la variante _tiktok.mp4 + audio trending."
         _notify_telegram(msg)
+
+    # MP4 vertical → Telegram para descarga manual → TikTok
+    try:
+        from .notify_batch import send_video_for_tiktok
+        mp4 = dst / "video_es_vertical.mp4"
+        if mp4.exists():
+            title = getattr(scripts, "es").title
+            yt_url = links.get("es", "")
+            send_video_for_tiktok(mp4, "WaitWhy", title, yt_url)
+    except Exception as e:
+        print(f"  service: TT tg video fail — {e}")
 
     return links
 
