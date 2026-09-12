@@ -1,17 +1,17 @@
-"""LLM client unificado con fallback automático Gemini → Cerebras → Groq.
+"""LLM client unificado con fallback automático Gemini → OpenRouter → Groq.
 
-Cadena de fallback (todo GRATIS):
+Cadena de fallback (todo GRATIS, sin tarjeta):
   1. Gemini 2.5 (20 req/día/modelo). Cuando 429/503 → siguiente.
-  2. Cerebras Cloud — ~1M tokens/día en Llama 3.3 70B, latencia <1s.
+  2. OpenRouter — modelos ':free' (Llama 3.3 70B, DeepSeek, Qwen…),
+     free tier real sin CC.
   3. Groq — gpt-oss-120b JSON, gpt-oss-20b texto plano.
 
-Cerebras es el fallback preferido porque tiene el mayor cupo diario
-y latencia excepcional. Groq queda como red final por si Cerebras
-también rate-limita.
+Cerebras se descartó 09/12/26: migraron a PayGo (tarjeta obligatoria)
+→ viola política coste-cero-obligatorio.
 
 Requiere:
   - GEMINI_API_KEY (aistudio.google.com)
-  - CEREBRAS_API_KEY (cloud.cerebras.ai) — opcional, salta si falta
+  - OPENROUTER_API_KEY (openrouter.ai/keys) — opcional, salta si falta
   - GROQ_API_KEY (console.groq.com)     — opcional, salta si falta
 
 Uso:
@@ -28,8 +28,13 @@ from typing import Any
 
 
 GEMINI_MODELS = ["gemini-2.5-flash", "gemini-2.5-flash-lite"]
-CEREBRAS_MODEL = "llama-3.3-70b"  # free tier Cerebras, 128k ctx
-CEREBRAS_MODEL_FAST = "llama3.1-8b"  # fallback rápido si el 70b rate-limita
+# OpenRouter modelos :free (rotación por si uno rate-limita)
+OPENROUTER_MODELS = [
+    "meta-llama/llama-3.3-70b-instruct:free",
+    "deepseek/deepseek-chat-v3.1:free",
+    "qwen/qwen-2.5-72b-instruct:free",
+    "google/gemma-2-9b-it:free",
+]
 GROQ_MODEL = "openai/gpt-oss-120b"  # free tier Groq — 131k ctx, alta calidad
 GROQ_MODEL_FAST = "openai/gpt-oss-20b"  # fallback más rápido
 
@@ -92,12 +97,13 @@ def _try_gemini_json(prompt: str, schema: dict | None,
     return None, last_err
 
 
-def _try_cerebras_json(prompt: str, schema: dict | None,
-                         max_tokens: int, temperature: float) -> tuple[dict | None, str]:
-    """Fallback a Cerebras Cloud (llama-3.3-70b free). API OpenAI-compatible."""
-    key = os.environ.get("CEREBRAS_API_KEY", "").strip()
+def _try_openrouter_json(prompt: str, schema: dict | None,
+                           max_tokens: int, temperature: float) -> tuple[dict | None, str]:
+    """Fallback a OpenRouter (modelos ':free', sin CC). Rota entre modelos
+    si el primero rate-limita. API OpenAI-compatible."""
+    key = os.environ.get("OPENROUTER_API_KEY", "").strip()
     if not key:
-        return None, "no CEREBRAS_API_KEY"
+        return None, "no OPENROUTER_API_KEY"
 
     def _call(model: str) -> tuple[dict | None, str]:
         try:
@@ -127,9 +133,14 @@ def _try_cerebras_json(prompt: str, schema: dict | None,
                     "max_tokens": max_tokens,
                 }
             r = requests.post(
-                "https://api.cerebras.ai/v1/chat/completions",
-                headers={"Authorization": f"Bearer {key}",
-                          "Content-Type": "application/json"},
+                "https://openrouter.ai/api/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {key}",
+                    "Content-Type": "application/json",
+                    # Recomendado por OpenRouter para tracking/rankings
+                    "HTTP-Referer": "https://github.com/yassinebhk/automated-videos",
+                    "X-Title": "videogen automated-videos",
+                },
                 json=body, timeout=60,
             )
             if r.status_code >= 300:
@@ -150,14 +161,14 @@ def _try_cerebras_json(prompt: str, schema: dict | None,
         except Exception as e:
             return None, f"{type(e).__name__}: {e}"
 
-    data, err = _call(CEREBRAS_MODEL)
-    if data is not None and (schema or data.get("text")):
-        return data, ""
-    print(f"  cerebras {CEREBRAS_MODEL} fail ({err[:80]}) → intento {CEREBRAS_MODEL_FAST}")
-    data2, err2 = _call(CEREBRAS_MODEL_FAST)
-    if data2 is not None and (schema or data2.get("text")):
-        return data2, ""
-    return None, f"{CEREBRAS_MODEL}={err[:60]} · {CEREBRAS_MODEL_FAST}={err2[:60]}"
+    errors: list[str] = []
+    for model in OPENROUTER_MODELS:
+        data, err = _call(model)
+        if data is not None and (schema or data.get("text")):
+            return data, ""
+        errors.append(f"{model.split('/')[-1]}={err[:50]}")
+        # 429/402 → prueba siguiente modelo. Otros errores también.
+    return None, " · ".join(errors)
 
 
 def _try_groq_json(prompt: str, schema: dict | None,
@@ -243,17 +254,17 @@ def generate_json(prompt: str, schema: dict | None = None,
     data, gerr = _try_gemini_json(prompt, schema, max_tokens, temperature)
     if data is not None:
         return data
-    print(f"  llm: gemini fail ({gerr[:120]}) → intento cerebras")
-    data, cerr = _try_cerebras_json(prompt, schema, max_tokens, temperature)
+    print(f"  llm: gemini fail ({gerr[:120]}) → intento openrouter")
+    data, oerr = _try_openrouter_json(prompt, schema, max_tokens, temperature)
     if data is not None:
-        print(f"  llm: ✅ cerebras rescató el request")
+        print(f"  llm: ✅ openrouter rescató el request")
         return data
-    print(f"  llm: cerebras fail ({cerr[:120]}) → intento groq")
+    print(f"  llm: openrouter fail ({oerr[:120]}) → intento groq")
     data, ferr = _try_groq_json(prompt, schema, max_tokens, temperature)
     if data is not None:
         print(f"  llm: ✅ groq rescató el request")
         return data
-    print(f"  llm: ❌ tres LLMs fallaron · gemini={gerr[:60]} · cerebras={cerr[:60]} · groq={ferr[:60]}")
+    print(f"  llm: ❌ tres LLMs fallaron · gemini={gerr[:60]} · openrouter={oerr[:60]} · groq={ferr[:60]}")
     return None
 
 
