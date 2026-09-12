@@ -220,6 +220,25 @@ def _crosspost_tax(slug: str, url: str, topic: dict) -> dict[str, bool]:
         print(f"  tax mastodon fail: {e}")
         result["🐘"] = False
 
+    # Instagram Reels
+    try:
+        from ..config import UPLOADED_DIR, PENDING_DIR
+        from .. import instagram_poster
+        mp4 = None
+        for base in (UPLOADED_DIR, PENDING_DIR):
+            p = base / slug / "video_es_vertical.mp4"
+            if p.exists():
+                mp4 = p
+                break
+        if mp4:
+            r = instagram_poster.post_reel_to_instagram(title, url, mp4, slug, teaser=teaser)
+            result["📸"] = bool(r)
+        else:
+            result["📸"] = False
+    except Exception as e:
+        print(f"  tax ig fail: {e}")
+        result["📸"] = False
+
     # Threads
     try:
         from .. import threads_poster
