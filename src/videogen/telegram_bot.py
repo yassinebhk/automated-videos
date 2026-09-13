@@ -2229,6 +2229,84 @@ def _fmt_delta(cur: int, prev: int) -> str:
     return f"{d:+d}"
 
 
+# Schedule declarado — refleja los cron de .github/workflows/*.yml
+# Hora UTC → (categoría, descripción, días activos [0=lun..6=dom])
+# Categorías: SHORT · LONG · RRSS · MANT (mantenimiento) · SPECIAL
+_SCHEDULE: list[tuple[int, int, str, str, tuple[int, ...]]] = [
+    # (hora_utc, min_utc, categoría, desc, días_semana)
+    (3,  0,  "MANT",    "Meta token refresh",              (6,)),         # dom
+    (5,  0,  "MANT",    "Topics refresh (dias 1,15)",      (0,1,2,3,4,5,6)),  # solo si día
+    (6,  0,  "SHORT",   "WaitWhy Short (true crime)",      (0,1,2,3,4,5,6)),
+    (6,  0,  "SPECIAL", "Playlists refresh",               (6,)),         # dom
+    (6,  0,  "MANT",    "Hourly catchup (06-20 cada h)",   (0,1,2,3,4,5,6)),
+    (7,  0,  "SHORT",   "MenteEnCalma ambient",            (0,1,2,3,4,5,6)),
+    (7,  0,  "MANT",    "Daily summary",                   (0,1,2,3,4,5,6)),
+    (7,  15, "MANT",    "TikTok token refresh",            (0,1,2,3,4,5,6)),
+    (7,  30, "RRSS",    "Bluesky growth",                  (0,1,2,3,4,5,6)),
+    (8,  0,  "SHORT",   "TaxHack Short",                   (0,1,2,3,4,5,6)),
+    (8,  0,  "LONG",    "Tax long-form (weekly)",          (6,)),
+    (8,  0,  "LONG",    "WaitWhy long-form (dom+mié)",     (2,6)),
+    (9,  0,  "SHORT",   "Legal Short",                     (0,1,2,3,4,5,6)),
+    (9,  0,  "RRSS",    "Newsjack (09+16 UTC)",            (0,1,2,3,4,5,6)),
+    (9,  0,  "RRSS",    "Social boost",                    (0,1,2,3,4,5,6)),
+    (9,  0,  "RRSS",    "Narrative post Bluesky",          (0,1,2,3,4,5,6)),
+    (9,  0,  "SPECIAL", "Shorts audit (sabado)",           (5,)),
+    (10, 0,  "RRSS",    "Mastodon growth",                 (0,1,2,3,4,5,6)),
+    (10, 0,  "LONG",    "Legal long-form (weekly)",        (6,)),
+    (10, 0,  "SPECIAL", "Series start (miercoles)",        (2,)),
+    (10, 15, "RRSS",    "X growth",                        (0,1,2,3,4,5,6)),
+    (10, 30, "RRSS",    "Bluesky growth",                  (0,1,2,3,4,5,6)),
+    (11, 0,  "SHORT",   "Ayudas Short",                    (0,1,2,3,4,5,6)),
+    (11, 0,  "SHORT",   "IA Autonomos Short",              (0,1,2,3,4,5,6)),
+    (11, 0,  "SPECIAL", "Community poll resolve (lunes)",  (0,)),
+    (12, 0,  "LONG",    "Ayudas long-form (weekly)",       (6,)),
+    (13, 0,  "SHORT",   "Motor Short",                     (0,1,2,3,4,5,6)),
+    (13, 0,  "RRSS",    "Social boost",                    (0,1,2,3,4,5,6)),
+    (13, 0,  "SPECIAL", "Weekly longform catchup",         (6,)),
+    (14, 0,  "SHORT",   "TiempoAtras (POV) Short",         (0,1,2,3,4,5,6)),
+    (14, 0,  "LONG",    "Motor long-form (weekly)",        (6,)),
+    (14, 30, "RRSS",    "Bluesky growth",                  (0,1,2,3,4,5,6)),
+    (15, 0,  "SHORT",   "TopRanking Short",                (0,1,2,3,4,5,6)),
+    (15, 0,  "RRSS",    "Mastodon growth",                 (0,1,2,3,4,5,6)),
+    (16, 0,  "RRSS",    "Narrative post",                  (0,1,2,3,4,5,6)),
+    (17, 0,  "RRSS",    "Social boost",                    (0,1,2,3,4,5,6)),
+    (17, 30, "MANT",    "TikTok draft reminder",           (0,1,2,3,4,5,6)),
+    (18, 0,  "SPECIAL", "Community poll create (dom)",     (6,)),
+    (18, 30, "RRSS",    "Bluesky growth",                  (0,1,2,3,4,5,6)),
+    (20, 0,  "RRSS",    "Mastodon growth",                 (0,1,2,3,4,5,6)),
+    (21, 0,  "RRSS",    "Social boost",                    (0,1,2,3,4,5,6)),
+    (21, 30, "RRSS",    "Bluesky growth",                  (0,1,2,3,4,5,6)),
+]
+
+
+def _today_schedule_lines() -> list[str]:
+    """Devuelve líneas HTML con el schedule del DÍA actual (UTC weekday).
+    Marca ✅ los que ya deberían haber corrido y ⏳ los pendientes según hora
+    actual UTC. Las horas son planificadas — GH Actions añade delay variable."""
+    from datetime import datetime, timezone
+    now = datetime.now(timezone.utc)
+    weekday = now.weekday()  # 0=lun..6=dom
+    now_minutes = now.hour * 60 + now.minute
+    # Filtra jobs del día actual
+    todays = [(h, m, cat, desc) for h, m, cat, desc, days in _SCHEDULE
+                if weekday in days]
+    todays.sort(key=lambda x: (x[0], x[1]))
+    if not todays:
+        return []
+    day_es = ["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"][weekday]
+    icons = {"SHORT": "🎬", "LONG": "📽", "RRSS": "📣", "MANT": "🔧", "SPECIAL": "✨"}
+    lines = [f"📅 <b>Schedule hoy ({day_es})</b> · horas UTC aprox",
+              "<i>GH Actions añade retraso variable, sobre todo fin de semana.</i>"]
+    # Compacta: agrupa por bloque horario
+    for h, m, cat, desc in todays:
+        job_min = h * 60 + m
+        state = "✅" if job_min <= now_minutes else "⏳"
+        cest_h = (h + 2) % 24  # verano CEST = UTC+2
+        emo = icons.get(cat, "•")
+        lines.append(f"  {state} {h:02d}:{m:02d}z ({cest_h:02d}:{m:02d}) {emo} {desc}")
+    return lines
+
+
 async def _build_daily_report(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> int | None:
     """Compone el mensaje ÚNICO del reporte diario y lo envía. Devuelve
     message_id para poder fijarlo."""
@@ -2461,9 +2539,11 @@ async def _build_daily_report(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> i
     lines += [bsky_line, "", masto_line, "", ig_line, "", threads_line, "", tt_line, ""]
     if channel_lines:
         lines += ["━━━ <b>Ecosistema blue-ocean</b> ━━━"] + channel_lines + [""]
-    lines += ["🤖 <b>Sistema</b>", f"   Token YT: {token_line}",
-              "   Cron: WaitWhy 06 · TaxHack 08 · Legal 09 · Ayudas 11 · Motor 13 · Ambient 07 UTC",
-              "",
+    lines += ["🤖 <b>Sistema</b>", f"   Token YT: {token_line}", ""]
+    # Schedule del día — vista rápida de qué toca hoy (horas aprox, GH Actions
+    # tiene retraso variable especialmente fin de semana).
+    lines += _today_schedule_lines()
+    lines += ["",
               '<a href="https://youtube.com/playlist?list=PLK08iO9LACck">📼 WaitWhy playlist</a>']
     text = "\n".join(lines)
 
