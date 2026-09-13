@@ -84,9 +84,11 @@ def _stage(subs: int) -> tuple[str, str]:
 
 def check_all() -> dict[str, Any]:
     from .notify_batch import add
-    lines = ["🎯 <b>YPP watch — distancia monetización</b>"]
+    lines = ["🎯 <b>YPP watch — distancia monetización</b>",
+              "<i>subs · videos · views totales</i>"]
     results: dict[str, dict] = {}
     urgent_alerts: list[str] = []
+    tot_subs = tot_videos = tot_views = 0
     for prefix, name in CHANNELS:
         stats = _channel_stats(prefix)
         if not stats or stats.get("error"):
@@ -94,23 +96,30 @@ def check_all() -> dict[str, Any]:
             results[name] = {"error": True}
             continue
         subs = stats["subs"]
+        vids = stats["videos"]
+        views = stats["views"]
         icon, msg = _stage(subs)
-        results[name] = {"subs": subs, "views": stats["videos"], "stage": msg}
-        # Distance to next milestone
+        results[name] = {"subs": subs, "videos": vids, "views": views, "stage": msg}
+        tot_subs += subs
+        tot_videos += vids
+        tot_views += views
         if subs < 500:
-            gap = 500 - subs
-            gap_msg = f"faltan {gap} subs → YT Shopping"
+            gap_msg = f"faltan {500-subs} → YT Shopping"
         elif subs < 1000:
-            gap = 1000 - subs
-            gap_msg = f"faltan {gap} subs → YPP full"
+            gap_msg = f"faltan {1000-subs} → YPP full"
         else:
-            gap_msg = "ya monetizable — verifica aplicación"
-        lines.append(f"{icon} <b>{name}</b>: <b>{subs}</b> subs — {gap_msg}")
+            gap_msg = "ya monetizable"
+        lines.append(
+            f"{icon} <b>{name}</b>: <b>{subs}</b>👥 · <b>{vids}</b>🎬 · "
+            f"{views:,}👁 — {gap_msg}"
+        )
         if subs >= 500:
             urgent_alerts.append(f"🎉 {name} pasó 500 subs · <b>{msg}</b>")
         elif subs >= 400:
             urgent_alerts.append(f"🚀 {name} tiene {subs} subs · aplicación cerca")
 
+    lines.append("")
+    lines.append(f"📊 <b>Total ecosistema</b>: {tot_subs}👥 · {tot_videos}🎬 · {tot_views:,}👁")
     add("\n".join(lines))
     for alert in urgent_alerts:
         add(alert, urgent=True)
