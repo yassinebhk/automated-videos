@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Política de Privacidad · videogen automated-videos</title>
+<style>
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  max-width:800px;margin:2em auto;padding:0 1em;line-height:1.6;color:#222}
+h1{border-bottom:2px solid #333;padding-bottom:.5em}
+h2{margin-top:2em;color:#0366d6}
+small{color:#666}
+code{background:#f6f8fa;padding:2px 6px;border-radius:3px}
+</style>
+</head>
+<body>
+<h1>Política de Privacidad</h1>
+<small>videogen automated-videos · última actualización 13 septiembre 2026</small>
+
+<h2>1. Quiénes somos</h2>
+<p>Este proyecto (<a href="https://github.com/yassinebhk/automated-videos">github.com/yassinebhk/automated-videos</a>) es una aplicación personal desarrollada y operada por Yassine Bouhaik como herramienta de gestión automatizada de canales propios de YouTube, Instagram, Threads, Bluesky, Mastodon y TikTok. No se ofrece a terceros como servicio.</p>
+
+<h2>2. Datos que la aplicación accede</h2>
+<p>La aplicación utiliza APIs de terceros para publicar contenido en canales propiedad del desarrollador. Concretamente:</p>
+<ul>
+<li><strong>YouTube Data API v3</strong>: subir vídeos, actualizar títulos/descripciones/tags, gestionar playlists y consultar estadísticas de los canales propios del desarrollador. Ningún dato de otros usuarios es accedido ni almacenado.</li>
+<li><strong>Instagram Graph API / Threads API</strong>: publicar Reels y posts en cuentas propias.</li>
+<li><strong>Bluesky / Mastodon / TikTok API</strong>: publicar posts en cuentas propias.</li>
+</ul>
+
+<h2>3. Datos que se almacenan</h2>
+<p>La aplicación almacena localmente en el entorno de ejecución (GitHub Actions runners y repositorio privado):</p>
+<ul>
+<li>Tokens OAuth de los servicios anteriores (refresh_token, client_id, client_secret) como GitHub Secrets encriptados.</li>
+<li>Ledgers de contenido publicado (identificadores internos de temas ya usados, sin datos personales de terceros).</li>
+<li>Estadísticas agregadas de los canales propios (subs, views, videos) para monitoreo.</li>
+</ul>
+<p>No se recogen ni procesan datos personales de espectadores o seguidores.</p>
+
+<h2>4. Compartición de datos</h2>
+<p>Ningún dato es compartido con terceros. La aplicación no vende, cede ni transfiere ninguna información. Los tokens y credenciales están almacenados exclusivamente en secretos encriptados de GitHub Actions y no son accesibles por otros usuarios ni servicios.</p>
+
+<h2>5. Cumplimiento EU AI Act</h2>
+<p>Todo el contenido generado por esta aplicación se marca explícitamente como creado con asistencia de inteligencia artificial (imagen, voz sintética) en cumplimiento del artículo 50 del EU AI Act (vigor 2 agosto 2026). La marca <code>containsSyntheticMedia=true</code> se aplica en el metadato de cada vídeo subido a YouTube, y un disclaimer visible se añade a la descripción.</p>
+
+<h2>6. Derechos del usuario</h2>
+<p>Al ser una aplicación de uso personal privado (solo el desarrollador la utiliza como propietario de las cuentas), no aplican mecanismos formales de solicitud de derechos GDPR de terceros. Cualquier consulta técnica sobre el código puede dirigirse al repositorio público: <a href="https://github.com/yassinebhk/automated-videos/issues">Issues del repositorio</a>.</p>
+
+<h2>7. Contacto</h2>
+<p>Contacto del desarrollador: <code>yassine.bouhaik@tupl.com</code></p>
+
+<hr>
+<small>Esta política puede ser actualizada. Los cambios se reflejarán en esta misma URL sin notificación previa dado el carácter personal de la aplicación.</small>
+</body>
+</html>
