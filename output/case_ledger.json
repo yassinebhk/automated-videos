@@ -259,6 +259,15 @@
           "topic": "El fraude de 'Camboya Mallorca': El timo que desvió millones en los 90 en Mallorca"
         }
       ]
+    },
+    "divar": {
+      "count": 1,
+      "history": [
+        {
+          "ts": "2026-09-13T11:03:19.852718+00:00",
+          "topic": "[CRIMEN] Caso Dívar: 200.000€ malversados en gastos de representación del CGPJ en 2012"
+        }
+      ]
     }
   }
 }
