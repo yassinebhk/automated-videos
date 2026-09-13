@@ -126,8 +126,18 @@ def _fetch_music(topic: dict, target_duration_seconds: int, out_dir: Path) -> Pa
             break
 
     if not data or not data.get("hits"):
-        print(f"  ambient: agotadas {len(queries)} queries Pixabay, sin tracks")
-        return None
+        print(f"  ambient: agotadas {len(queries)} queries Pixabay → fallback ffmpeg noise")
+        # Fallback total: ruido generado con ffmpeg puro para el target
+        # duration. Elige noise type según mood del topic:
+        #   sleep/deep_sleep → brownian noise (grave, relajante)
+        #   focus/study/relax → pink noise (más natural)
+        #   yoga/zen/nature → pink noise
+        mood = topic.get("mood", "").lower()
+        if "sleep" in mood or "deep" in mood:
+            noise_color = "brown"
+        else:
+            noise_color = "pink"
+        return _generate_noise_fallback(out_dir, target_duration_seconds, noise_color)
     hits = data.get("hits", [])
 
     # Baraja para variedad + prefiere tracks largos
@@ -203,6 +213,33 @@ def _fetch_music(topic: dict, target_duration_seconds: int, out_dir: Path) -> Pa
         base_audio.rename(output)
         return output
     base_audio.unlink(missing_ok=True)
+    return output
+
+
+def _generate_noise_fallback(out_dir: Path, duration_seconds: int,
+                                color: str = "pink") -> Path | None:
+    """Fallback: genera ruido pink/brown/white con ffmpeg puro cuando
+    Pixabay se cae. Sonido ambient válido sin depender de API externa.
+
+    color: 'pink' (natural, música/estudio), 'brown' (grave, dormir),
+    'white' (neutral, meditación).
+    """
+    out_dir.mkdir(parents=True, exist_ok=True)
+    output = out_dir / "audio.mp3"
+    # anoisesrc con color + volume bajo + fade in/out suave
+    cmd = [
+        "ffmpeg", "-y",
+        "-f", "lavfi",
+        "-i", f"anoisesrc=color={color}:amplitude=0.3:duration={duration_seconds}",
+        "-c:a", "libmp3lame", "-b:a", "192k",
+        "-af", f"afade=t=in:st=0:d=3,afade=t=out:st={duration_seconds-3}:d=3",
+        str(output),
+    ]
+    r = subprocess.run(cmd, capture_output=True, text=True, timeout=900)
+    if r.returncode != 0:
+        print(f"  ambient: noise fallback fail — {r.stderr[-300:]}")
+        return None
+    print(f"  ambient: ✅ noise fallback OK ({color}, {duration_seconds}s)")
     return output
 
 

@@ -1,0 +1,25 @@
+name: Auto-retry workflows failed
+
+# Cada hora escanea GH Actions runs con conclusion=failure en los
+# últimos 90 min y los relanza automáticamente 1 vez más. Cubre
+# glitches transitorios (Gemini 503, Pixabay HTML, network flaps).
+#
+# Skip: workflows de mantenimiento + runs ya reintentados (attempt>1).
+#
+# Cron :53 para no colisionar con crons principales.
+
+on:
+  schedule:
+    - cron: "53 * * * *"
+  workflow_dispatch: {}
+
+permissions:
+  actions: write
+  contents: write
+
+jobs:
+  retry:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: retry-failed
+    secrets: inherit

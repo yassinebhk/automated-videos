@@ -956,6 +956,36 @@ def ia_autonomos_once_cmd():
         raise SystemExit(1)
 
 
+@cli.command(name="retry-failed")
+def retry_failed_cmd():
+    """Auto-retry workflows GH Actions con status=failure en última hora.
+
+    Filosofía: transitorios (Gemini 503, Pixabay HTML) se resuelven solos.
+    Solo re-ejecuta 1 vez (attempt=1). Si vuelve a fallar, queda como
+    failure hasta acción manual (no loop infinito).
+
+    Requiere REPO_ADMIN_PAT con scope actions:write.
+    """
+    from . import retry_failed
+    result = retry_failed.retry_recent_failures(minutes_lookback=90)
+    print(json.dumps(result, indent=2, ensure_ascii=False))
+
+
+@cli.command(name="healthcheck")
+def healthcheck_cmd():
+    """Chequea salud de TODOS los servicios externos + tokens YT/IG/Threads.
+
+    Detecta problemas ANTES de que un cron real falle. Notif Telegram
+    con estado ✅/❌ + acción sugerida.
+    """
+    from . import healthcheck
+    result = healthcheck.check_all()
+    if result["down_count"] > 0:
+        # Exit code no-zero para que GH Actions marque el run como failure
+        # (pero solo si hay servicios caídos — todo verde = 0)
+        raise SystemExit(1)
+
+
 @cli.command(name="ypp-check")
 def ypp_check_cmd():
     """Chequea distancia a monetización YouTube en todos los canales.

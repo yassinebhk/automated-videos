@@ -195,7 +195,48 @@ def generate_image(
             backoff = 5 * (attempt + 1)
             print(f"  pollinations attempt {attempt+1} timeout/error: {str(e)[:60]}")
         time.sleep(backoff)
+
+    # Fallback total: Pexels stock. Se activa cuando Pollinations sigue
+    # caído tras 3 reintentos. No es imagen IA custom pero mejor 1 imagen
+    # relacionada al topic que fondo negro.
+    print(f"  pollinations agotados 3 reintentos → fallback Pexels")
+    fallback = _fallback_pexels(prompt, out, width, height)
+    if fallback:
+        return fallback
     return None
+
+
+def _fallback_pexels(prompt: str, out: Path, width: int, height: int) -> Path | None:
+    """Descarga imagen stock de Pexels como fallback cuando Pollinations se cae."""
+    key = os.environ.get("PEXELS_API_KEY", "").strip()
+    if not key:
+        return None
+    try:
+        import requests
+        # Usa primeras 2-3 palabras del prompt como query
+        query = " ".join(prompt.split()[:3])
+        orientation = "portrait" if height > width else "landscape"
+        r = requests.get(
+            "https://api.pexels.com/v1/search",
+            headers={"Authorization": key},
+            params={"query": query, "per_page": 10, "orientation": orientation},
+            timeout=30,
+        )
+        if r.status_code != 200:
+            return None
+        photos = r.json().get("photos", [])
+        if not photos:
+            return None
+        import random as _r
+        photo = _r.choice(photos)
+        img_url = (photo.get("src") or {}).get("original") or photo["src"]["large2x"]
+        img = requests.get(img_url, timeout=30).content
+        out.write_bytes(img)
+        print(f"  pexels fallback OK ({len(img)}b)")
+        return out
+    except Exception as e:
+        print(f"  pexels fallback fail: {e}")
+        return None
 
 
 def build_image_prompt(segment_text: str, visual_keywords: list[str]) -> str:

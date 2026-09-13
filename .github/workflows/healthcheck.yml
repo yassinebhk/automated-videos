@@ -1,0 +1,22 @@
+name: Health-check ecosistema (cada 6h)
+
+# Chequea todos los servicios externos + tokens de los 9 canales YT
+# cada 6h. Notifica Telegram con estado ✅/❌ + acciones sugeridas
+# ANTES de que un cron real de publicación falle.
+#
+# Horas: 04:37 · 10:37 · 16:37 · 22:37 UTC (evita :00, :15, :30, :45)
+
+on:
+  schedule:
+    - cron: "37 4,10,16,22 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  health:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: healthcheck
+    secrets: inherit
