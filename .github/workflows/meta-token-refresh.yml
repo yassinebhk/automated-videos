@@ -11,7 +11,7 @@ name: Meta Token Refresh
 on:
   schedule:
     # domingos 03:00 UTC — bajo tráfico, sin colisión con autogen/longgen
-    - cron: "0 3 * * 0"
+    - cron: "27 3 * * 0"
   workflow_dispatch:
 
 jobs:

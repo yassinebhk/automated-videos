@@ -7,7 +7,7 @@ name: Series start (miniserie 5-partes)
 
 on:
   schedule:
-    - cron: "0 10 * * 3"
+    - cron: "52 10 * * 3"
   workflow_dispatch: {}
 
 permissions:

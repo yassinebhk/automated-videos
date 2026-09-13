@@ -9,8 +9,8 @@ name: Community poll (Bluesky)
 
 on:
   schedule:
-    - cron: "0 18 * * 0"   # DOMINGO 18 UTC — publica encuesta
-    - cron: "0 11 * * 1"   # LUNES 11 UTC — resuelve
+    - cron: "42 18 * * 0"   # DOMINGO 18 UTC — publica encuesta
+    - cron: "32 11 * * 1"   # LUNES 11 UTC — resuelve
   workflow_dispatch:
     inputs:
       action:

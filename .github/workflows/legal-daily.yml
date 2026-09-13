@@ -6,7 +6,7 @@ name: Legal Laboral daily (TusDerechos ES)
 
 on:
   schedule:
-    - cron: "0 9 * * *"
+    - cron: "22 9 * * *"
   workflow_dispatch: {}
 
 permissions:

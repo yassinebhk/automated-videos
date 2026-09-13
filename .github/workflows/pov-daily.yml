@@ -5,7 +5,7 @@ name: POV histórico daily (TiempoAtrás ES)
 
 on:
   schedule:
-    - cron: "0 14 * * *"
+    - cron: "19 14 * * *"
   workflow_dispatch: {}
 
 permissions:

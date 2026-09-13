@@ -6,8 +6,8 @@ on:
     # vía YT API (`_longform_generated_this_week`) evita disparos duplicados si
     # ya hay long-form esta semana. ANTES (`0 10-22 * * 0`) generaba 13 chequeos
     # diarios que causaron 24 videos duplicados el 26/07.
-    - cron: "0 13 * * 0"
-    - cron: "0 10 * * 1"
+    - cron: "17 13 * * 0"
+    - cron: "32 10 * * 1"
   workflow_dispatch: {}
 
 concurrency:

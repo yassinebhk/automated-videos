@@ -13,7 +13,7 @@ name: Newsjack (short en <2h desde noticia)
 
 on:
   schedule:
-    - cron: "0 9,16 * * *"
+    - cron: "8 9,16 * * *"
   workflow_dispatch: {}
 
 permissions:

@@ -8,7 +8,7 @@ name: Shorts audit semanal (retention underperformers)
 
 on:
   schedule:
-    - cron: "0 9 * * 6"
+    - cron: "33 9 * * 6"
   workflow_dispatch: {}
 
 permissions:

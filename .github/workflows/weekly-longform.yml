@@ -6,8 +6,8 @@ name: Bi-Weekly Long-form (true crime)
 # 5 clips atomizados como Shorts derivados.
 on:
   schedule:
-    - cron: "0 8 * * 0"  # Domingo
-    - cron: "0 8 * * 3"  # Miércoles
+    - cron: "43 8 * * 0"  # Domingo
+    - cron: "43 8 * * 3"  # Miércoles
   workflow_dispatch: {}
 
 concurrency:

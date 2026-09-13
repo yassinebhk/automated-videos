@@ -3,7 +3,7 @@ name: Daily summary (stats + charts + ideas)
 on:
   schedule:
     # 07:00 UTC = 09:00 CEST. Manda snapshot + charts + ideas a Telegram.
-    - cron: "0 7 * * *"
+    - cron: "42 7 * * *"
   workflow_dispatch: {}
 
 permissions:

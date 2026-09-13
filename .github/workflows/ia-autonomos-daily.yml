@@ -16,7 +16,7 @@ name: IA Autónomos daily (9º canal — micronicho blue-ocean 2026)
 
 on:
   schedule:
-    - cron: "0 11 * * *"
+    - cron: "43 11 * * *"
   workflow_dispatch: {}
 
 permissions:

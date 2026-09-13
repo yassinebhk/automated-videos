@@ -9,7 +9,7 @@ name: Tax daily (Fiscalidad España — 2º canal)
 
 on:
   schedule:
-    - cron: "0 8 * * *"
+    - cron: "37 8 * * *"
   workflow_dispatch: {}
 
 permissions:
