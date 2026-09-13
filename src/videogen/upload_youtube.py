@@ -113,6 +113,15 @@ def upload_video(
         description = f"{description}\n\n#Shorts"
     if contains_synthetic_media and "creado con asistencia de ia" not in description.lower():
         description = f"{description}{AI_DISCLAIMER_ES}"
+    # Inyecta afiliados Amazon ES por nicho (si AMAZON_AFFILIATE_TAG está
+    # configurado). No-op sin tag. Monetización pre-YPP.
+    try:
+        from .affiliate import enrich_description
+        import os as _os
+        yt_prefix = _os.environ.get("YT_CHANNEL_PREFIX", "")
+        description = enrich_description(description, yt_prefix=yt_prefix)
+    except Exception as _e:
+        print(f"  affiliate injection skip: {_e}")
 
     status = {
         "privacyStatus": privacy,

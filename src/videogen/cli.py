@@ -956,6 +956,18 @@ def ia_autonomos_once_cmd():
         raise SystemExit(1)
 
 
+@cli.command(name="ypp-check")
+def ypp_check_cmd():
+    """Chequea distancia a monetización YouTube en todos los canales.
+
+    Notifica Telegram con estado + gap a próximos umbrales (500 subs
+    → YT Shopping / Super Thanks, 1000 subs → YPP full).
+    """
+    from . import ypp_watch
+    result = ypp_watch.check_all()
+    print(json.dumps(result, indent=2, ensure_ascii=False))
+
+
 @cli.command(name="shorts-audit")
 @click.option("--channel", default=None,
               help="Prefix del canal. Vacío = todos.")

@@ -1,0 +1,21 @@
+name: YPP watch (semanal — distancia monetización)
+
+# Chequea subs de los 9 canales y notifica cuando alguno roza 500/1000
+# subs (umbrales YT Shopping / Super Thanks / YPP full 2026).
+#
+# Miércoles 08:22 UTC (10:22 CEST — no colisión).
+
+on:
+  schedule:
+    - cron: "22 8 * * 3"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  ypp:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: ypp-check
+    secrets: inherit
