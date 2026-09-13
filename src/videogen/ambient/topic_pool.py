@@ -24,7 +24,7 @@ TOPICS = [
         "modifiers": ["concentración profunda", "estudiar sin distracciones",
                        "trabajo productivo", "flow state", "leer un libro"],
         "mood": "focus",
-        "min_duration_minutes": 30, "max_duration_minutes": 60,
+        "min_duration_minutes": 60, "max_duration_minutes": 120,
     },
     {
         "key": "beta_15hz_alerta", "mood_type": "binaural",
@@ -35,7 +35,7 @@ TOPICS = [
         "modifiers": ["alerta mental", "reunión importante", "productividad máx",
                        "resolver problemas", "aprender rápido"],
         "mood": "alert",
-        "min_duration_minutes": 30, "max_duration_minutes": 45,
+        "min_duration_minutes": 45, "max_duration_minutes": 90,
     },
     {
         "key": "theta_6hz_dormir", "mood_type": "binaural",
@@ -46,7 +46,7 @@ TOPICS = [
         "modifiers": ["sueño profundo", "meditación profunda", "relajación total",
                        "insomnio", "descanso reparador"],
         "mood": "sleep",
-        "min_duration_minutes": 60, "max_duration_minutes": 60,
+        "min_duration_minutes": 180, "max_duration_minutes": 480,
     },
     {
         "key": "delta_2hz_regeneracion", "mood_type": "binaural",
@@ -57,7 +57,7 @@ TOPICS = [
         "modifiers": ["sueño reparador", "regeneración celular", "descanso profundo",
                        "meditación avanzada", "sanación"],
         "mood": "deep_sleep",
-        "min_duration_minutes": 60, "max_duration_minutes": 60,
+        "min_duration_minutes": 240, "max_duration_minutes": 480,
     },
     {
         "key": "gamma_40hz_memoria", "mood_type": "binaural",
@@ -68,7 +68,7 @@ TOPICS = [
         "modifiers": ["memoria activa", "aprendizaje intenso", "creatividad máxima",
                        "resolver exámenes", "productividad extrema"],
         "mood": "gamma_focus",
-        "min_duration_minutes": 30, "max_duration_minutes": 45,
+        "min_duration_minutes": 45, "max_duration_minutes": 90,
     },
 
     # ─── MÚSICA CLÁSICA (Pixabay CC0 classical) ───
@@ -80,7 +80,7 @@ TOPICS = [
         "modifiers": ["concentrarse en el trabajo", "leer literatura",
                        "programar en calma", "escribir con foco"],
         "mood": "classical_focus",
-        "min_duration_minutes": 45, "max_duration_minutes": 60,
+        "min_duration_minutes": 60, "max_duration_minutes": 120,
     },
     {
         "key": "clasica_mozart_relax", "mood_type": "pixabay",
@@ -90,7 +90,7 @@ TOPICS = [
         "modifiers": ["descansar tras trabajo", "leer novela",
                        "sobremesa tranquila", "meditación clásica"],
         "mood": "classical_relax",
-        "min_duration_minutes": 45, "max_duration_minutes": 60,
+        "min_duration_minutes": 60, "max_duration_minutes": 120,
     },
     {
         "key": "clasica_chopin_noche", "mood_type": "pixabay",
@@ -100,7 +100,7 @@ TOPICS = [
         "modifiers": ["dormir en calma", "leer antes de dormir",
                        "tarde de invierno", "reflexión personal"],
         "mood": "classical_night",
-        "min_duration_minutes": 45, "max_duration_minutes": 60,
+        "min_duration_minutes": 120, "max_duration_minutes": 240,
     },
 
     # ─── SONIDOS NATURALEZA ───
@@ -112,7 +112,7 @@ TOPICS = [
         "modifiers": ["dormir profundo", "insomnio nocturno", "meditación",
                        "descanso profundo", "leer con lluvia"],
         "mood": "rain",
-        "min_duration_minutes": 60, "max_duration_minutes": 60,
+        "min_duration_minutes": 180, "max_duration_minutes": 480,
     },
     {
         "key": "oceano_meditar", "mood_type": "pixabay",
@@ -122,7 +122,7 @@ TOPICS = [
         "modifiers": ["meditar en playa", "yoga acompañado", "spa masaje",
                        "sueño profundo", "descanso tras trabajo"],
         "mood": "ocean",
-        "min_duration_minutes": 30, "max_duration_minutes": 60,
+        "min_duration_minutes": 90, "max_duration_minutes": 180,
     },
     {
         "key": "bosque_amanecer", "mood_type": "pixabay",
@@ -132,7 +132,7 @@ TOPICS = [
         "modifiers": ["meditación matutina", "yoga suave", "dormir bebé",
                        "leer con té", "descansar tras trabajo"],
         "mood": "forest",
-        "min_duration_minutes": 30, "max_duration_minutes": 45,
+        "min_duration_minutes": 60, "max_duration_minutes": 120,
     },
     {
         "key": "chimenea_invierno", "mood_type": "pixabay",
@@ -142,7 +142,7 @@ TOPICS = [
         "modifiers": ["invierno acogedor", "leer con té", "dormir tranquilo",
                        "relajarse en casa", "atmósfera cálida"],
         "mood": "fireplace",
-        "min_duration_minutes": 45, "max_duration_minutes": 60,
+        "min_duration_minutes": 120, "max_duration_minutes": 240,
     },
 
     # ─── LOFI / AMBIENT ELECTRÓNICO ───
@@ -154,7 +154,7 @@ TOPICS = [
         "modifiers": ["exámenes finales", "trabajo largo", "café mañana",
                        "programar código", "escribir tesis"],
         "mood": "lofi_study",
-        "min_duration_minutes": 45, "max_duration_minutes": 60,
+        "min_duration_minutes": 90, "max_duration_minutes": 180,
     },
     {
         "key": "lofi_trabajo", "mood_type": "pixabay",
@@ -164,7 +164,7 @@ TOPICS = [
         "modifiers": ["trabajo remoto", "creatividad calma", "planificar día",
                        "diseñar en calma", "escribir emails"],
         "mood": "lofi_work",
-        "min_duration_minutes": 45, "max_duration_minutes": 60,
+        "min_duration_minutes": 90, "max_duration_minutes": 180,
     },
     {
         "key": "ambient_espacial", "mood_type": "pixabay",
@@ -174,7 +174,7 @@ TOPICS = [
         "modifiers": ["meditación profunda", "sueño lúcido", "ciencia ficción",
                        "creatividad", "reflexión filosófica"],
         "mood": "cosmic",
-        "min_duration_minutes": 45, "max_duration_minutes": 60,
+        "min_duration_minutes": 60, "max_duration_minutes": 120,
     },
     {
         "key": "ambient_zen", "mood_type": "pixabay",
@@ -184,7 +184,7 @@ TOPICS = [
         "modifiers": ["mindfulness", "respiración consciente", "yoga suave",
                        "estrés cotidiano", "reiki calma"],
         "mood": "zen",
-        "min_duration_minutes": 30, "max_duration_minutes": 45,
+        "min_duration_minutes": 45, "max_duration_minutes": 90,
     },
 ]
 

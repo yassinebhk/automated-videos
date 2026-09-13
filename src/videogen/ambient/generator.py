@@ -123,24 +123,56 @@ def _fetch_music(topic: dict, target_duration_seconds: int, out_dir: Path) -> Pa
         if total >= target_duration_seconds:
             break
 
-    if not tracks or total < target_duration_seconds * 0.7:
-        print(f"  ambient: no reunió duración suficiente ({total}s < {target_duration_seconds}s)")
+    if not tracks:
+        print(f"  ambient: 0 tracks descargados de Pixabay para '{q}'")
         return None
 
-    # Concatena con ffmpeg crossfade 3s entre tracks
+    # Concatena tracks descargados
     concat_file = out_dir / "concat.txt"
     concat_file.write_text("\n".join(f"file '{t.name}'" for t in tracks))
-    output = out_dir / "audio.mp3"
+    base_audio = out_dir / "base.mp3"
     cmd = [
         "ffmpeg", "-y", "-f", "concat", "-safe", "0",
         "-i", str(concat_file),
         "-c", "copy",
-        str(output),
+        str(base_audio),
     ]
-    r = subprocess.run(cmd, cwd=out_dir, capture_output=True, text=True, timeout=180)
+    r = subprocess.run(cmd, cwd=out_dir, capture_output=True, text=True, timeout=300)
     if r.returncode != 0:
         print(f"  ambient: ffmpeg concat fail — {r.stderr[:200]}")
         return None
+
+    # Si la duración conseguida cubre >=95% del target, listo.
+    # Si NO, hacemos LOOP con stream_loop para llegar a target_duration.
+    # Esto evita depender de tener 8h de música única en Pixabay para videos
+    # largos (dormir/bebés). La música ambient/naturaleza se loopea sin que se
+    # note, y es más eficiente que descargar 50 tracks distintos.
+    output = out_dir / "audio.mp3"
+    if total >= target_duration_seconds * 0.95:
+        base_audio.rename(output)
+        print(f"  ambient: audio {total}s (cubre target {target_duration_seconds}s sin loop)")
+        return output
+
+    # Loop necesario — repite base_audio N veces hasta target
+    loops_needed = (target_duration_seconds // total) + 1
+    print(f"  ambient: loop x{loops_needed} para llegar a {target_duration_seconds}s "
+          f"(base {total}s de {len(tracks)} tracks)")
+    cmd_loop = [
+        "ffmpeg", "-y",
+        "-stream_loop", str(loops_needed),
+        "-i", str(base_audio),
+        "-t", str(target_duration_seconds),
+        "-c", "copy",
+        str(output),
+    ]
+    # Loop hasta 8h con -stream_loop + -c copy es rápido (~2-5min max)
+    r2 = subprocess.run(cmd_loop, cwd=out_dir, capture_output=True, text=True, timeout=900)
+    if r2.returncode != 0:
+        print(f"  ambient: ffmpeg loop fail — {r2.stderr[:200]}")
+        # Fallback: usa el base_audio aunque sea corto
+        base_audio.rename(output)
+        return output
+    base_audio.unlink(missing_ok=True)
     return output
 
 

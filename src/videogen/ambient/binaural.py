@@ -51,7 +51,8 @@ def generate_binaural(
         "-c:a", "aac", "-b:a", "192k",
         str(dest),
     ]
-    r = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
+    # Timeout 15min: para 8h binaurales, ffmpeg genera en ~3-5min con lavfi
+    r = subprocess.run(cmd, capture_output=True, text=True, timeout=900)
     if r.returncode != 0:
         print(f"  binaural ffmpeg fail: {r.stderr[-400:]}")
         return None
