@@ -84,21 +84,51 @@ def _fetch_music(topic: dict, target_duration_seconds: int, out_dir: Path) -> Pa
         return None
 
     q = topic["pixabay_music_query"]
-    try:
-        r = requests.get(
-            "https://pixabay.com/api/audio/",
-            params={"key": key, "q": q, "per_page": 50, "safesearch": "true"},
-            timeout=30,
-        )
-        data = r.json()
-    except Exception as e:
-        print(f"  ambient: Pixabay Music fetch fail — {e}")
-        return None
+    # Fallback queries por si la principal no devuelve nada — cubre topic
+    # variations (rain → thunderstorm rain nature, etc.).
+    queries = [q] + topic.get("pixabay_fallback_queries", [])
+    # Genéricos ambient safe si todo lo específico falla
+    queries += ["ambient calm relaxing", "nature relax"]
 
-    hits = data.get("hits", [])
-    if not hits:
-        print(f"  ambient: Pixabay Music sin resultados para '{q}'")
+    data = None
+    for i, query in enumerate(queries):
+        for attempt in range(3):
+            try:
+                r = requests.get(
+                    "https://pixabay.com/api/audio/",
+                    params={"key": key, "q": query, "per_page": 50, "safesearch": "true"},
+                    timeout=30,
+                )
+                if r.status_code == 429:
+                    print(f"  ambient: Pixabay rate-limit (429), espera {5*(attempt+1)}s")
+                    import time as _t; _t.sleep(5 * (attempt + 1))
+                    continue
+                # Log si el content no es JSON (rate-limit HTML page suele venir así)
+                ct = r.headers.get("content-type", "")
+                if "json" not in ct:
+                    print(f"  ambient: Pixabay respuesta no-JSON (ct={ct[:40]}, "
+                          f"status={r.status_code}, body='{r.text[:100]}')")
+                    break  # Cambia a siguiente query
+                try:
+                    data = r.json()
+                except Exception as je:
+                    print(f"  ambient: Pixabay JSON parse fail: {je} · body='{r.text[:100]}'")
+                    break
+                if data.get("totalHits", 0) > 0:
+                    print(f"  ambient: Pixabay OK query='{query}' hits={data.get('totalHits')}")
+                    break
+                print(f"  ambient: Pixabay 0 hits para '{query}' → siguiente")
+                data = None
+                break  # 0 hits: cambia query, no reintenta
+            except Exception as e:
+                print(f"  ambient: Pixabay request fail (intento {attempt+1}): {e}")
+        if data and data.get("hits"):
+            break
+
+    if not data or not data.get("hits"):
+        print(f"  ambient: agotadas {len(queries)} queries Pixabay, sin tracks")
         return None
+    hits = data.get("hits", [])
 
     # Baraja para variedad + prefiere tracks largos
     random.shuffle(hits)
