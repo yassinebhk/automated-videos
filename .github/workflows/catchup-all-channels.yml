@@ -1,0 +1,145 @@
+name: Catchup ALL channels (1-click)
+
+# Ejecuta secuencialmente todos los canales del ecosistema. Uso:
+#   → GitHub Actions UI → esta workflow → Run workflow
+#
+# Ideal cuando el scheduler de GH ha skipeado múltiples canales
+# en un día (típico fin de semana). El ledger de cada canal evita
+# duplicados, así que es idempotente — si un canal ya publicó hoy,
+# se salta (o resubirá si aún no).
+#
+# Categorías opcionales via input `only`:
+#   all      → todos (default)
+#   shorts   → solo shorts (WaitWhy, Tax, Legal, Ayudas, Motor, POV, Ranking, IA, Ambient)
+#   longform → solo long-form dominicales (Tax, Legal, Ayudas, Motor, WaitWhy)
+#   blue     → solo canales blue-ocean (excluye WaitWhy)
+
+on:
+  workflow_dispatch:
+    inputs:
+      only:
+        description: "Qué correr: all | shorts | longform | blue"
+        required: false
+        default: "shorts"
+        type: choice
+        options:
+          - all
+          - shorts
+          - longform
+          - blue
+
+permissions:
+  contents: write
+
+jobs:
+  waitwhy_short:
+    if: ${{ inputs.only == 'all' || inputs.only == 'shorts' }}
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: autogen-once
+    secrets: inherit
+
+  tax_short:
+    if: ${{ inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue' }}
+    needs: [waitwhy_short]
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: tax-once
+    secrets: inherit
+
+  legal_short:
+    if: ${{ inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue' }}
+    needs: [tax_short]
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: legal-once
+    secrets: inherit
+
+  ayudas_short:
+    if: ${{ inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue' }}
+    needs: [legal_short]
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: ayudas-once
+    secrets: inherit
+
+  motor_short:
+    if: ${{ inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue' }}
+    needs: [ayudas_short]
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: motor-once
+    secrets: inherit
+
+  pov_short:
+    if: ${{ inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue' }}
+    needs: [motor_short]
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: pov-once
+    secrets: inherit
+
+  ranking_short:
+    if: ${{ inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue' }}
+    needs: [pov_short]
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: ranking-once
+    secrets: inherit
+
+  ia_autonomos_short:
+    if: ${{ inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue' }}
+    needs: [ranking_short]
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: ia-autonomos-once
+    secrets: inherit
+
+  ambient_short:
+    if: ${{ inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue' }}
+    needs: [ia_autonomos_short]
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: ambient-once
+    secrets: inherit
+
+  # ─── LONG-FORM (dominicales) ───
+
+  waitwhy_long:
+    if: ${{ inputs.only == 'all' || inputs.only == 'longform' }}
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: longgen-once
+    secrets: inherit
+
+  tax_long:
+    if: ${{ inputs.only == 'all' || inputs.only == 'longform' }}
+    needs: [waitwhy_long]
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: tax-longform
+    secrets: inherit
+
+  legal_long:
+    if: ${{ inputs.only == 'all' || inputs.only == 'longform' }}
+    needs: [tax_long]
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: legal-longform
+    secrets: inherit
+
+  ayudas_long:
+    if: ${{ inputs.only == 'all' || inputs.only == 'longform' }}
+    needs: [legal_long]
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: ayudas-longform
+    secrets: inherit
+
+  motor_long:
+    if: ${{ inputs.only == 'all' || inputs.only == 'longform' }}
+    needs: [ayudas_long]
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: motor-longform
+    secrets: inherit
