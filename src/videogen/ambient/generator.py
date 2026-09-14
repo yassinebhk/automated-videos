@@ -158,12 +158,13 @@ def _fetch_music(topic: dict, target_duration_seconds: int, out_dir: Path) -> Pa
             break
 
     if not data or not data.get("hits"):
-        print(f"  ambient: agotadas {len(queries)} queries Pixabay → fallback ffmpeg noise")
-        # Fallback total: ruido generado con ffmpeg puro para el target
-        # duration. Elige noise type según mood del topic:
-        #   sleep/deep_sleep → brownian noise (grave, relajante)
-        #   focus/study/relax → pink noise (más natural)
-        #   yoga/zen/nature → pink noise
+        print(f"  ambient: agotadas {len(queries)} queries Pixabay → intento Freesound")
+        # Fallback 2: Freesound (millones tracks CC0/CC-BY, gratis API key)
+        fs_result = _fetch_music_freesound(topic, target_duration_seconds, out_dir)
+        if fs_result:
+            return fs_result
+        # Fallback 3 (final): ruido ffmpeg puro
+        print(f"  ambient: Freesound también falló → fallback ffmpeg noise")
         mood = topic.get("mood", "").lower()
         if "sleep" in mood or "deep" in mood:
             noise_color = "brown"
@@ -245,6 +246,110 @@ def _fetch_music(topic: dict, target_duration_seconds: int, out_dir: Path) -> Pa
         base_audio.rename(output)
         return output
     base_audio.unlink(missing_ok=True)
+    return output
+
+
+def _fetch_music_freesound(topic: dict, target_duration_seconds: int,
+                             out_dir: Path) -> Path | None:
+    """Fallback Freesound API — millones de tracks CC0/CC-BY.
+
+    Se activa cuando Pixabay agotó queries. Requiere FREESOUND_API_KEY.
+    Header: Authorization: Token <key>. 60 req/min gratis.
+
+    Búsqueda: query del topic + filter duration >=60s. Ordena por rating.
+    Descarga preview HQ mp3 (~128kbps, sin auth extra) directo.
+    """
+    import os, requests, time as _time
+    key = os.environ.get("FREESOUND_API_KEY", "").strip()
+    if not key:
+        return None
+    q = topic.get("pixabay_music_query", "")
+    # Fallback queries por si la principal no da nada
+    queries = [q] + topic.get("pixabay_fallback_queries", [])
+    queries += ["ambient calm", "relaxing"]
+    headers = {"Authorization": f"Token {key}"}
+    hits_all = []
+    for query in queries:
+        try:
+            r = requests.get(
+                "https://freesound.org/apiv2/search/text/",
+                headers=headers,
+                params={
+                    "query": query,
+                    "filter": f"duration:[60 TO 3600]",  # 1min-1h por track
+                    "fields": "id,name,duration,previews,license",
+                    "sort": "rating_desc",
+                    "page_size": 20,
+                },
+                timeout=30,
+            )
+            if r.status_code == 429:
+                _time.sleep(3); continue
+            if r.status_code != 200:
+                print(f"  freesound query '{query}': HTTP {r.status_code}")
+                continue
+            data = r.json()
+            hits = data.get("results", [])
+            if hits:
+                hits_all = hits
+                print(f"  freesound query '{query}': {len(hits)} hits")
+                break
+        except Exception as e:
+            print(f"  freesound query '{query}' fail: {e}")
+            continue
+    if not hits_all:
+        return None
+
+    # Descarga tracks hasta cubrir target_duration
+    tracks = []
+    total = 0
+    for i, hit in enumerate(hits_all):
+        dur = float(hit.get("duration") or 0)
+        if dur < 30:
+            continue
+        preview_url = (hit.get("previews") or {}).get("preview-hq-mp3")
+        if not preview_url:
+            continue
+        try:
+            audio = requests.get(preview_url, timeout=60).content
+            p = out_dir / f"fs_track_{i:02d}.mp3"
+            p.write_bytes(audio)
+            tracks.append(p)
+            total += dur
+            if total >= target_duration_seconds:
+                break
+        except Exception:
+            continue
+    if not tracks:
+        return None
+
+    # Concat + loop hasta target (mismo patrón que _fetch_music)
+    import subprocess
+    concat_file = out_dir / "concat_fs.txt"
+    concat_file.write_text("\n".join(f"file '{t.name}'" for t in tracks))
+    base_audio = out_dir / "base_fs.mp3"
+    cmd = ["ffmpeg", "-y", "-f", "concat", "-safe", "0",
+           "-i", str(concat_file), "-c", "copy", str(base_audio)]
+    r = subprocess.run(cmd, cwd=out_dir, capture_output=True, text=True, timeout=300)
+    if r.returncode != 0:
+        print(f"  freesound concat fail — {r.stderr[:200]}")
+        return None
+    output = out_dir / "audio.mp3"
+    if total >= target_duration_seconds * 0.95:
+        base_audio.rename(output)
+        print(f"  freesound: ✅ audio {int(total)}s de {len(tracks)} tracks (sin loop)")
+        return output
+    # Loop
+    loops = (target_duration_seconds // int(total)) + 1
+    cmd_loop = ["ffmpeg", "-y", "-stream_loop", str(loops),
+                "-i", str(base_audio), "-t", str(target_duration_seconds),
+                "-c", "copy", str(output)]
+    r2 = subprocess.run(cmd_loop, cwd=out_dir, capture_output=True, text=True, timeout=900)
+    if r2.returncode != 0:
+        base_audio.rename(output)
+    else:
+        base_audio.unlink(missing_ok=True)
+    print(f"  freesound: ✅ audio {target_duration_seconds}s con loop x{loops}")
     return output
 
 

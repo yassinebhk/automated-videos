@@ -202,6 +202,7 @@ jobs:
             [ -n "$KOKORO_VOICE_ES" ] && printf 'KOKORO_VOICE_ES=%s\n' "$KOKORO_VOICE_ES"
             printf 'AMBIENT_MAX_MIN=%s\n' "${AMBIENT_MAX_MIN:-14}"
             [ -n "$AMBIENT_PREFER_BINAURAL" ] && printf 'AMBIENT_PREFER_BINAURAL=%s\n' "$AMBIENT_PREFER_BINAURAL"
+            [ -n "$FREESOUND_API_KEY" ] && printf 'FREESOUND_API_KEY=%s\n' "$FREESOUND_API_KEY"
             printf 'AUTOGEN_PUBLISH_HOUR=%s\n' "${AUTOGEN_PUBLISH_HOUR:-21}"
             # WEBHOOK_URL: crítico para el botón inline de reauth YT en Telegram.
             # Sin esto, _send_yt_token_alert solo manda texto sin botón → user
@@ -250,6 +251,7 @@ jobs:
           YT_RANKINGS_CLIENT_ID:     ${{ secrets.YT_RANKINGS_CLIENT_ID }}
           YT_RANKINGS_CLIENT_SECRET: ${{ secrets.YT_RANKINGS_CLIENT_SECRET }}
           PIXABAY_API_KEY:          ${{ secrets.PIXABAY_API_KEY }}
+          FREESOUND_API_KEY:        ${{ secrets.FREESOUND_API_KEY }}
         run: |
           set -x  # traza cada línea shell para ver dónde muere si aborta
           # Carga extra_env como env vars adicionales del proceso videogen
