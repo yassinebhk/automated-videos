@@ -15,6 +15,13 @@ name: Catchup ALL channels (1-click)
 #   blue     → solo canales blue-ocean (excluye WaitWhy)
 
 on:
+  # Auto-safety-net: 20:37 UTC (22:37 CEST) diario. A esa hora TODOS los
+  # crons daily han tenido su window. Los canales que ya publicaron hoy
+  # se saltan (ledger cooldown 90d por topic). Los que no publicaron por
+  # GH scheduler contention se rescatan aquí. Solo shorts (long-form ya
+  # tiene sus workflows semanales dedicados).
+  schedule:
+    - cron: "37 20 * * *"
   workflow_dispatch:
     inputs:
       only:
@@ -33,14 +40,14 @@ permissions:
 
 jobs:
   waitwhy_short:
-    if: ${{ inputs.only == 'all' || inputs.only == 'shorts' }}
+    if: ${{ inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts' }}
     uses: ./.github/workflows/_videogen-job.yml
     with:
       command: autogen-once
     secrets: inherit
 
   tax_short:
-    if: ${{ inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue' }}
+    if: ${{ inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue' }}
     needs: [waitwhy_short]
     uses: ./.github/workflows/_videogen-job.yml
     with:
@@ -48,7 +55,7 @@ jobs:
     secrets: inherit
 
   legal_short:
-    if: ${{ inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue' }}
+    if: ${{ inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue' }}
     needs: [tax_short]
     uses: ./.github/workflows/_videogen-job.yml
     with:
@@ -56,7 +63,7 @@ jobs:
     secrets: inherit
 
   ayudas_short:
-    if: ${{ inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue' }}
+    if: ${{ inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue' }}
     needs: [legal_short]
     uses: ./.github/workflows/_videogen-job.yml
     with:
@@ -64,7 +71,7 @@ jobs:
     secrets: inherit
 
   motor_short:
-    if: ${{ inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue' }}
+    if: ${{ inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue' }}
     needs: [ayudas_short]
     uses: ./.github/workflows/_videogen-job.yml
     with:
@@ -72,7 +79,7 @@ jobs:
     secrets: inherit
 
   pov_short:
-    if: ${{ inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue' }}
+    if: ${{ inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue' }}
     needs: [motor_short]
     uses: ./.github/workflows/_videogen-job.yml
     with:
@@ -80,7 +87,7 @@ jobs:
     secrets: inherit
 
   ranking_short:
-    if: ${{ inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue' }}
+    if: ${{ inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue' }}
     needs: [pov_short]
     uses: ./.github/workflows/_videogen-job.yml
     with:
@@ -88,7 +95,7 @@ jobs:
     secrets: inherit
 
   ia_autonomos_short:
-    if: ${{ inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue' }}
+    if: ${{ inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue' }}
     needs: [ranking_short]
     uses: ./.github/workflows/_videogen-job.yml
     with:
@@ -96,7 +103,7 @@ jobs:
     secrets: inherit
 
   ambient_short:
-    if: ${{ inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue' }}
+    if: ${{ inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue' }}
     needs: [ia_autonomos_short]
     uses: ./.github/workflows/_videogen-job.yml
     with:
