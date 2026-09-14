@@ -281,6 +281,15 @@
           "topic": "[CRIMEN] Voxpopuli: El fraude periodístico que costó 3 millones y engañó a 200.000 lectores"
         }
       ]
+    },
+    "malaya": {
+      "count": 1,
+      "history": [
+        {
+          "ts": "2026-09-14T14:18:06.163869+00:00",
+          "topic": "El cerebro del Caso Malaya: cómo Juan Antonio Roca movió más de 200 millones en Marbella y fue sentenciado a 17 años de cárcel en 2013."
+        }
+      ]
     }
   }
 }
