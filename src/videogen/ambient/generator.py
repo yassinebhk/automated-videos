@@ -50,11 +50,23 @@ def _mark_used(topic_key: str) -> None:
 
 
 def _pick_topic() -> dict:
-    """Elige topic no usado en últimos COOLDOWN_DAYS días."""
+    """Elige topic no usado en últimos COOLDOWN_DAYS días.
+
+    Usa pool ESTÁTICO + DINÁMICO (Gemini refresca cada 14d con topics
+    trending). Prioriza:
+      1. Topics dinámicos frescos (nunca usados) — máxima novedad
+      2. Estáticos fuera de cooldown
+      3. Cualquiera fuera de cooldown (dinámicos + estáticos)
+      4. Todos si todos en cooldown (fallback anti-bloqueo)
+    """
+    from . import topic_refresher
+    all_pool = topic_refresher.get_all_topics_merged()
+
     ledger = _load_ledger()
     cutoff = datetime.now(timezone.utc) - timedelta(days=COOLDOWN_DAYS)
-    available = []
-    for t in topic_pool.all_topics():
+    fresh_dynamic, available = [], []
+    static_keys = {t["key"] for t in topic_pool.all_topics()}
+    for t in all_pool:
         recent = ledger.get(t["key"], [])
         last_use = None
         for iso in recent[-1:]:
@@ -65,10 +77,16 @@ def _pick_topic() -> dict:
                 continue
         if not last_use or last_use < cutoff:
             available.append(t)
-    if not available:
-        # Todos en cooldown → coge el más antiguo
-        available = topic_pool.all_topics()
-    return random.choice(available)
+            if t["key"] not in static_keys and not recent:
+                fresh_dynamic.append(t)
+
+    if fresh_dynamic:
+        # Da 60% preferencia a dinámicos nunca usados (variedad garantizada)
+        pool = fresh_dynamic if random.random() < 0.6 else available
+        return random.choice(pool)
+    if available:
+        return random.choice(available)
+    return random.choice(all_pool)
 
 
 def _fetch_music(topic: dict, target_duration_seconds: int, out_dir: Path) -> Path | None:
