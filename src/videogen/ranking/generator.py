@@ -14,9 +14,29 @@ import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 
+from dataclasses import dataclass, field
+
 from ..config import ROOT
 
 RANKING_ROOT = ROOT / "output" / "ranking_uploaded"
+
+
+@dataclass
+class RankingBranding:
+    """Branding/idioma de un canal de rankings. Default = TopRanking ES
+    (comportamiento histórico intacto). El canal EN pasa el suyo."""
+    lang: str = "es"
+    intro_subtitle: str = "Datos verificados · TopRanking ES"
+    outro_line1: str = "¿Sorprendido?"
+    outro_line2: str = "Suscríbete para más rankings"
+    outro_brand: str = "📊 TopRanking ES"
+    source_label: str = "Fuente"
+    disclaimer: str = "⚠️ Datos aproximados de fuentes oficiales · verifica antes de citarlos."
+    hashtags: str = "#ranking #top10 #datos #españa #curiosidades #estadisticas #Shorts"
+    tags: list = field(default_factory=lambda: ["ranking", "top10", "datos", "estadisticas", "españa"])
+
+
+ES_BRANDING = RankingBranding()
 
 
 def _wrap_text(text: str, max_chars_per_line: int) -> list[str]:
@@ -37,7 +57,7 @@ def _wrap_text(text: str, max_chars_per_line: int) -> list[str]:
 
 
 def _generate_dataset_with_gemini(topic: dict, n_items: int = 10,
-                                    n_years: int = 10) -> dict | None:
+                                    n_years: int = 10, lang: str = "es") -> dict | None:
     """Gemini genera dataset REAL basado en fuente citada del topic.
     Devuelve {'years': [2000,...], 'items': ['USA','China',...],
              'data': [[val_2000_USA, val_2000_China,...], [...]] }"""
@@ -77,6 +97,9 @@ def _generate_dataset_with_gemini(topic: dict, n_items: int = 10,
             f"- unidad: '€', '$B', 'millones', 'medallas' etc\n"
             f"- titulo_video: título SEO YT max 80 chars\n"
             f"- cierre_dato: frase cierre con dato clave y fuente\n"
+            f"\nIDIOMA de titulo_video/unidad/cierre_dato: "
+            f"{'ENGLISH' if lang == 'en' else 'ESPAÑOL'} "
+            f"(los nombres de items/entidades van en su forma internacional habitual).\n"
         )
         # Con fallback Gemini→Groq
         data = generate_json(prompt, schema=schema, max_tokens=4000, temperature=0.4)
@@ -116,9 +139,11 @@ def _generate_dataset_with_gemini(topic: dict, n_items: int = 10,
 
 def _render_bar_chart_race(dataset: dict, out_video: Path,
                              duration_seconds: int = 55,
-                             vertical: bool = True) -> Path | None:
+                             vertical: bool = True,
+                             branding: "RankingBranding | None" = None) -> Path | None:
     """Renderiza bar chart race con matplotlib.animation → mp4.
     vertical=True para Shorts 9:16 (1080x1920), False para 16:9."""
+    branding = branding or ES_BRANDING
     try:
         import matplotlib
         matplotlib.use("Agg")
@@ -176,7 +201,7 @@ def _render_bar_chart_race(dataset: dict, out_video: Path,
         # Subtítulo abajo
         if fi > 20:
             sub_alpha = min(1.0, (fi - 20) / 15)
-            ax.text(5, 2, "Datos verificados · TopRanking ES",
+            ax.text(5, 2, branding.intro_subtitle,
                      ha="center", va="center",
                      color=(0.9, 0.9, 0.9, sub_alpha),
                      fontsize=14, style="italic")
@@ -187,14 +212,14 @@ def _render_bar_chart_race(dataset: dict, out_video: Path,
         ax.set_xlim(0, 10); ax.set_ylim(0, 10)
         ax.axis("off")
         alpha = min(1.0, fi / 10)
-        ax.text(5, 6.5, "¿Sorprendido?",
+        ax.text(5, 6.5, branding.outro_line1,
                  ha="center", va="center",
                  color=(1, 1, 1, alpha), fontsize=36, fontweight="bold")
-        ax.text(5, 4.5, "Suscríbete para más rankings",
+        ax.text(5, 4.5, branding.outro_line2,
                  ha="center", va="center",
                  color=(1, 0.85, 0.15, alpha),
                  fontsize=24, fontweight="bold")
-        ax.text(5, 2.8, "📊 TopRanking ES", ha="center", va="center",
+        ax.text(5, 2.8, branding.outro_brand, ha="center", va="center",
                  color=(0.85, 0.85, 0.85, alpha), fontsize=16)
 
     def draw(frame_idx: int):
@@ -321,9 +346,11 @@ def _add_music_to_video(video: Path, work_dir: Path,
 
 
 def generate_ranking_video(topic: dict, out_dir: Path, duration_seconds: int = 55,
-                             vertical: bool = True) -> dict | None:
+                             vertical: bool = True,
+                             branding: "RankingBranding | None" = None) -> dict | None:
     """Pipeline completo. Devuelve {video_path, title, description, dataset}."""
-    dataset = _generate_dataset_with_gemini(topic)
+    branding = branding or ES_BRANDING
+    dataset = _generate_dataset_with_gemini(topic, lang=branding.lang)
     if not dataset:
         return None
 
@@ -335,7 +362,7 @@ def generate_ranking_video(topic: dict, out_dir: Path, duration_seconds: int = 5
     print(f"  ranking: rendering chart race {duration_seconds}s vertical={vertical}")
     raw_video = _render_bar_chart_race(dataset, work_dir / "chart.mp4",
                                          duration_seconds=duration_seconds,
-                                         vertical=vertical)
+                                         vertical=vertical, branding=branding)
     if not raw_video:
         return None
 
@@ -355,9 +382,9 @@ def generate_ranking_video(topic: dict, out_dir: Path, duration_seconds: int = 5
         "description": (
             f"{dataset.get('titulo_video','')}\n\n"
             f"{dataset.get('cierre_dato','')}\n\n"
-            f"📊 Fuente: {topic.get('fuente','')}\n\n"
-            f"⚠️ Datos aproximados de fuentes oficiales · verifica antes de citarlos.\n\n"
-            f"#ranking #top10 #datos #españa #curiosidades #estadisticas #Shorts"
+            f"📊 {branding.source_label}: {topic.get('fuente','')}\n\n"
+            f"{branding.disclaimer}\n\n"
+            f"{branding.hashtags}"
         )[:4900],
-        "tags": ["ranking", "top10", "datos", "estadisticas", "españa"],
+        "tags": list(branding.tags),
     }

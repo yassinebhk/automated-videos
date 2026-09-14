@@ -250,7 +250,45 @@ def generate_long_scripts(topic: str, target_minutes: int = 7) -> GeneratedLongS
                 else:
                     raise
         print(f"  {model} no disponible, siguiente modelo...")
-    raise RuntimeError(f"Ningún modelo Gemini devolvió long script válido: {last_err}")
+    # FALLBACK LLM cascada (Gemini→OpenRouter→Groq) — mismo patrón que generate_scripts.
+    # Sin esto el long-form muere en cuanto se agota la cuota diaria de Gemini
+    # (20 req/día free tier, COMPARTIDA por todos los canales) → todos los
+    # long-forms fallaban cuando el quota estaba agotado. 14/09/26.
+    print(f"  long: todos los Gemini fallaron ({last_err}) → intento fallback LLM cascade")
+    try:
+        from .llm_fallback import generate_json as _llm_json
+        combined_prompt = (
+            f"{system}\n\n---\n\n{contents}\n\n"
+            f"IMPORTANTE: devuelve SOLO JSON válido con la estructura pedida. "
+            f"NO añadas explicaciones antes ni después. NO uses markdown fences."
+        )
+        data = _llm_json(combined_prompt, schema=None, max_tokens=16000, temperature=0.8)
+        if data and data.get("text"):
+            raw = data["text"].strip()
+            if raw.startswith("```"):
+                raw = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw, flags=re.MULTILINE)
+            raw = raw.strip()
+            if not raw.startswith("{"):
+                m = re.search(r"\{[\s\S]*\}", raw)
+                if m:
+                    raw = m.group(0)
+                    print("  long: extraído JSON de wrapper texto")
+            try:
+                parsed = json.loads(raw)
+                if not parsed.get("slug"):
+                    parsed["slug"] = _slugify(topic)
+                parsed.setdefault("target_minutes", target_minutes)
+                _ensure_outro(parsed, "es")
+                _ensure_outro(parsed, "en")
+                return GeneratedLongScripts.model_validate(parsed)
+            except Exception as gpe:
+                print(f"  long: LLM devolvió texto no-JSON parseable: {gpe} (preview: {raw[:200]})")
+        else:
+            print("  long: LLM cascade devolvió vacío/None")
+    except Exception as ge:
+        print(f"  long: LLM cascade fail: {ge}")
+
+    raise RuntimeError(f"Ningún LLM devolvió long script válido (Gemini+OpenRouter+Groq): {last_err}")
 
 
 def _tt_native_system_prompt() -> str:

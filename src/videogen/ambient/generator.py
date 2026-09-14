@@ -574,13 +574,18 @@ def generate_ambient_video() -> dict[str, Any] | None:
     # 5. Marca ledger
     _mark_used(topic["key"])
 
+    # image_path acepta list[Path] (crossfade nuevo) o Path (legacy fallback)
+    if isinstance(images, list):
+        img_path_str = str(images[0]) if images else ""
+    else:
+        img_path_str = str(images)
     result = {
         "slug": slug,
         "topic_key": topic["key"],
         "duration_seconds": duration_sec,
         "video_path": str(video),
         "audio_path": str(audio),
-        "image_path": str(image),
+        "image_path": img_path_str,
         "title": meta["title"],
         "description": meta["description"],
         "tags": meta["tags"],
