@@ -1,0 +1,27 @@
+name: AI Tools daily (AI Tools Weekly EN — canal #10)
+
+# Primer canal EN (CPM $12-25 vs $2-4 ES). 1 Short/día "Top 5 AI tools for X".
+# 100% gratis: mismo pipeline WaitWhy + prompt EN + voz Edge en-US-GuyNeural +
+# canal YT separado (YT_AITOOLS_*). Contenido nuevo desde cero (NO traducción).
+#
+# Cron 14:17 UTC (~9am ET / 6am PT — mañana US, mejor ventana faceless tech).
+# El publish es inmediato (el pipeline no programa hora), así que el cron = hora
+# de publicación. Ajustable. Si el scheduler GH skipea, catchup-all-channels
+# (20:37 UTC) lo rescata; ledger cooldown 90d evita duplicados.
+#
+# ACTIVO cuando existan los secrets YT_AITOOLS_REFRESH_TOKEN/CLIENT_ID/CLIENT_SECRET.
+
+on:
+  schedule:
+    - cron: "17 14 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  ai_tools:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: ai-tools-once
+    secrets: inherit
