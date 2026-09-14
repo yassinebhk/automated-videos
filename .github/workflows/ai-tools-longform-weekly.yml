@@ -1,0 +1,20 @@
+name: AI Tools long-form weekly (AI Tools Weekly EN)
+
+# 1 long-form/semana SÁBADO 15 UTC (~10am ET). ~8 min, 16:9.
+# Complementa el short diario — YT premia mix short+long. Formato:
+# "The Complete Guide to X (2026)" / comparativas en profundidad.
+
+on:
+  schedule:
+    - cron: "41 15 * * 6"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  ai_tools_long:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: ai-tools-longform
+    secrets: inherit

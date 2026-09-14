@@ -27,7 +27,15 @@ import time
 from typing import Any
 
 
-GEMINI_MODELS = ["gemini-2.5-flash", "gemini-2.5-flash-lite"]
+# 14/09/26 expandido de 2 → 5 modelos. Free tier son 20 req/día PER MODEL,
+# así que 5 modelos = ~100 req/día capacidad total antes de saturar todos.
+GEMINI_MODELS = [
+    "gemini-2.5-flash",
+    "gemini-2.5-flash-lite",
+    "gemini-2.0-flash",
+    "gemini-1.5-flash",
+    "gemini-1.5-flash-8b",
+]
 # OpenRouter modelos :free (rotación por si uno rate-limita)
 OPENROUTER_MODELS = [
     # Actualizados 14/09/26: los antiguos (llama-3.3, deepseek, qwen, gemma-2)

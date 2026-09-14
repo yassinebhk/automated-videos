@@ -51,10 +51,20 @@ def generate(
     langs: tuple[str, ...] = ("es", "en"),
     progress: Progress = _noop,
     ai_hero: bool = True,
+    precached_scripts=None,
 ) -> str:
-    """Genera el/los video(s) en modo --stats. Devuelve el slug."""
-    progress("Generando guion bilingüe con Gemini…")
-    scripts = script.generate_scripts(topic)
+    """Genera el/los video(s) en modo --stats. Devuelve el slug.
+
+    precached_scripts: si viene, se usa DIRECTAMENTE en vez de llamar a
+    Gemini. Evita rate-limits en runtime (los canales blue-ocean pop del
+    cache pre-generado a las 03:37 UTC via script_cache.precache_all).
+    """
+    if precached_scripts is not None:
+        progress("Usando script pre-cacheado (skip LLM en runtime)")
+        scripts = precached_scripts
+    else:
+        progress("Generando guion bilingüe con Gemini (sin cache)…")
+        scripts = script.generate_scripts(topic)
     slug = scripts.slug
     work_dir = PENDING_DIR / slug
     work_dir.mkdir(parents=True, exist_ok=True)

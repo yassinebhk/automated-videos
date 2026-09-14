@@ -956,6 +956,39 @@ def ia_autonomos_once_cmd():
         raise SystemExit(1)
 
 
+@cli.command(name="ai-tools-once")
+def ai_tools_once_cmd():
+    """Genera + sube 1 Short EN 'Top 5 AI tools for X' al canal AI Tools Weekly (YT_AITOOLS)."""
+    from .ai_tools import pipeline
+    result = pipeline.run_once()
+    print(json.dumps(result, indent=2, ensure_ascii=False))
+    if result.get("status") not in ("ok",):
+        raise SystemExit(1)
+
+
+@cli.command(name="ai-tools-longform")
+def ai_tools_longform_cmd():
+    """Genera + sube 1 long-form EN (~8 min) al canal AI Tools Weekly (YT_AITOOLS)."""
+    from .ai_tools import pipeline
+    result = pipeline.run_longform()
+    print(json.dumps(result, indent=2, ensure_ascii=False))
+    if result.get("status") not in ("ok",):
+        raise SystemExit(1)
+
+
+@cli.command(name="precache-scripts")
+@click.option("--n", default=3, type=int, help="Scripts a generar por canal (default 3)")
+def precache_scripts_cmd(n: int):
+    """Pre-genera N scripts LLM por canal blue-ocean y los cachea en disk.
+
+    Cron 03:37 UTC (baja demanda global Gemini). Evita rate-limits en runtime:
+    cuando el cron de publicación dispara, coge del cache en vez de LLM.
+    """
+    from . import script_cache
+    result = script_cache.precache_all(n_per_channel=n)
+    print(json.dumps(result, indent=2, ensure_ascii=False, default=str))
+
+
 @cli.command(name="yt-delete")
 @click.argument("video_id")
 @click.option("--channel", default=None, help="Prefix del canal (YT_AMBIENT, YT_TAX...). Vacío=WaitWhy.")

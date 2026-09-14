@@ -297,14 +297,39 @@ def run_channel_longform_once(cfg: ChannelConfig, target_minutes: int = 7) -> di
 
 
 def run_channel_once(cfg: ChannelConfig) -> dict[str, Any]:
-    """Genera + sube + crosspostea 1 short del canal `cfg`."""
+    """Genera + sube + crosspostea 1 short del canal `cfg`.
+
+    14/09/26: prioridad SCRIPT CACHE (script_cache.pop_cached_script).
+    Si hay uno pre-generado a las 03:37 UTC, se usa (0 llamadas LLM).
+    Si no, cae a generación en tiempo real como safety net.
+    """
     from . import service
+    from . import script_cache
 
-    topic = _pick_topic(cfg)
-    if not topic:
-        return {"status": "no_topic"}
-
-    topic_prompt = _build_topic_prompt(cfg, topic)
+    # Prioridad 1: script pre-cacheado (evita rate limit LLM en runtime)
+    cached = script_cache.pop_cached_script(cfg.yt_prefix)
+    if cached:
+        cached_topic_key, cached_scripts = cached
+        # Reconstruye "topic" dict desde el key para _mark_used + notif
+        import importlib
+        pool_mod = importlib.import_module(cfg.topic_pool_module)
+        topic = None
+        for t in pool_mod.all_topics():
+            if t.get("key") == cached_topic_key:
+                topic = t
+                break
+        if not topic:
+            topic = {"key": cached_topic_key, "titulo": cached_topic_key.replace("_", " "),
+                     "audiencia": "general"}
+        topic_prompt = _build_topic_prompt(cfg, topic)
+        print(f"  {cfg.slug}: 🍱 CACHE HIT topic={cached_topic_key} (skip LLM)")
+    else:
+        topic = _pick_topic(cfg)
+        if not topic:
+            return {"status": "no_topic"}
+        topic_prompt = _build_topic_prompt(cfg, topic)
+        cached_scripts = None
+        print(f"  {cfg.slug}: cache vacío → generación runtime")
     print(f"  {cfg.slug}: topic={topic['key']} audiencia={topic.get('audiencia','')}")
     print(f"  {cfg.slug}: prefix={cfg.yt_prefix} · voice_key=KOKORO_VOICE_ES_{cfg.yt_prefix[3:]} · "
           f"has_refresh={bool(os.environ.get(cfg.yt_prefix + '_REFRESH_TOKEN'))}")
@@ -324,7 +349,8 @@ def run_channel_once(cfg: ChannelConfig) -> dict[str, Any]:
 
     try:
         slug = service.generate(topic_prompt, ("es",),
-                                 lambda m: print(f"  {m}"), ai_hero=True)
+                                 lambda m: print(f"  {m}"), ai_hero=True,
+                                 precached_scripts=cached_scripts)
         print(f"  {cfg.slug}: subiendo al canal {cfg.display_name}…")
         links = service.publish(slug, ("es",), privacy="public",
                                  progress=lambda m: print(f"  {m}"), notify=False)

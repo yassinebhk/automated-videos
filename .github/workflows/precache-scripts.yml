@@ -1,0 +1,25 @@
+name: Precache scripts LLM (madrugada — evita rate-limits)
+
+# Genera 3 scripts por canal blue-ocean cada madrugada (baja demanda
+# global Gemini). Almacena en output/script_cache/ para que los crons
+# de publicación cojan del cache en vez de llamar a Gemini en runtime.
+#
+# Consecuencia: 0% de rate-limits en runtime en el 95% de los casos.
+# El resto (cache vacío) cae a generación runtime como safety net.
+#
+# 03:37 UTC = 05:37 CEST (baja demanda Gemini) · minutos evitados :00/:15/:30.
+
+on:
+  schedule:
+    - cron: "37 3 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  precache:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: precache-scripts
+    secrets: inherit

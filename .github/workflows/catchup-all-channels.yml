@@ -110,6 +110,14 @@ jobs:
       command: ambient-once
     secrets: inherit
 
+  ai_tools_short:
+    if: ${{ always() && (inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue') }}
+    needs: [ambient_short]
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: ai-tools-once
+    secrets: inherit
+
   # ─── LONG-FORM (dominicales) ───
 
   waitwhy_long:
@@ -149,4 +157,12 @@ jobs:
     uses: ./.github/workflows/_videogen-job.yml
     with:
       command: motor-longform
+    secrets: inherit
+
+  ai_tools_long:
+    if: ${{ always() && (inputs.only == 'all' || inputs.only == 'longform') }}
+    needs: [motor_long]
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: ai-tools-longform
     secrets: inherit
