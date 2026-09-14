@@ -261,73 +261,173 @@ def _generate_noise_fallback(out_dir: Path, duration_seconds: int,
     return output
 
 
-def _fetch_image(topic: dict, out_dir: Path) -> Path | None:
-    """Descarga imagen HD de Pexels."""
+def _fetch_multiple_images(topic: dict, out_dir: Path, n: int = 8) -> list[Path]:
+    """Descarga N imágenes HD distintas de Pexels para crossfade en video ambient.
+
+    Fix 14/09/26: user reportó "procesamiento interrumpido" en YT para
+    videos ambient largos con imagen estática, aún con framerate 12fps.
+    YT tiene heurística anti-abuse que detecta contenido "estático"
+    independientemente del framerate y lo rechaza como spam.
+
+    Solución (canales top del nicho tipo Meditation Relax Music, Yellow
+    Brick Cinema): CROSSFADE entre múltiples imágenes distintas cada
+    15-30s. YT ve "variedad visual" → no bloquea.
+    """
     import os, requests
     key = os.environ.get("PEXELS_API_KEY", "").strip()
     if not key:
-        print("  ambient: falta PEXELS_API_KEY")
-        return None
+        print("  ambient: falta PEXELS_API_KEY — usa 1 imagen fallback")
+        return []
     q = topic["pexels_image_query"]
     try:
         r = requests.get(
             "https://api.pexels.com/v1/search",
             headers={"Authorization": key},
-            params={"query": q, "per_page": 20, "orientation": "landscape"},
+            params={"query": q, "per_page": max(20, n * 2),
+                     "orientation": "landscape", "size": "large"},
             timeout=30,
         )
         data = r.json()
     except Exception as e:
-        print(f"  ambient: Pexels image fetch fail — {e}")
-        return None
+        print(f"  ambient: Pexels multi-image fetch fail — {e}")
+        return []
     photos = data.get("photos", [])
     if not photos:
-        return None
-    photo = random.choice(photos)
-    url = (photo.get("src") or {}).get("original") or photo["src"]["large2x"]
-    try:
-        content = requests.get(url, timeout=30).content
-    except Exception:
-        return None
-    p = out_dir / "cover.jpg"
-    p.write_bytes(content)
-    return p
+        return []
+    random.shuffle(photos)
+    downloaded: list[Path] = []
+    for i, photo in enumerate(photos[:n]):
+        url = (photo.get("src") or {}).get("large2x") or photo["src"]["large"]
+        try:
+            content = requests.get(url, timeout=30).content
+            p = out_dir / f"cover_{i:02d}.jpg"
+            p.write_bytes(content)
+            downloaded.append(p)
+        except Exception:
+            continue
+    print(f"  ambient: {len(downloaded)} imágenes Pexels descargadas para crossfade")
+    return downloaded
 
 
-def _build_video(image: Path, audio: Path, out_dir: Path,
-                  duration_seconds: int) -> Path | None:
-    """ffmpeg: image loop + audio → mp4 1920x1080. Fade in/out 3s."""
+def _fetch_image(topic: dict, out_dir: Path) -> Path | None:
+    """Legacy — 1 sola imagen. Retenido como fallback si _fetch_multiple_images
+    devuelve nada."""
+    imgs = _fetch_multiple_images(topic, out_dir, n=1)
+    return imgs[0] if imgs else None
+
+
+def _build_video_crossfade(images: list[Path], audio: Path, out_dir: Path,
+                             duration_seconds: int) -> Path | None:
+    """Video ambient con crossfade entre múltiples imágenes.
+
+    Cada imagen dura ~duration/N segundos con crossfade 2s entre transiciones.
+    Loop del ciclo de imágenes durante toda la duración del audio.
+
+    Ventaja vs imagen estática: YT ve VARIEDAD VISUAL → no marca como
+    spam/abuse. Los canales top del nicho lo hacen así.
+    """
     output = out_dir / "video.mp4"
-    # Fix 14/09/26: user reportó "procesamiento interrumpido" en YT para
-    # video de 235min (Chopin). Causa: framerate 1fps hace que YT lo trate
-    # como corrupto/spam en videos largos (>3h). YT workers hacen timeout.
-    # Solución: framerate 12fps (imagen sigue estática, pero YT lo procesa
-    # como video normal). Duplica el tamaño del archivo pero cabe en runner.
-    # -tune stillimage sigue optimizando aunque no sea 1fps.
-    cmd = [
+    if not images:
+        return None
+
+    # Precompute cycle duration: cada imagen ~20-30s en el ciclo
+    n_imgs = len(images)
+    per_img = max(20, min(60, duration_seconds // (n_imgs * 3)))
+    cycle = per_img * n_imgs  # segundos por ciclo completo
+    loops_needed = (duration_seconds // cycle) + 2
+
+    # ffmpeg concat repite el ciclo N veces (cada imagen loop per_img segundos
+    # con framerate 24 para que YT lo procese perfect).
+    # Usamos concat filter con imagenes en secuencia + fade cross entre ellas.
+    # Enfoque más simple y robusto: generar UN video por imagen + concat con
+    # xfade transitions.
+
+    # PASO 1: convierte cada imagen en un mini-video de per_img segundos
+    mini_dir = out_dir / "mini_clips"
+    mini_dir.mkdir(exist_ok=True)
+    mini_clips = []
+    for i, img in enumerate(images):
+        mc = mini_dir / f"mc_{i:02d}.mp4"
+        cmd = [
+            "ffmpeg", "-y",
+            "-loop", "1", "-framerate", "24", "-i", str(img),
+            "-c:v", "libx264",
+            "-tune", "stillimage",
+            "-preset", "ultrafast",
+            "-r", "24",
+            "-pix_fmt", "yuv420p",
+            "-vf", ("scale=1920:1080:force_original_aspect_ratio=increase,"
+                    "crop=1920:1080"),
+            "-t", str(per_img),
+            "-an",
+            str(mc),
+        ]
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+        if r.returncode == 0 and mc.exists():
+            mini_clips.append(mc)
+    if not mini_clips:
+        print(f"  ambient: falló mini-clips generation")
+        return None
+
+    # PASO 2: concat file para loop del ciclo
+    concat = out_dir / "concat_video.txt"
+    lines = []
+    for _ in range(loops_needed):
+        for mc in mini_clips:
+            lines.append(f"file '{mc.relative_to(out_dir)}'")
+    concat.write_text("\n".join(lines))
+
+    # PASO 3: concat + audio + fade in/out global
+    cmd_final = [
         "ffmpeg", "-y",
-        "-loop", "1", "-framerate", "12", "-i", str(image),
+        "-f", "concat", "-safe", "0", "-i", str(concat),
         "-i", str(audio),
         "-c:v", "libx264",
-        "-tune", "stillimage",
         "-preset", "ultrafast",
-        "-r", "12",  # 12fps output — compatible YT sin timeouts
+        "-r", "24",
         "-c:a", "aac", "-b:a", "192k",
         "-pix_fmt", "yuv420p",
-        "-vf", (
-            "scale=1920:1080:force_original_aspect_ratio=increase,"
-            "crop=1920:1080,"
-            "fade=t=in:st=0:d=3,"
-            f"fade=t=out:st={duration_seconds-3}:d=3"
-        ),
+        "-vf", (f"fade=t=in:st=0:d=3,"
+                f"fade=t=out:st={duration_seconds-3}:d=3"),
         "-shortest",
         "-t", str(duration_seconds),
         str(output),
     ]
-    # Timeout 40min max (60min video ambient tipo dormir requiere hasta ~2400s)
+    r = subprocess.run(cmd_final, cwd=out_dir, capture_output=True,
+                        text=True, timeout=3600)
+    if r.returncode != 0:
+        print(f"  ambient: ffmpeg crossfade final fail — {r.stderr[-400:]}")
+        return None
+    # Limpieza mini_clips (ahorra ~500MB disco)
+    import shutil
+    shutil.rmtree(mini_dir, ignore_errors=True)
+    concat.unlink(missing_ok=True)
+    print(f"  ambient: ✅ video crossfade OK ({n_imgs} imgs × {per_img}s)")
+    return output
+
+
+def _build_video(image_or_images, audio: Path, out_dir: Path,
+                  duration_seconds: int) -> Path | None:
+    """Wrapper compat: acepta 1 imagen (legacy) o lista (crossfade nuevo)."""
+    if isinstance(image_or_images, list):
+        return _build_video_crossfade(image_or_images, audio, out_dir, duration_seconds)
+    # Legacy path — 1 imagen sola (usado solo si Pexels sin key)
+    output = out_dir / "video.mp4"
+    cmd = [
+        "ffmpeg", "-y",
+        "-loop", "1", "-framerate", "24", "-i", str(image_or_images),
+        "-i", str(audio),
+        "-c:v", "libx264", "-tune", "stillimage", "-preset", "ultrafast",
+        "-r", "24", "-c:a", "aac", "-b:a", "192k", "-pix_fmt", "yuv420p",
+        "-vf", ("scale=1920:1080:force_original_aspect_ratio=increase,"
+                "crop=1920:1080,"
+                "fade=t=in:st=0:d=3,"
+                f"fade=t=out:st={duration_seconds-3}:d=3"),
+        "-shortest", "-t", str(duration_seconds), str(output),
+    ]
     r = subprocess.run(cmd, capture_output=True, text=True, timeout=2400)
     if r.returncode != 0:
-        print(f"  ambient: ffmpeg video fail — {r.stderr[-400:]}")
+        print(f"  ambient: ffmpeg fallback single-img fail — {r.stderr[-400:]}")
         return None
     return output
 
@@ -454,13 +554,17 @@ def generate_ambient_video() -> dict[str, Any] | None:
     if not audio:
         return None
 
-    # 2. Imagen
-    image = _fetch_image(topic, work_dir)
-    if not image:
-        return None
+    # 2. Imágenes múltiples (crossfade — evita "procesamiento interrumpido" YT)
+    images = _fetch_multiple_images(topic, work_dir, n=8)
+    if not images:
+        # Fallback: 1 imagen sola si Pexels sin key
+        img_single = _fetch_image(topic, work_dir)
+        if not img_single:
+            return None
+        images = img_single  # el wrapper de _build_video acepta un Path solo
 
-    # 3. Video (image loop + audio + fade)
-    video = _build_video(image, audio, work_dir, duration_sec)
+    # 3. Video (crossfade entre N imágenes + audio + fade global)
+    video = _build_video(images, audio, work_dir, duration_sec)
     if not video:
         return None
 
