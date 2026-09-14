@@ -54,19 +54,24 @@ def _mark_used(topic_key: str) -> None:
 def _pick_topic() -> dict:
     """Elige topic no usado en últimos COOLDOWN_DAYS días.
 
-    Usa pool ESTÁTICO + DINÁMICO (Gemini refresca cada 14d con topics
-    trending). Prioriza:
-      1. Topics dinámicos frescos (nunca usados) — máxima novedad
-      2. Estáticos fuera de cooldown
-      3. Cualquiera fuera de cooldown (dinámicos + estáticos)
-      4. Todos si todos en cooldown (fallback anti-bloqueo)
+    14/09 modo D: cuando Pixabay lleva rate-limit persistente, prefiere
+    topics binaurales (100% ffmpeg local, no dependen Pixabay). Detecta
+    por env AMBIENT_PREFER_BINAURAL=1 (activar cuando Pixabay caído).
+
+    Prioriza:
+      1. Si PREFER_BINAURAL=1 → binaurales fuera cooldown
+      2. Topics dinámicos frescos (nunca usados) — máxima novedad
+      3. Estáticos fuera de cooldown
+      4. Cualquiera fuera de cooldown (dinámicos + estáticos)
+      5. Todos si todos en cooldown (fallback anti-bloqueo)
     """
     from . import topic_refresher
-    all_pool = topic_refresher.get_all_topics_merged()
+    import os as _os
 
+    all_pool = topic_refresher.get_all_topics_merged()
     ledger = _load_ledger()
     cutoff = datetime.now(timezone.utc) - timedelta(days=COOLDOWN_DAYS)
-    fresh_dynamic, available = [], []
+    fresh_dynamic, available, binaural_avail = [], [], []
     static_keys = {t["key"] for t in topic_pool.all_topics()}
     for t in all_pool:
         recent = ledger.get(t["key"], [])
@@ -79,11 +84,18 @@ def _pick_topic() -> dict:
                 continue
         if not last_use or last_use < cutoff:
             available.append(t)
+            if t.get("mood_type") == "binaural":
+                binaural_avail.append(t)
             if t["key"] not in static_keys and not recent:
                 fresh_dynamic.append(t)
 
+    # Modo D: prefiere binaurales (Pixabay caído — evita fallback noise)
+    prefer_binaural = _os.environ.get("AMBIENT_PREFER_BINAURAL", "").strip() == "1"
+    if prefer_binaural and binaural_avail:
+        print(f"  ambient: modo PREFER_BINAURAL activo (Pixabay caído)")
+        return random.choice(binaural_avail)
+
     if fresh_dynamic:
-        # Da 60% preferencia a dinámicos nunca usados (variedad garantizada)
         pool = fresh_dynamic if random.random() < 0.6 else available
         return random.choice(pool)
     if available:
