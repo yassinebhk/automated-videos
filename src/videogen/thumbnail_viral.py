@@ -62,6 +62,56 @@ def extract_first_frame(video_path: Path, dest: Path, at_seconds: float = 1.0) -
         return None
 
 
+def _fetch_pexels_background(title: str, dest: Path, w: int = 1280,
+                                h: int = 720) -> Path | None:
+    """Descarga imagen HD real de Pexels como fondo del thumbnail.
+
+    Fix 14/09/26: user detectó que los thumbnails se veían "muñecos AI"
+    porque el frame extraído del video era imagen Pollinations Flux (que
+    a veces sale con proporciones raras). Pexels devuelve foto real
+    profesional relacionada al topic → mucho más creíble y llamativo.
+
+    Extrae 2-3 keywords del título en inglés (Pexels es EN) para buscar.
+    """
+    import os
+    key = os.environ.get("PEXELS_API_KEY", "").strip()
+    if not key:
+        return None
+    try:
+        import requests
+        import random as _r
+        # Traduce keywords ES → EN aproximado: quita stopwords + toma
+        # nombres/números primeros como query
+        words = re.findall(r"\b[A-ZÁÉÍÓÚÑ][a-záéíóúñA-Z]+\b", title)
+        stopwords_es = {"El", "La", "Los", "Las", "De", "Del", "Al", "Un",
+                          "Una", "Con", "Para", "Por", "En", "Sin", "Con"}
+        keywords = [w for w in words if w not in stopwords_es][:3]
+        query = " ".join(keywords) or title[:40]
+
+        r = requests.get(
+            "https://api.pexels.com/v1/search",
+            headers={"Authorization": key},
+            params={"query": query, "per_page": 15, "orientation": "landscape",
+                     "size": "large"},
+            timeout=15,
+        )
+        if r.status_code != 200:
+            return None
+        photos = r.json().get("photos", [])
+        if not photos:
+            return None
+        photo = _r.choice(photos[:8])
+        url = (photo.get("src") or {}).get("large2x") or photo["src"]["large"]
+        img = requests.get(url, timeout=20).content
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_bytes(img)
+        print(f"  thumb: bg pexels OK query='{query}' ({len(img)}b)")
+        return dest
+    except Exception as e:
+        print(f"  thumb: pexels bg fail: {e}")
+        return None
+
+
 def _fit_text(draw, text: str, font_path_size, max_w: int, max_h: int) -> ImageFont.FreeTypeFont:
     """Busca el mayor tamaño de fuente que quepa."""
     size = font_path_size
@@ -124,9 +174,13 @@ def build_viral_thumbnail(
             except Exception:
                 ai_face_img = None
 
-    # 1. Fondo: primer frame del video (o gris oscuro fallback)
+    # 1. Fondo — prioridad Pexels stock (real, profesional) sobre frame
+    # del video (que es Pollinations AI y puede verse como "muñeco").
+    # Fallback frame video → fallback gris oscuro.
     bg_frame = dest.parent / "_thumb_frame.jpg"
-    frame = extract_first_frame(video_path, bg_frame, at_seconds=2.0)
+    frame = _fetch_pexels_background(title, bg_frame, W, H)
+    if not frame:
+        frame = extract_first_frame(video_path, bg_frame, at_seconds=2.0)
     if not frame:
         bg = Image.new("RGB", (W, H), (20, 20, 30))
     else:

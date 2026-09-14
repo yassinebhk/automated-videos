@@ -298,20 +298,20 @@ def _build_video(image: Path, audio: Path, out_dir: Path,
                   duration_seconds: int) -> Path | None:
     """ffmpeg: image loop + audio → mp4 1920x1080. Fade in/out 3s."""
     output = out_dir / "video.mp4"
-    # Optimizado para imagen estática 30-60min en runner 2-core:
-    # - framerate 1fps (imagen no cambia — YT lo mostrará normal, no truco).
-    #   Reduce load 30× vs 30fps default.
-    # - preset ultrafast → prioriza velocidad sobre tamaño.
-    # - -tune stillimage: optimizaciones específicas x264 para imagen fija.
-    # - audio copy (ya es AAC binaural o mp3 pixabay convertido a aac out).
+    # Fix 14/09/26: user reportó "procesamiento interrumpido" en YT para
+    # video de 235min (Chopin). Causa: framerate 1fps hace que YT lo trate
+    # como corrupto/spam en videos largos (>3h). YT workers hacen timeout.
+    # Solución: framerate 12fps (imagen sigue estática, pero YT lo procesa
+    # como video normal). Duplica el tamaño del archivo pero cabe en runner.
+    # -tune stillimage sigue optimizando aunque no sea 1fps.
     cmd = [
         "ffmpeg", "-y",
-        "-loop", "1", "-framerate", "1", "-i", str(image),
+        "-loop", "1", "-framerate", "12", "-i", str(image),
         "-i", str(audio),
         "-c:v", "libx264",
         "-tune", "stillimage",
         "-preset", "ultrafast",
-        "-r", "1",  # 1fps output
+        "-r", "12",  # 12fps output — compatible YT sin timeouts
         "-c:a", "aac", "-b:a", "192k",
         "-pix_fmt", "yuv420p",
         "-vf", (
