@@ -1,15 +1,18 @@
-name: MenteEnCalma — daily long-form ambient
+name: MenteEnCalma — daily ambient (3×/día)
 
-# Canal ambient/relax MenteEnCalma. 1 video/día 07:00 UTC (09:00 CEST).
-# 30-60 min de audio (binaural / clásica / naturaleza / lofi) + imagen loop.
-# DESACTIVADO hasta setup del user:
-# - Canal YT MenteEnCalma
-# - 3 secrets YT_AMBIENT_*
-# - PIXABAY_API_KEY (para música clásica/naturaleza/lofi CC0)
+# Canal ambient/relax MenteEnCalma. 3 videos/día para compensar cap de
+# 14 min por vídeo (canal sin verify SMS, límite YT hard 15min).
+# Total 3×14 = 42min de contenido/día con topics distintos rotando.
+# Cuando el user verifique SMS, subir env AMBIENT_MAX_MIN=180 y bajar
+# cadencia a 1×/día (o mantener 3 para volumen).
+#
+# Horarios: 07:12 / 14:17 / 21:23 UTC (evita :00 y colisiones otros crons).
 
 on:
   schedule:
     - cron: "12 7 * * *"
+    - cron: "17 14 * * *"
+    - cron: "23 21 * * *"
   workflow_dispatch: {}
 
 concurrency:

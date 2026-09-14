@@ -22,7 +22,9 @@ from . import topic_pool
 
 AMBIENT_ROOT = ROOT / "output" / "ambient_uploaded"
 AMBIENT_LEDGER = ROOT / "output" / "ambient_ledger.json"
-COOLDOWN_DAYS = 14  # no repetir tema en 2 semanas
+COOLDOWN_DAYS = 5  # 14/09: bajado de 14→5 con cadencia 3×/día (compensación
+                     # cap 14min sin SMS verify). Con 22 estáticos + dinámicos
+                     # y 21 videos/semana, cooldown 5d rota todo sin repetir
 
 
 def _load_ledger() -> dict[str, list[str]]:
