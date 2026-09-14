@@ -118,6 +118,14 @@ jobs:
       command: ai-tools-once
     secrets: inherit
 
+  rankings_en_short:
+    if: ${{ always() && (inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue') }}
+    needs: [ai_tools_short]
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: rankings-en-once
+    secrets: inherit
+
   # ─── LONG-FORM (dominicales) ───
 
   waitwhy_long:

@@ -1,0 +1,22 @@
+name: Global Rankings daily (Global Rankings EN — canal #11)
+
+# 2º canal EN (CPM $6-12). 1 bar chart race/día (Top 10 global evergreen).
+# Reusa el generador de TopRanking con branding EN (RankingBranding lang=en).
+# 100% gratis: matplotlib + Pixabay music + canal YT separado (YT_RANKINGS_*).
+# Cron 16:17 UTC (~11am ET). Publish inmediato = cron time. Catchup 20:37 rescata.
+# ACTIVO cuando existan los secrets YT_RANKINGS_REFRESH_TOKEN/CLIENT_ID/CLIENT_SECRET.
+
+on:
+  schedule:
+    - cron: "17 16 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  rankings_en:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: rankings-en-once
+    secrets: inherit

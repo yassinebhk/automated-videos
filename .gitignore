@@ -34,4 +34,3 @@ music/*.mp3
 # Logs locales del bot Mac (no van al repo)
 /tmp/videogen_bot.log
 *.log
-src/videogen/rankings_en/
