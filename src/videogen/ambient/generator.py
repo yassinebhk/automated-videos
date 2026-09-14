@@ -336,20 +336,35 @@ def _generate_seo_metadata(topic: dict, duration_min: int) -> dict:
             "tags": [base_kw, modifier, topic["mood"], "relax", "música"],
         }
 
-    prompt = f"""Genera metadata SEO para un video de YouTube en español.
+    prompt = f"""Genera metadata SEO para YouTube ES en el nicho música ambient/relax.
 
-Nicho: música ambiental/relax
+Estilo de referencia: canales top ES tipo "Meditation Relax Music",
+"Yellow Brick Cinema", "The Soul of Wind" (patrones long-tail que
+rankean en YT ES en 2026).
+
 Tema: {topic['key']} ({topic['mood']})
-Palabra clave base: {base_kw}
-Modificador: {modifier}
-Duración: {duration_min} minutos
+Keyword base (usar CASI textual en el título): {base_kw}
+Modificador (contexto de uso): {modifier}
+Duración: {duration_min} minutos ({duration_min // 60} horas)
 
 Devuelve JSON con:
-- title (max 100 chars, incluye la keyword base + modificador + duración, muy SEO)
-- description (~400 chars, tono cálido, invita a suscribirse, con 3 timestamps ficticios spaced, cierra con hashtags)
-- tags (lista de 10 keywords SEO, sin #)
+- title (max 90 chars, empieza con la keyword base + añade duración
+  formato "X Horas" si >60min o "X Minutos" si <60min + termina con
+  algo tipo "Sin Anuncios" / "Sueño Profundo" / "Concentracion Total".
+  Ejemplos ganadores: "Musica para Estudiar 3 Horas Ondas Alfa Sin Anuncios",
+  "Ruido Blanco para Dormir Bebes 8 Horas Ininterrumpido",
+  "Musica Relajante para Yoga 90 Minutos Sonidos de la Naturaleza".
+  MAYUSCULAS iniciales estilo YT/inglés (Title Case))
+- description (~500 chars, tono cálido y directo, 4 timestamps [00:00,
+  15:00, 30:00, {duration_min//2:02d}:00] con descripción breve de cada
+  sección, invita a suscribirse al final, cierra con 5-8 hashtags
+  relevantes en 1 línea)
+- tags (lista de 12 keywords SEO ES sin #, mezcla short-tail
+  "musica relajante" + long-tail "musica para estudiar concentrarse
+  ondas alfa"; incluye "relax", "musica sin anuncios", "{duration_min}
+  minutos" o "{duration_min//60} horas")
 
-NO uses emojis en title. Sí en description con moderación.
+NO emojis en title (perjudica SEO). Sí en description con moderación.
 Devuelve SOLO JSON."""
 
     try:
@@ -407,6 +422,7 @@ def generate_ambient_video() -> dict[str, Any] | None:
             carrier_hz=topic.get("carrier_hz", 200),
             beat_hz=topic.get("beat_hz", 8),
             volume=0.3,
+            wave=topic.get("wave", "binaural"),
         )
     else:
         audio = _fetch_music(topic, duration_sec, work_dir)
