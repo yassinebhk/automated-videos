@@ -956,6 +956,38 @@ def ia_autonomos_once_cmd():
         raise SystemExit(1)
 
 
+@cli.command(name="yt-delete")
+@click.argument("video_id")
+@click.option("--channel", default=None, help="Prefix del canal (YT_AMBIENT, YT_TAX...). Vacío=WaitWhy.")
+def yt_delete_cmd(video_id: str, channel: str | None):
+    """Borra un video YT del canal indicado (o WaitWhy por defecto).
+
+    Requiere scope youtube.force-ssl (ya cableado).
+    Uso: videogen yt-delete VIDEO_ID --channel YT_AMBIENT
+    """
+    import os as _os
+    prev = _os.environ.get("YT_CHANNEL_PREFIX", "")
+    if channel:
+        _os.environ["YT_CHANNEL_PREFIX"] = channel
+    else:
+        _os.environ.pop("YT_CHANNEL_PREFIX", None)
+    try:
+        from . import upload_youtube
+        import googleapiclient.discovery
+        creds = upload_youtube._get_credentials()
+        yt = googleapiclient.discovery.build("youtube", "v3", credentials=creds)
+        yt.videos().delete(id=video_id).execute()
+        print(f"✅ Video {video_id} borrado del canal {channel or 'MAIN'}")
+    except Exception as e:
+        print(f"❌ Delete fail: {type(e).__name__}: {e}")
+        raise SystemExit(1)
+    finally:
+        if prev:
+            _os.environ["YT_CHANNEL_PREFIX"] = prev
+        else:
+            _os.environ.pop("YT_CHANNEL_PREFIX", None)
+
+
 @cli.command(name="retry-failed")
 def retry_failed_cmd():
     """Auto-retry workflows GH Actions con status=failure en última hora.

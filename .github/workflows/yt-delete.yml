@@ -1,0 +1,65 @@
+name: YT delete video (one-shot)
+
+# Borra un video YT del canal indicado. Uso manual.
+
+on:
+  workflow_dispatch:
+    inputs:
+      video_id:
+        description: "ID del video YT a borrar (ej: l6IQ1rYnSew)"
+        required: true
+        type: string
+      channel:
+        description: "Prefix canal (YT_AMBIENT, YT_TAX, etc.) — vacío = WaitWhy"
+        required: false
+        default: ""
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  delete:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install -e .
+      - name: Setup YT creds
+        env:
+          YT_CLIENT_ID:         ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET:     ${{ secrets.YT_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN:     ${{ secrets.YT_REFRESH_TOKEN }}
+          YT_TAX_CLIENT_ID:     ${{ secrets.YT_TAX_CLIENT_ID }}
+          YT_TAX_CLIENT_SECRET: ${{ secrets.YT_TAX_CLIENT_SECRET }}
+          YT_TAX_REFRESH_TOKEN: ${{ secrets.YT_TAX_REFRESH_TOKEN }}
+          YT_LEGAL_CLIENT_ID:     ${{ secrets.YT_LEGAL_CLIENT_ID }}
+          YT_LEGAL_CLIENT_SECRET: ${{ secrets.YT_LEGAL_CLIENT_SECRET }}
+          YT_LEGAL_REFRESH_TOKEN: ${{ secrets.YT_LEGAL_REFRESH_TOKEN }}
+          YT_AYUDAS_CLIENT_ID:     ${{ secrets.YT_AYUDAS_CLIENT_ID }}
+          YT_AYUDAS_CLIENT_SECRET: ${{ secrets.YT_AYUDAS_CLIENT_SECRET }}
+          YT_AYUDAS_REFRESH_TOKEN: ${{ secrets.YT_AYUDAS_REFRESH_TOKEN }}
+          YT_MOTOR_CLIENT_ID:     ${{ secrets.YT_MOTOR_CLIENT_ID }}
+          YT_MOTOR_CLIENT_SECRET: ${{ secrets.YT_MOTOR_CLIENT_SECRET }}
+          YT_MOTOR_REFRESH_TOKEN: ${{ secrets.YT_MOTOR_REFRESH_TOKEN }}
+          YT_POV_CLIENT_ID:       ${{ secrets.YT_POV_CLIENT_ID }}
+          YT_POV_CLIENT_SECRET:   ${{ secrets.YT_POV_CLIENT_SECRET }}
+          YT_POV_REFRESH_TOKEN:   ${{ secrets.YT_POV_REFRESH_TOKEN }}
+          YT_RANKING_CLIENT_ID:     ${{ secrets.YT_RANKING_CLIENT_ID }}
+          YT_RANKING_CLIENT_SECRET: ${{ secrets.YT_RANKING_CLIENT_SECRET }}
+          YT_RANKING_REFRESH_TOKEN: ${{ secrets.YT_RANKING_REFRESH_TOKEN }}
+          YT_AMBIENT_CLIENT_ID:     ${{ secrets.YT_AMBIENT_CLIENT_ID }}
+          YT_AMBIENT_CLIENT_SECRET: ${{ secrets.YT_AMBIENT_CLIENT_SECRET }}
+          YT_AMBIENT_REFRESH_TOKEN: ${{ secrets.YT_AMBIENT_REFRESH_TOKEN }}
+          YT_IA_CLIENT_ID:      ${{ secrets.YT_IA_CLIENT_ID }}
+          YT_IA_CLIENT_SECRET:  ${{ secrets.YT_IA_CLIENT_SECRET }}
+          YT_IA_REFRESH_TOKEN:  ${{ secrets.YT_IA_REFRESH_TOKEN }}
+        run: |
+          mkdir -p secrets
+          if [ -n "${{ inputs.channel }}" ]; then
+            videogen yt-delete "${{ inputs.video_id }}" --channel "${{ inputs.channel }}"
+          else
+            videogen yt-delete "${{ inputs.video_id }}"
+          fi

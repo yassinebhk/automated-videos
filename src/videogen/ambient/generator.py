@@ -416,11 +416,18 @@ Devuelve SOLO JSON."""
     }
 
 
+MAX_DURATION_MIN = 180  # Cap 3h para evitar timeout procesamiento YT (fix 14/09)
+
+
 def generate_ambient_video() -> dict[str, Any] | None:
     """Pipeline completo. Devuelve dict con metadata + paths, o None si falla."""
     topic = _pick_topic()
     duration_min = random.randint(
         topic["min_duration_minutes"], topic["max_duration_minutes"])
+    # Cap 3h — YT rechaza "procesamiento" en videos ambient >3h con
+    # imagen estática (workers timeout). Duración suficiente para siesta
+    # profunda, sesión estudio, meditación larga.
+    duration_min = min(duration_min, MAX_DURATION_MIN)
     duration_sec = duration_min * 60
 
     ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
