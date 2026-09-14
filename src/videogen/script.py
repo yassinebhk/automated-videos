@@ -107,29 +107,49 @@ def generate_scripts(topic: str) -> GeneratedScripts:
                     raise
         print(f"  {model} no disponible, probando siguiente modelo...")
 
-    # FALLBACK GROQ — cuando TODOS los modelos Gemini fallan (503/429),
-    # intenta Groq (openai/gpt-oss-120b free) con el mismo prompt+system.
-    print(f"  script: todos los Gemini fallaron ({last_err}) → intento GROQ fallback")
+    # FALLBACK LLM cascada (Gemini→OpenRouter→Groq) vía llm_fallback.
+    # 14/09/26: reforzado — extrae JSON aunque venga con explicaciones
+    # antes/después del bloque JSON (Groq/OpenRouter tienden a envolver).
+    print(f"  script: todos los Gemini fallaron ({last_err}) → intento fallback LLM cascade")
     try:
         from .llm_fallback import generate_json as _llm_json
-        combined_prompt = f"{system}\n\n---\n\n{contents}"
+        combined_prompt = (
+            f"{system}\n\n---\n\n{contents}\n\n"
+            f"IMPORTANTE: devuelve SOLO JSON válido con la estructura pedida. "
+            f"NO añadas explicaciones antes ni después. NO uses markdown fences."
+        )
         data = _llm_json(combined_prompt, schema=None, max_tokens=8000,
                           temperature=0.85)
         if data and data.get("text"):
             raw = data["text"].strip()
+            # Limpieza cascada de formatos comunes:
+            # 1. Markdown fences ```json ... ```
             if raw.startswith("```"):
-                raw = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw, flags=re.MULTILINE)
+                raw = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw,
+                              flags=re.MULTILINE)
+            # 2. Texto explicativo antes/después del JSON — extrae {...}
+            raw = raw.strip()
+            if not raw.startswith("{"):
+                m = re.search(r"\{[\s\S]*\}", raw)
+                if m:
+                    raw = m.group(0)
+                    print(f"  script: extraído JSON de wrapper texto")
             try:
                 parsed = json.loads(raw)
                 if not parsed.get("slug"):
                     parsed["slug"] = _slugify(topic)
                 return GeneratedScripts.model_validate(parsed)
             except Exception as gpe:
-                print(f"  script: GROQ devolvió texto no-JSON válido: {gpe}")
+                print(f"  script: LLM devolvió texto no-JSON parseable: {gpe} "
+                      f"(preview: {raw[:200]})")
+        else:
+            print(f"  script: LLM cascade devolvió vacío/None")
     except Exception as ge:
-        print(f"  script: GROQ fallback fail: {ge}")
+        print(f"  script: LLM cascade fail: {ge}")
 
-    raise RuntimeError(f"Ningún LLM devolvió script válido (Gemini+Groq): {last_err}")
+    raise RuntimeError(
+        f"Ningún LLM devolvió script válido (Gemini+OpenRouter+Groq): {last_err}"
+    )
 
 
 def _ensure_outro(data: dict, lang: str) -> None:

@@ -30,10 +30,12 @@ from typing import Any
 GEMINI_MODELS = ["gemini-2.5-flash", "gemini-2.5-flash-lite"]
 # OpenRouter modelos :free (rotación por si uno rate-limita)
 OPENROUTER_MODELS = [
-    "meta-llama/llama-3.3-70b-instruct:free",
-    "deepseek/deepseek-chat-v3.1:free",
-    "qwen/qwen-2.5-72b-instruct:free",
-    "google/gemma-2-9b-it:free",
+    # Actualizados 14/09/26: los antiguos (llama-3.3, deepseek, qwen, gemma-2)
+    # ya no están disponibles en OpenRouter free tier. Lista verificada:
+    "google/gemma-4-31b-it:free",
+    "nvidia/nemotron-3-super-120b-a12b:free",
+    "nex-agi/nex-n2.5-pro:free",
+    "thinkingmachines/inkling:free",
 ]
 GROQ_MODEL = "openai/gpt-oss-120b"  # free tier Groq — 131k ctx, alta calidad
 GROQ_MODEL_FAST = "openai/gpt-oss-20b"  # fallback más rápido

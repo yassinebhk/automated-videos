@@ -40,14 +40,14 @@ permissions:
 
 jobs:
   waitwhy_short:
-    if: ${{ inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts' }}
+    if: ${{ always() && (inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts') }}
     uses: ./.github/workflows/_videogen-job.yml
     with:
       command: autogen-once
     secrets: inherit
 
   tax_short:
-    if: ${{ inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue' }}
+    if: ${{ always() && (inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue') }}
     needs: [waitwhy_short]
     uses: ./.github/workflows/_videogen-job.yml
     with:
@@ -55,7 +55,7 @@ jobs:
     secrets: inherit
 
   legal_short:
-    if: ${{ inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue' }}
+    if: ${{ always() && (inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue') }}
     needs: [tax_short]
     uses: ./.github/workflows/_videogen-job.yml
     with:
@@ -63,7 +63,7 @@ jobs:
     secrets: inherit
 
   ayudas_short:
-    if: ${{ inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue' }}
+    if: ${{ always() && (inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue') }}
     needs: [legal_short]
     uses: ./.github/workflows/_videogen-job.yml
     with:
@@ -71,7 +71,7 @@ jobs:
     secrets: inherit
 
   motor_short:
-    if: ${{ inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue' }}
+    if: ${{ always() && (inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue') }}
     needs: [ayudas_short]
     uses: ./.github/workflows/_videogen-job.yml
     with:
@@ -79,7 +79,7 @@ jobs:
     secrets: inherit
 
   pov_short:
-    if: ${{ inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue' }}
+    if: ${{ always() && (inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue') }}
     needs: [motor_short]
     uses: ./.github/workflows/_videogen-job.yml
     with:
@@ -87,7 +87,7 @@ jobs:
     secrets: inherit
 
   ranking_short:
-    if: ${{ inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue' }}
+    if: ${{ always() && (inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue') }}
     needs: [pov_short]
     uses: ./.github/workflows/_videogen-job.yml
     with:
@@ -95,7 +95,7 @@ jobs:
     secrets: inherit
 
   ia_autonomos_short:
-    if: ${{ inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue' }}
+    if: ${{ always() && (inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue') }}
     needs: [ranking_short]
     uses: ./.github/workflows/_videogen-job.yml
     with:
@@ -103,7 +103,7 @@ jobs:
     secrets: inherit
 
   ambient_short:
-    if: ${{ inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue' }}
+    if: ${{ always() && (inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue') }}
     needs: [ia_autonomos_short]
     uses: ./.github/workflows/_videogen-job.yml
     with:
@@ -113,14 +113,14 @@ jobs:
   # ─── LONG-FORM (dominicales) ───
 
   waitwhy_long:
-    if: ${{ inputs.only == 'all' || inputs.only == 'longform' }}
+    if: ${{ always() && (inputs.only == 'all' || inputs.only == 'longform') }}
     uses: ./.github/workflows/_videogen-job.yml
     with:
       command: longgen-once
     secrets: inherit
 
   tax_long:
-    if: ${{ inputs.only == 'all' || inputs.only == 'longform' }}
+    if: ${{ always() && (inputs.only == 'all' || inputs.only == 'longform') }}
     needs: [waitwhy_long]
     uses: ./.github/workflows/_videogen-job.yml
     with:
@@ -128,7 +128,7 @@ jobs:
     secrets: inherit
 
   legal_long:
-    if: ${{ inputs.only == 'all' || inputs.only == 'longform' }}
+    if: ${{ always() && (inputs.only == 'all' || inputs.only == 'longform') }}
     needs: [tax_long]
     uses: ./.github/workflows/_videogen-job.yml
     with:
@@ -136,7 +136,7 @@ jobs:
     secrets: inherit
 
   ayudas_long:
-    if: ${{ inputs.only == 'all' || inputs.only == 'longform' }}
+    if: ${{ always() && (inputs.only == 'all' || inputs.only == 'longform') }}
     needs: [legal_long]
     uses: ./.github/workflows/_videogen-job.yml
     with:
@@ -144,7 +144,7 @@ jobs:
     secrets: inherit
 
   motor_long:
-    if: ${{ inputs.only == 'all' || inputs.only == 'longform' }}
+    if: ${{ always() && (inputs.only == 'all' || inputs.only == 'longform') }}
     needs: [ayudas_long]
     uses: ./.github/workflows/_videogen-job.yml
     with:
