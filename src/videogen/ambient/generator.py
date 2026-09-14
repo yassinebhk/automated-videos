@@ -516,7 +516,12 @@ Devuelve SOLO JSON."""
     }
 
 
-MAX_DURATION_MIN = 180  # Cap 3h para evitar timeout procesamiento YT (fix 14/09)
+# 14/09/26 (segunda vez): user reportó video "retirado por demasiado largo".
+# Causa raíz DEFINITIVA: canal YT sin verificar SMS tiene límite HARD 15 min.
+# YT rechaza cualquier video >15min y marca "Procesamiento interrumpido" o
+# "Retirado por longitud". Fix estructural: cap 14 min hasta verify SMS.
+# Cuando el user verifique (youtube.com/verify), sube este cap a 180.
+MAX_DURATION_MIN = int(__import__("os").environ.get("AMBIENT_MAX_MIN", "14"))
 
 
 def generate_ambient_video() -> dict[str, Any] | None:
