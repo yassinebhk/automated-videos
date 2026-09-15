@@ -803,6 +803,18 @@ def ambient_once_cmd():
     print(json.dumps(result, indent=2, default=str))
 
 
+@cli.command(name="waitwhy-analyze")
+def waitwhy_analyze_cmd():
+    """Analiza performance WaitWhy: top10 videos + ranking por categoría.
+
+    Fetch YT API, categoriza por keywords (corrupción, crimen, estafa, robo,
+    casos famosos ES, etc), ordena por views/día. Notif Telegram con
+    recomendación pivote."""
+    from . import waitwhy_analyze
+    result = waitwhy_analyze.analyze()
+    print(json.dumps(result, indent=2, ensure_ascii=False, default=str))
+
+
 @cli.command(name="ambient-short")
 def ambient_short_cmd():
     """Genera + sube 1 Short ambient (40s) al canal MenteEnCalma como cebo

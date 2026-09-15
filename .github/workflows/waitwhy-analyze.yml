@@ -1,0 +1,17 @@
+name: WaitWhy analyze performance (one-shot)
+
+# Analiza performance canal WaitWhy: top10 videos + ranking por categoría.
+# Notif Telegram con recomendación pivote (qué sub-nicho rinde mejor).
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: waitwhy-analyze
+    secrets: inherit
