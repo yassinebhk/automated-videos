@@ -1,0 +1,14 @@
+{
+  "titulo_video": "TOP 10 VIDEOS más VISTOS de YouTube histórico",
+  "years": [2024],
+  "items": ["Baby Shark Dance", "Despacito", "Johny Johny Yes Papa", "Bath Song", "Phonics Song", "Wheels on the Bus", "Masha and the Bear", "See You Again", "Learning Colors", "Shape of You"],
+  "data": [
+    [14800, 8500, 7300, 6900, 6800, 6500, 4700, 6400, 6100, 6200]
+  ],
+  "unidad": "millones views",
+  "source_label": "YouTube (público) / Wikipedia list",
+  "source_url": "https://en.wikipedia.org/wiki/List_of_most-viewed_YouTube_videos",
+  "cierre_dato": "Baby Shark supera 14.800M views — 1º video en la historia YT en romper 10B",
+  "_fetched_at": "2026-09-15T00:00:00+00:00",
+  "_manual_curated": true
+}

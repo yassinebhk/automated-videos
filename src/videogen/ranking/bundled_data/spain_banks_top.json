@@ -1,0 +1,14 @@
+{
+  "titulo_video": "TOP 10 BANCOS ESPAÑOLES por activos · 2024",
+  "years": [2024],
+  "items": ["Banco Santander", "BBVA", "CaixaBank", "Sabadell", "Bankinter", "Unicaja", "Kutxabank", "Ibercaja", "Abanca", "Cajamar"],
+  "data": [
+    [1798, 771, 610, 236, 108, 97, 64, 60, 56, 55]
+  ],
+  "unidad": "miles millones € activos",
+  "source_label": "Banco de España / AEB",
+  "source_url": "https://www.bde.es/wbe/es/estadisticas/",
+  "cierre_dato": "Santander lidera con €1.798B en activos — la 4ª mayor entidad bancaria de la Eurozona",
+  "_fetched_at": "2026-09-15T00:00:00+00:00",
+  "_manual_curated": true
+}

@@ -1,9 +1,11 @@
-"""Pool rankings TopRanking — 66 topics con dataset REAL.
+"""Pool rankings TopRanking — 71 topics con dataset REAL.
 
-15/09/26: expandido de 8 → 36 → 46 → 61 → 66 topics tras user request
-"cuanto más mejor". 36 World Bank + 30 bundled curated (JSON verificados).
+15/09/26: expandido de 8 → 36 → 46 → 61 → 66 → 71 topics tras user
+request "cuanto más mejor". 36 World Bank + 35 bundled curated
+(JSON verificados). Batch 4 con enfoque España (IBEX35, bancos ES,
+Amancio Ortega ranking).
 
-Con cooldown 90d y 66 topics: ~200 días sin repetir = 6.5 meses de
+Con cooldown 90d y 71 topics: ~215 días sin repetir = 7 meses de
 contenido único diario. Cuando roten, mismos topics con datos actualizados.
 
 Fuentes 100% verificables + citables. Cero alucinación LLM.
@@ -323,6 +325,30 @@ TOPICS = [
      "titulo": "TOP 10 REDES SOCIALES con MÁS usuarios · 2024",
      "dataset_key": "social_media_users",
      "fuente": "DataReportal Global Digital Report 2024"},
+
+    # ═══════════════════════════════════════════════════════════
+    # BUNDLED DATA CURADA · BATCH 4 (15/09/26) — enfoque España
+    # ═══════════════════════════════════════════════════════════
+    {"key": "ibex35_top", "categoria": "empresas",
+     "titulo": "TOP 10 EMPRESAS IBEX 35 por capitalización · 2024",
+     "dataset_key": "ibex35_top",
+     "fuente": "Bolsa de Madrid (BME)"},
+    {"key": "bancos_espana_top", "categoria": "empresas",
+     "titulo": "TOP 10 BANCOS ESPAÑOLES por activos · 2024",
+     "dataset_key": "spain_banks_top",
+     "fuente": "Banco de España / AEB"},
+    {"key": "youtube_videos_top", "categoria": "internet",
+     "titulo": "TOP 10 VIDEOS más VISTOS de YouTube histórico",
+     "dataset_key": "youtube_most_viewed",
+     "fuente": "YouTube / Wikipedia list"},
+    {"key": "tenistas_grand_slams", "categoria": "deporte",
+     "titulo": "TOP 10 TENISTAS masculinos con más GRAND SLAMS",
+     "dataset_key": "tennis_grand_slams",
+     "fuente": "ATP / ITF"},
+    {"key": "espanoles_mas_ricos", "categoria": "riqueza",
+     "titulo": "TOP 10 ESPAÑOLES más RICOS · Forbes 2024",
+     "dataset_key": "spain_richest",
+     "fuente": "Forbes Real-Time Billionaires 2024"},
 ]
 
 

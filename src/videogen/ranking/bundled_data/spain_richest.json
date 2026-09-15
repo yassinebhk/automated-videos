@@ -1,0 +1,14 @@
+{
+  "titulo_video": "TOP 10 ESPAÑOLES más RICOS · Forbes 2024",
+  "years": [2024],
+  "items": ["Amancio Ortega", "Sandra Ortega Mera", "Rafael del Pino", "Juan Roig", "Juan Carlos Escotet", "Alicia Koplowitz", "Isak Andic", "Manuel Jove Capellán", "Hortensia Herrero", "Tomás Olivo López"],
+  "data": [
+    [103, 8.4, 4.5, 3.9, 3.2, 3.1, 3.0, 2.8, 2.5, 2.4]
+  ],
+  "unidad": "miles millones $",
+  "source_label": "Forbes Real-Time Billionaires 2024",
+  "source_url": "https://www.forbes.com/real-time-billionaires/",
+  "cierre_dato": "Amancio Ortega (Inditex/Zara) mantiene liderazgo con $103B — 12ª fortuna mundial",
+  "_fetched_at": "2026-09-15T00:00:00+00:00",
+  "_manual_curated": true
+}

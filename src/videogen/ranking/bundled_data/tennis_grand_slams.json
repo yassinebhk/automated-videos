@@ -1,0 +1,14 @@
+{
+  "titulo_video": "TOP 10 TENISTAS masculinos con más GRAND SLAMS",
+  "years": [2024],
+  "items": ["Novak Djokovic", "Rafael Nadal", "Roger Federer", "Pete Sampras", "Roy Emerson", "Björn Borg", "Rod Laver", "Bill Tilden", "Andre Agassi", "Jimmy Connors"],
+  "data": [
+    [24, 22, 20, 14, 12, 11, 11, 10, 8, 8]
+  ],
+  "unidad": "Grand Slams",
+  "source_label": "ATP / ITF oficial",
+  "source_url": "https://www.atptour.com/en/rankings/",
+  "cierre_dato": "Djokovic lidera con 24 GS — récord absoluto histórico del tenis masculino",
+  "_fetched_at": "2026-09-15T00:00:00+00:00",
+  "_manual_curated": true
+}
