@@ -1,0 +1,14 @@
+{
+  "titulo_video": "TOP 10 MARCAS de LUJO más valiosas · Kantar 2024",
+  "years": [2024],
+  "items": ["Louis Vuitton", "Hermès", "Chanel", "Gucci", "Rolex", "Dior", "Cartier", "Prada", "Tiffany & Co", "Burberry"],
+  "data": [
+    [124.8, 90.4, 68.7, 27.5, 12.4, 12.0, 11.9, 8.3, 5.4, 4.5]
+  ],
+  "unidad": "miles millones $ valor marca",
+  "source_label": "Kantar BrandZ Most Valuable Global Brands",
+  "source_url": "https://www.kantar.com/campaigns/brandz",
+  "cierre_dato": "Louis Vuitton lidera con $124,8B — la marca de lujo más valiosa del mundo",
+  "_fetched_at": "2026-09-15T00:00:00+00:00",
+  "_manual_curated": true
+}

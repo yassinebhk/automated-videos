@@ -1,0 +1,14 @@
+{
+  "titulo_video": "TOP 10 STREAMERS TWITCH con más SEGUIDORES · 2024",
+  "years": [2024],
+  "items": ["Ninja", "AuronPlay", "Rubius", "Ibai", "Tfue", "Shroud", "Loud_coringa", "TheGrefg", "Nickmercs", "Gaules"],
+  "data": [
+    [19.0, 16.6, 15.0, 17.6, 11.4, 10.6, 9.9, 10.9, 7.0, 6.8]
+  ],
+  "unidad": "millones seguidores",
+  "source_label": "Social Blade Twitch / TwitchTracker",
+  "source_url": "https://socialblade.com/twitch/top/most-followed",
+  "cierre_dato": "Ninja e Ibai lideran Twitch — los streamers hispanohablantes copan 4 puestos del TOP 10",
+  "_fetched_at": "2026-09-15T00:00:00+00:00",
+  "_manual_curated": true
+}

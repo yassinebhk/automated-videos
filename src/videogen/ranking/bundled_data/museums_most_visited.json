@@ -1,0 +1,14 @@
+{
+  "titulo_video": "TOP 10 MUSEOS más VISITADOS del mundo · 2023",
+  "years": [2023],
+  "items": ["Louvre (París)", "Vatican Museums (Vaticano)", "British Museum (Londres)", "Metropolitan (NYC)", "Nat. Gallery (Londres)", "Musée d'Orsay (París)", "State Hermitage (Rusia)", "Prado (Madrid)", "Reina Sofía (Madrid)", "American Museum Nat. Hist."],
+  "data": [
+    [8.9, 6.8, 5.8, 5.4, 3.1, 3.9, 2.8, 3.4, 3.3, 4.5]
+  ],
+  "unidad": "millones visitantes/año",
+  "source_label": "The Art Newspaper Museum Ranking 2024",
+  "source_url": "https://www.theartnewspaper.com/2024/03/26/most-visited-museums-2023",
+  "cierre_dato": "El Louvre lidera con 8,9M visitantes — el museo más visitado del planeta",
+  "_fetched_at": "2026-09-15T00:00:00+00:00",
+  "_manual_curated": true
+}

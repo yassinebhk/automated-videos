@@ -1,0 +1,14 @@
+{
+  "titulo_video": "TOP 10 VIDEOJUEGOS con MÁS jugadores activos · 2024",
+  "years": [2024],
+  "items": ["Minecraft", "Roblox", "Fortnite", "Counter-Strike 2", "Genshin Impact", "PUBG Mobile", "League of Legends", "Free Fire", "Call of Duty Warzone", "Valorant"],
+  "data": [
+    [170, 217, 231, 40, 65, 100, 152, 100, 100, 25]
+  ],
+  "unidad": "millones jugadores activos mensuales",
+  "source_label": "Reportes oficiales devs / SuperData",
+  "source_url": "https://en.wikipedia.org/wiki/List_of_most-played_video_games_by_player_count",
+  "cierre_dato": "Fortnite lidera con 231M jugadores mensuales — Roblox y Minecraft le pisan los talones",
+  "_fetched_at": "2026-09-15T00:00:00+00:00",
+  "_manual_curated": true
+}

@@ -1,10 +1,14 @@
-"""Pool rankings TopRanking — 81 topics con dataset REAL.
+"""Pool rankings TopRanking — 86 topics con dataset REAL.
 
-15/09/26: expandido de 8 → 36 → 46 → 61 → 66 → 71 → 76 → 81 topics.
-36 World Bank + 45 bundled curated (JSON verificados).
+15/09/26: expandido de 8 → 86 topics en 7 batches. 36 World Bank +
+50 bundled curated (JSON verificados con fuente + cierre_dato citable).
 
-Con cooldown 90d y 81 topics: ~245 días sin repetir = 8 meses de
+Con cooldown 90d y 86 topics: ~260 días sin repetir = 8,5 meses de
 contenido único diario. Cuando roten, mismos topics con datos actualizados.
+
+Categorías: economía, demografía, salud, educación, empleo, tecnología,
+medio ambiente, defensa, turismo, riqueza, deporte, cine, música, cultura,
+empresas, internet, videojuegos, geografía, política, arquitectura, ciencia.
 
 Fuentes 100% verificables + citables. Cero alucinación LLM.
 """
@@ -395,6 +399,30 @@ TOPICS = [
      "titulo": "TOP 10 AEROLÍNEAS más grandes por PASAJEROS · 2023",
      "dataset_key": "airlines_biggest",
      "fuente": "IATA World Air Transport Statistics 2024"},
+
+    # ═══════════════════════════════════════════════════════════
+    # BUNDLED DATA CURADA · BATCH 7 (15/09/26)
+    # ═══════════════════════════════════════════════════════════
+    {"key": "museos_mas_visitados", "categoria": "cultura",
+     "titulo": "TOP 10 MUSEOS más VISITADOS del mundo · 2023",
+     "dataset_key": "museums_most_visited",
+     "fuente": "The Art Newspaper Museum Ranking 2024"},
+    {"key": "marcas_lujo_top", "categoria": "empresas",
+     "titulo": "TOP 10 MARCAS de LUJO más valiosas · 2024",
+     "dataset_key": "luxury_brands",
+     "fuente": "Kantar BrandZ 2024"},
+    {"key": "videojuegos_jugadores_activos", "categoria": "videojuegos",
+     "titulo": "TOP 10 VIDEOJUEGOS con MÁS jugadores activos · 2024",
+     "dataset_key": "videogames_active_players",
+     "fuente": "Reportes oficiales devs"},
+    {"key": "divorcios_mas_caros", "categoria": "riqueza",
+     "titulo": "TOP 10 DIVORCIOS más CAROS de la historia",
+     "dataset_key": "expensive_divorces",
+     "fuente": "Forbes / Business Insider"},
+    {"key": "streamers_twitch_top", "categoria": "internet",
+     "titulo": "TOP 10 STREAMERS de TWITCH con más SEGUIDORES · 2024",
+     "dataset_key": "streamers_twitch",
+     "fuente": "Social Blade Twitch"},
 ]
 
 

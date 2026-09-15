@@ -1,0 +1,14 @@
+{
+  "titulo_video": "TOP 10 DIVORCIOS más CAROS de la historia",
+  "years": [2024],
+  "items": ["Jeff Bezos & MacKenzie Scott", "Alec & Jocelyn Wildenstein", "Rupert & Anna Murdoch", "Bernie & Slavica Ecclestone", "Steve & Elaine Wynn", "Mel & Robyn Gibson", "Harold & Sue Ann Hamm", "Michael & Juanita Jordan", "Craig McCaw & Wendy Petrak", "Roman Abramovich & Irina"],
+  "data": [
+    [38.3, 3.8, 1.7, 1.2, 1.0, 0.425, 0.975, 0.168, 0.460, 0.300]
+  ],
+  "unidad": "miles millones $ acuerdo divorcio",
+  "source_label": "Forbes / Business Insider",
+  "source_url": "https://www.forbes.com/sites/robertfrank/",
+  "cierre_dato": "Bezos vs MacKenzie Scott ($38.3B) — el divorcio más caro de la historia mundial",
+  "_fetched_at": "2026-09-15T00:00:00+00:00",
+  "_manual_curated": true
+}
