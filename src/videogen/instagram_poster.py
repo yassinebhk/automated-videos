@@ -305,19 +305,41 @@ def post_reel_to_instagram(video_title: str, video_url: str,
                          "status": "fail_no_mp4"})
         return None
 
-    # 2) Container
-    container_id = _create_media_container(access_token, ig_account_id, public_url, caption)
-    if not container_id:
-        _append_ig_log({"slug": slug, "title": video_title[:80],
-                         "status": "fail_container_create",
-                         "public_url": public_url})
-        return None
+    # 2+3) Container + wait ready, con retry si Meta devuelve 404 URL.
+    # GH Pages tiene edges asincronos: mi GET desde runner puede ver 200
+    # pero el edge que Meta usa aún tener 404. Retry con espera 60s
+    # entre intentos deja tiempo a que TODOS los edges propaguen.
+    container_id = None
+    for attempt in range(3):
+        container_id = _create_media_container(access_token, ig_account_id, public_url, caption)
+        if not container_id:
+            print(f"  ig: retry {attempt+1}/3 — container_create devolvió None")
+            time.sleep(60)
+            continue
 
-    # 3) Esperar procesamiento
-    if not _wait_container_ready(access_token, container_id):
+        if _wait_container_ready(access_token, container_id):
+            break  # FINISHED — sigue a publish
+
+        # Container ERROR — mira si fue 404. Si sí, retry con container nuevo.
+        err_msg = _LAST_CONTAINER_ERROR.get("error_message", "").lower()
+        is_404 = "404" in err_msg or "not found" in err_msg or "media could not be fetched" in err_msg
+        if is_404 and attempt < 2:
+            print(f"  ig: retry {attempt+1}/3 tras 404 URL — esperando 60s propagación edges Meta")
+            time.sleep(60)
+            container_id = None
+            continue
+        # Error no-404 (aspect ratio, codec, etc) → no retry, propagar fallo
         _append_ig_log({"slug": slug, "title": video_title[:80],
                          "status": "fail_container_ready",
                          "container_id": container_id,
+                         "public_url": public_url,
+                         "attempts": attempt + 1,
+                         **_LAST_CONTAINER_ERROR})
+        return None
+    else:
+        # 3 intentos agotados sin FINISHED
+        _append_ig_log({"slug": slug, "title": video_title[:80],
+                         "status": "fail_container_retries_exhausted",
                          "public_url": public_url,
                          **_LAST_CONTAINER_ERROR})
         return None
