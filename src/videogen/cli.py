@@ -827,6 +827,89 @@ def waitwhy_analyze_cmd():
     print(json.dumps(result, indent=2, ensure_ascii=False, default=str))
 
 
+@cli.command(name="yt-cookies-check")
+def yt_cookies_check_cmd():
+    """Diagnóstico específico YT_COOKIES: verifica secret + archivo + test yt-dlp.
+
+    Notifica a Telegram con causa concreta:
+      - Secret vacío
+      - Archivo /tmp/yt_cookies.txt no creado
+      - Formato inválido (no empieza por # Netscape)
+      - Cookies expiradas (yt-dlp devuelve "Sign in to confirm you're not a bot")
+      - Cookies OK (test download 1 short público funciona)
+    """
+    import os, subprocess, tempfile, json as _json, urllib.request
+    lines = ["🍪 <b>YT_COOKIES check</b>"]
+
+    # 1. Env var
+    env_val = os.environ.get("YT_COOKIES", "")
+    if not env_val:
+        lines.append("❌ env YT_COOKIES <b>VACÍA</b> — secret GH no existe o no se propaga.")
+        lines.append("   Fix: crea secret YT_COOKIES_V2 con contenido cookies.txt (Netscape format).")
+    else:
+        lines.append(f"✅ env YT_COOKIES presente ({len(env_val)} chars)")
+
+        # 2. Archivo
+        p = "/tmp/yt_cookies.txt"
+        if not os.path.exists(p):
+            lines.append(f"❌ {p} NO existe. Bug workflow — no se ejecutó el dump.")
+        else:
+            sz = os.path.getsize(p)
+            lines.append(f"✅ {p} existe ({sz} bytes)")
+
+            # 3. Formato
+            with open(p) as f:
+                head = f.read(200)
+            if not head.startswith("# Netscape"):
+                lines.append(f"❌ Formato INVÁLIDO: empieza por <code>{head[:40]}...</code>")
+                lines.append("   Fix: exporta cookies con extensión 'Get cookies.txt LOCALLY' (Netscape).")
+            else:
+                lines.append("✅ formato Netscape OK")
+
+                # 4. Test yt-dlp con video test público (Rick Roll)
+                # Este video es indexado ~ desde 2007, siempre existe.
+                test_url = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                with tempfile.TemporaryDirectory() as td:
+                    out_path = f"{td}/test.mp4"
+                    cmd = ["yt-dlp", "-f", "b[ext=mp4]/b", "-o", out_path,
+                           "--no-warnings", "--no-playlist",
+                           "--cookies", p,
+                           "--extractor-args", "youtube:player_client=web",
+                           test_url]
+                    try:
+                        r = subprocess.run(cmd, capture_output=True, text=True, timeout=90)
+                        if r.returncode == 0 and os.path.exists(out_path) and os.path.getsize(out_path) > 100_000:
+                            lines.append(f"✅ TEST download OK ({os.path.getsize(out_path)//1024}KB)")
+                            lines.append("<b>Cookies funcionan.</b> Si backfill igual falla → problema NO es cookies.")
+                        else:
+                            err = (r.stderr or r.stdout or "")[:250]
+                            lines.append(f"❌ TEST download FAIL rc={r.returncode}")
+                            lines.append(f"<code>{err}</code>")
+                            if "Sign in to confirm" in err or "bot" in err.lower():
+                                lines.append("→ Cookies caducadas o inválidas. Re-exporta desde el navegador.")
+                            elif "410" in err or "unavailable" in err.lower():
+                                lines.append("→ Video test caído (raro) — no es tu cookies.")
+                            else:
+                                lines.append("→ Error desconocido — ver output.")
+                    except Exception as e:
+                        lines.append(f"❌ exception: {type(e).__name__}: {e}")
+
+    text = "\n".join(lines)
+    print(text)
+    tok = os.environ.get("TELEGRAM_BOT_TOKEN"); chat = os.environ.get("TELEGRAM_CHAT_ID")
+    if tok and chat:
+        try:
+            req = urllib.request.Request(
+                f"https://api.telegram.org/bot{tok}/sendMessage",
+                data=_json.dumps({"chat_id": int(chat), "text": text,
+                                    "parse_mode": "HTML"}).encode(),
+                headers={"Content-Type": "application/json"},
+            )
+            urllib.request.urlopen(req, timeout=30).read()
+        except Exception as e:
+            print(f"tg notify fail: {e}")
+
+
 @cli.command(name="ig-status")
 def ig_status_cmd():
     """Diagnóstico Instagram: token OK + últimos 10 intentos IG (log local).
@@ -1412,7 +1495,8 @@ def backfill_once_cmd(per_platform: int, platforms: str):
                 lines.append(f"{icon} {plat} ✅: {x['title'][:60]} ({x['views']}v)")
             for x in failed:
                 any_activity = True
-                lines.append(f"{icon} {plat} ❌: {x['title'][:60]} — download/post falló")
+                reason = x.get("fail_reason") or "download/post falló"
+                lines.append(f"{icon} {plat} ❌: {x['title'][:60]}\n    ↳ {reason[:120]}")
         if any_activity or not results:
             try:
                 req = urllib.request.Request(

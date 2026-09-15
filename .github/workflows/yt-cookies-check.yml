@@ -1,0 +1,17 @@
+name: YT Cookies check
+
+# Diagnóstico standalone: verifica secret YT_COOKIES + descarga test.
+# Notifica a Telegram con causa concreta si falla.
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: yt-cookies-check
+    secrets: inherit

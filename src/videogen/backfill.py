@@ -254,34 +254,43 @@ def backfill_once(platforms: list[str] | None = None,
 
 def _post_to_platform(platform: str, cand: dict[str, Any]) -> dict | None:
     """Enruta al poster correspondiente. Asegura el mp4 local antes de postear
-    (descarga desde YT si el runner no lo tiene)."""
+    (descarga desde YT si el runner no lo tiene). Guarda `fail_reason` en cand
+    para diagnóstico específico (yt-dlp bloqueado vs IG rechazó vs otro)."""
     # Threads es texto solo, no necesita mp4.
     if platform != "threads":
         vert = _ensure_vertical_local(cand)
         if not vert:
             print(f"  backfill {platform}: sin mp4 disponible para {cand['slug']}")
+            cand["fail_reason"] = "yt-dlp download fail (probable YT_COOKIES vacío/inválido/caducado)"
             return None
         cand["vertical_path"] = vert
 
     try:
         if platform == "tiktok":
             from . import tiktok_poster
-            return tiktok_poster.post_video_to_tiktok(
+            r = tiktok_poster.post_video_to_tiktok(
                 cand["title"], cand["vertical_path"], cand["slug"],
             )
+            if not r: cand["fail_reason"] = "tiktok poster returned None"
+            return r
         if platform == "instagram":
             from . import instagram_poster
             yt_url = f"https://youtube.com/shorts/{cand['video_id']}"
-            return instagram_poster.post_reel_to_instagram(
+            r = instagram_poster.post_reel_to_instagram(
                 cand["title"], yt_url, cand["vertical_path"], cand["slug"],
             )
+            if not r: cand["fail_reason"] = "IG poster returned None (mira output/ig_publish_log.json)"
+            return r
         if platform == "threads":
             from . import threads_poster
             yt_url = f"https://youtube.com/shorts/{cand['video_id']}"
-            return threads_poster.post_short_to_threads(
+            r = threads_poster.post_short_to_threads(
                 cand["title"], yt_url,
             )
+            if not r: cand["fail_reason"] = "threads poster returned None"
+            return r
     except Exception as e:
         print(f"  backfill {platform}: {type(e).__name__}: {e}")
+        cand["fail_reason"] = f"{type(e).__name__}: {str(e)[:100]}"
         return None
     return None
