@@ -93,6 +93,7 @@ def run_short() -> dict[str, Any] | None:
             cross = crosspost_full.crosspost_short_from_mp4(
                 Path(meta["video_path"]), meta["title"], url,
                 teaser=teaser, channel_label="menteencalma",
+                slug=meta.get("slug"),  # sin esto → mp4_path.stem = 'video_es_vertical' (colisión)
             )
             _notify(f"🌙 <b>MenteEnCalma · RRSS</b> {crosspost_full.summary_line(cross)}")
         except Exception as e:
