@@ -1,9 +1,9 @@
-"""Pool rankings TopRanking — 86 topics con dataset REAL.
+"""Pool rankings TopRanking — 90 topics con dataset REAL.
 
-15/09/26: expandido de 8 → 86 topics en 7 batches. 36 World Bank +
-50 bundled curated (JSON verificados con fuente + cierre_dato citable).
+15/09/26: expandido de 8 → 90 topics en 8 batches. 36 World Bank +
+54 bundled curated (JSON verificados con fuente + cierre_dato citable).
 
-Con cooldown 90d y 86 topics: ~260 días sin repetir = 8,5 meses de
+Con cooldown 90d y 90 topics: ~270 días sin repetir = 9 meses de
 contenido único diario. Cuando roten, mismos topics con datos actualizados.
 
 Categorías: economía, demografía, salud, educación, empleo, tecnología,
@@ -423,6 +423,26 @@ TOPICS = [
      "titulo": "TOP 10 STREAMERS de TWITCH con más SEGUIDORES · 2024",
      "dataset_key": "streamers_twitch",
      "fuente": "Social Blade Twitch"},
+
+    # ═══════════════════════════════════════════════════════════
+    # BUNDLED DATA CURADA · BATCH 8 · FINAL (15/09/26) — llegamos a 90
+    # ═══════════════════════════════════════════════════════════
+    {"key": "michelin_paises_top", "categoria": "cultura",
+     "titulo": "TOP 10 PAÍSES con más RESTAURANTES 3 ESTRELLAS MICHELIN",
+     "dataset_key": "michelin_stars_countries",
+     "fuente": "Guía Michelin oficial 2024"},
+    {"key": "hoteles_cadenas_top", "categoria": "empresas",
+     "titulo": "TOP 10 CADENAS HOTELERAS más grandes del mundo · 2024",
+     "dataset_key": "hotels_biggest_chains",
+     "fuente": "STR / Hotel News Now 2024"},
+    {"key": "cuadros_mas_caros", "categoria": "cultura",
+     "titulo": "TOP 10 CUADROS más CAROS jamás vendidos",
+     "dataset_key": "paintings_most_expensive",
+     "fuente": "Christie's / Sotheby's"},
+    {"key": "alimentacion_top", "categoria": "empresas",
+     "titulo": "TOP 10 EMPRESAS de ALIMENTACIÓN más grandes del mundo · 2024",
+     "dataset_key": "food_brands_top",
+     "fuente": "Forbes Global 2000"},
 ]
 
 

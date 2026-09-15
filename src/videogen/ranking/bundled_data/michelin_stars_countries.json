@@ -1,0 +1,14 @@
+{
+  "titulo_video": "TOP 10 PAÍSES con más RESTAURANTES 3 ESTRELLAS MICHELIN · 2024",
+  "years": [2024],
+  "items": ["Francia", "Japón", "Italia", "Estados Unidos", "España", "China", "Alemania", "Reino Unido", "Suiza", "Bélgica"],
+  "data": [
+    [30, 22, 13, 14, 15, 13, 10, 8, 5, 3]
+  ],
+  "unidad": "restaurantes 3 estrellas Michelin",
+  "source_label": "Guía Michelin oficial 2024",
+  "source_url": "https://guide.michelin.com/",
+  "cierre_dato": "Francia lidera con 30 restaurantes 3 estrellas — cuna original de la guía Michelin",
+  "_fetched_at": "2026-09-15T00:00:00+00:00",
+  "_manual_curated": true
+}

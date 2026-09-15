@@ -1,0 +1,14 @@
+{
+  "titulo_video": "TOP 10 EMPRESAS de ALIMENTACIÓN más grandes del mundo · 2024",
+  "years": [2024],
+  "items": ["Nestlé (Suiza)", "PepsiCo (EE.UU.)", "Anheuser-Busch InBev", "JBS (Brasil)", "Tyson Foods (EE.UU.)", "Mondelez International", "Coca-Cola Company", "Danone (Francia)", "Kraft Heinz", "Unilever"],
+  "data": [
+    [102.7, 91.4, 59.4, 78.7, 52.9, 36.0, 45.8, 27.6, 26.6, 61.4]
+  ],
+  "unidad": "miles millones $ ingresos anuales",
+  "source_label": "Forbes Global 2000 (Food Processing) 2024",
+  "source_url": "https://www.forbes.com/global2000/",
+  "cierre_dato": "Nestlé lidera con $102,7B en ingresos anuales — la mayor multinacional alimentaria",
+  "_fetched_at": "2026-09-15T00:00:00+00:00",
+  "_manual_curated": true
+}

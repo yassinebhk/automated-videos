@@ -1,0 +1,14 @@
+{
+  "titulo_video": "TOP 10 CADENAS HOTELERAS más grandes del mundo · 2024",
+  "years": [2024],
+  "items": ["Marriott International", "Hilton Worldwide", "IHG Hotels", "Wyndham Hotels", "Choice Hotels", "Accor", "Hyatt Hotels", "Best Western", "Radisson", "Meliá Hotels (España)"],
+  "data": [
+    [1662000, 1229000, 946000, 872000, 626000, 807000, 336000, 400000, 165000, 100000]
+  ],
+  "unidad": "habitaciones globales",
+  "source_label": "STR / Hotel News Now 2024",
+  "source_url": "https://str.com/data-insights/reports/hotel-industry",
+  "cierre_dato": "Marriott lidera con 1,66M habitaciones — la mayor cadena hotelera del planeta",
+  "_fetched_at": "2026-09-15T00:00:00+00:00",
+  "_manual_curated": true
+}

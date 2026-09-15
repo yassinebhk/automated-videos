@@ -1,0 +1,14 @@
+{
+  "titulo_video": "TOP 10 CUADROS más CAROS jamás vendidos",
+  "years": [2024],
+  "items": ["Salvator Mundi (Da Vinci)", "Interchange (De Kooning)", "The Card Players (Cézanne)", "Nafea Faa Ipoipo (Gauguin)", "N.17A (Pollock)", "N.6 Violet, Green (Rothko)", "Pendant Portraits (Rembrandt)", "Les Femmes d'Alger (Picasso)", "Nu couché (Modigliani)", "Masterpiece (Lichtenstein)"],
+  "data": [
+    [450.3, 300, 250, 210, 200, 186, 180, 179, 170.4, 165]
+  ],
+  "unidad": "millones $ venta",
+  "source_label": "Christie's / Sotheby's registros",
+  "source_url": "https://en.wikipedia.org/wiki/List_of_most_expensive_paintings",
+  "cierre_dato": "Salvator Mundi de Da Vinci ($450M) sigue siendo el cuadro más caro jamás vendido (2017)",
+  "_fetched_at": "2026-09-15T00:00:00+00:00",
+  "_manual_curated": true
+}
