@@ -1,0 +1,20 @@
+name: Criminopatía daily (criminología forense ES)
+
+# Canal criminología/forense divulgativa (casos resueltos, sentencia firme).
+# 1 short/día. Reusa channel_pipeline + canal YT_CRIMINOPATIA_*. 100% gratis.
+# Cron 11:07 UTC. Catchup 20:37 rescata. ACTIVO con secrets YT_CRIMINOPATIA_*.
+
+on:
+  schedule:
+    - cron: "7 11 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  criminopatia:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: criminopatia-once
+    secrets: inherit
