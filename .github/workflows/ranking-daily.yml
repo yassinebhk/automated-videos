@@ -10,7 +10,10 @@ name: Ranking daily (TopRanking ES) — PAUSADO 15/09/26
 #      datos fiables (top 10 estáticos históricos consolidados)
 
 on:
-  # schedule: DISABLED — reactivar tras fix datasets
+  # 15/09/26 REACTIVADO tras cablear datasets REALES bundled
+  # (output/ranking_datasets/). Ver ranking-datasets-refresh.yml.
+  schedule:
+    - cron: "33 15 * * *"
   workflow_dispatch: {}
 
 permissions:

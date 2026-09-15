@@ -348,9 +348,35 @@ def _add_music_to_video(video: Path, work_dir: Path,
 def generate_ranking_video(topic: dict, out_dir: Path, duration_seconds: int = 55,
                              vertical: bool = True,
                              branding: "RankingBranding | None" = None) -> dict | None:
-    """Pipeline completo. Devuelve {video_path, title, description, dataset}."""
+    """Pipeline completo. Devuelve {video_path, title, description, dataset}.
+
+    15/09/26: prioridad DATASET REAL bundled (World Bank cache) sobre
+    generación LLM (que alucinaba). El topic ahora puede tener campo
+    `dataset_key` apuntando a un dataset cacheado (ej. `wb_NY_GDP_MKTP_CD_2000_2024`).
+    Si el key existe en cache → usar directo. Si no → Gemini fallback
+    (marcar el video como "estimación aproximada, verifica fuente").
+    """
     branding = branding or ES_BRANDING
-    dataset = _generate_dataset_with_gemini(topic, lang=branding.lang)
+
+    dataset = None
+    dkey = topic.get("dataset_key")
+    if dkey:
+        from . import datasets_fetcher
+        dataset = datasets_fetcher.load_cached(dkey, max_age_days=30)
+        if dataset:
+            print(f"  ranking: ✅ dataset REAL cargado desde cache ({dkey})")
+        else:
+            print(f"  ranking: ⚠️ dataset_key={dkey} sin cache — intentando fetch on-demand")
+            # Intento fetch on-demand si es key World Bank
+            if dkey.startswith("wb_"):
+                m = re.match(r"wb_(.+)_(\d{4})_(\d{4})", dkey)
+                if m:
+                    ind = m.group(1).replace("_", ".")
+                    dataset = datasets_fetcher.fetch_worldbank_top(
+                        ind, int(m.group(2)), int(m.group(3)))
+    if not dataset:
+        print(f"  ranking: sin dataset real, fallback Gemini (marca aproximado)")
+        dataset = _generate_dataset_with_gemini(topic, lang=branding.lang)
     if not dataset:
         return None
 

@@ -803,6 +803,18 @@ def ambient_once_cmd():
     print(json.dumps(result, indent=2, default=str))
 
 
+@cli.command(name="ranking-datasets-refresh")
+def ranking_datasets_refresh_cmd():
+    """Refresh datasets REALES para TopRanking (World Bank + más).
+
+    Cron weekly. Descarga últimos datos oficiales y cachea en
+    output/ranking_datasets/. Los videos ranking cogen de cache.
+    """
+    from .ranking import datasets_fetcher
+    result = datasets_fetcher.refresh_all()
+    print(json.dumps(result, indent=2, ensure_ascii=False, default=str))
+
+
 @cli.command(name="waitwhy-analyze")
 def waitwhy_analyze_cmd():
     """Analiza performance WaitWhy: top10 videos + ranking por categoría.

@@ -1,0 +1,22 @@
+name: Ranking datasets refresh (semanal)
+
+# Descarga datasets REALES de World Bank + otras fuentes gratis y los
+# cachea en output/ranking_datasets/. Los videos TopRanking leen del
+# cache (nunca inventan datos con LLM = veracidad garantizada).
+#
+# Lunes 05:33 UTC (07:33 CEST) — evita colisión otros crons.
+
+on:
+  schedule:
+    - cron: "33 5 * * 1"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: ranking-datasets-refresh
+    secrets: inherit

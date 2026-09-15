@@ -288,6 +288,8 @@ jobs:
             [ -d docs ] && git add docs/ || true
             # Script cache (precache_scripts diario) — persistir entre runs
             [ -d output/script_cache ] && git add output/script_cache/ || true
+            # Ranking datasets (World Bank + otras fuentes reales) — refresh weekly
+            [ -d output/ranking_datasets ] && git add output/ranking_datasets/ || true
             git commit -m "stats+docs: snapshot $(date -u +%FT%H:%MZ) [skip ci]" || true
             # Rebase para tolerar race con otro workflow que también commiteó.
             for i in 1 2 3; do
