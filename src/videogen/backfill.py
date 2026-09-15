@@ -179,6 +179,9 @@ def _ensure_vertical_local(cand: dict[str, Any]) -> Path | None:
         [],  # default yt-dlp
     ]
 
+    global _LAST_YTDLP_ERR
+    _LAST_YTDLP_ERR = ""
+    errors_by_strat: list[str] = []
     for i, extra in enumerate(strategies):
         cmd = [
             "yt-dlp",
@@ -210,9 +213,13 @@ def _ensure_vertical_local(cand: dict[str, Any]) -> Path | None:
             return path
         stderr = (r.stderr or r.stdout or "")[:300]
         print(f"  backfill: estrategia {i+1} falló ({video_id}) rc={r.returncode} — {stderr}")
-        # Guarda el último stderr para que _post_to_platform lo propague al notify.
-        global _LAST_YTDLP_ERR
-        _LAST_YTDLP_ERR = f"rc={r.returncode} strat{i+1} ({extra[1] if len(extra)>1 else 'default'}): {stderr[:200]}"
+        # Extrae el mensaje ERROR clave (línea que empieza por "ERROR:")
+        err_line = next((l for l in stderr.split("\n") if l.startswith("ERROR")), stderr[:80])
+        strat_label = extra[1] if len(extra) > 1 else "default"
+        errors_by_strat.append(f"S{i+1}({strat_label[:15]}): {err_line[:80]}")
+
+    # Guarda TODOS los errores para _post_to_platform (no solo el último)
+    _LAST_YTDLP_ERR = " | ".join(errors_by_strat)[:400]
 
     if not has_cookies:
         print("  backfill: sin YT_COOKIES secret — YT bloquea el runner. Setup en README.")
