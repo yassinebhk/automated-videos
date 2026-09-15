@@ -1,0 +1,21 @@
+{
+  "titulo_video": "TOP 10 HOMBRES MÁS RICOS DEL MUNDO · 2010-2024",
+  "years": [2010, 2012, 2014, 2016, 2018, 2020, 2022, 2024],
+  "items": ["Elon Musk", "Bernard Arnault", "Jeff Bezos", "Larry Ellison", "Warren Buffett", "Bill Gates", "Mark Zuckerberg", "Carlos Slim", "Amancio Ortega", "Larry Page"],
+  "data": [
+    [0, 27.5, 12.3, 27, 47, 53, 4, 53.5, 25, 17.5],
+    [0, 41, 18.4, 36, 44, 61, 17.5, 69, 37.5, 18.7],
+    [0, 33, 30.5, 48, 58.2, 76, 33.4, 72, 64, 32.3],
+    [12.7, 34, 45.2, 43.6, 60.8, 75, 44.6, 50, 67, 35.2],
+    [19.9, 72, 112, 58.5, 84, 90, 71, 67, 70, 48.8],
+    [24.6, 76, 113, 59, 73.5, 98, 55, 52.1, 55.1, 50.9],
+    [219, 158, 171, 106, 118, 129, 67.3, 81.2, 59.3, 111],
+    [195, 233, 194, 141, 133, 128, 177, 102, 103, 114]
+  ],
+  "unidad": "$B",
+  "source_label": "Forbes Real-Time Billionaires (histórico)",
+  "source_url": "https://www.forbes.com/real-time-billionaires/",
+  "cierre_dato": "Datos verificados en Forbes Real-Time Billionaires (edición marzo cada año)",
+  "_fetched_at": "2026-09-15T00:00:00+00:00",
+  "_manual_curated": true
+}

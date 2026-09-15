@@ -39,25 +39,43 @@ def _save(key: str, data: dict) -> Path:
     return p
 
 
+BUNDLED_ROOT = Path(__file__).parent / "bundled_data"
+
+
 def load_cached(key: str, max_age_days: int = 30) -> dict | None:
-    """Devuelve dataset cacheado si existe y no es muy viejo."""
+    """Devuelve dataset cacheado si existe y no es muy viejo.
+
+    Busca en 2 lugares:
+      1. output/ranking_datasets/{key}.json (World Bank fetch semanal)
+      2. src/videogen/ranking/bundled_data/{key}.json (curados manualmente,
+         nunca caducan porque están en el repo con datos verificados
+         y solo se actualizan en commits específicos)
+    """
+    # 1. Cache descargado
     p = _cache_path(key)
-    if not p.exists():
-        return None
-    try:
-        data = json.loads(p.read_text(encoding="utf-8"))
-    except Exception:
-        return None
-    ts = data.get("_fetched_at")
-    if ts:
+    if p.exists():
         try:
-            dt = datetime.fromisoformat(ts)
-            age_days = (datetime.now(timezone.utc) - dt).total_seconds() / 86400
-            if age_days > max_age_days:
-                return None
+            data = json.loads(p.read_text(encoding="utf-8"))
+            ts = data.get("_fetched_at")
+            if not ts:
+                return data
+            try:
+                dt = datetime.fromisoformat(ts)
+                age_days = (datetime.now(timezone.utc) - dt).total_seconds() / 86400
+                if age_days <= max_age_days or data.get("_manual_curated"):
+                    return data
+            except Exception:
+                return data
         except Exception:
             pass
-    return data
+    # 2. Bundled data (curado manual, en repo)
+    bp = BUNDLED_ROOT / f"{key}.json"
+    if bp.exists():
+        try:
+            return json.loads(bp.read_text(encoding="utf-8"))
+        except Exception:
+            return None
+    return None
 
 
 # ─────────────────────────────────────────────────────────────

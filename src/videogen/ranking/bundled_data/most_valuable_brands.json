@@ -1,0 +1,19 @@
+{
+  "titulo_video": "TOP 10 MARCAS MÁS VALIOSAS DEL MUNDO · 2010-2024",
+  "years": [2010, 2014, 2018, 2020, 2022, 2024],
+  "items": ["Apple", "Microsoft", "Amazon", "Google", "Samsung", "Coca-Cola", "Toyota", "Mercedes-Benz", "McDonald's", "Disney"],
+  "data": [
+    [21.1, 60.9, 4.4, 43.5, 19.5, 70.4, 26.2, 25.2, 35.6, 28.7],
+    [98.3, 62.8, 29.5, 107.4, 45.5, 81.6, 42.4, 34.3, 42.3, 32.2],
+    [214.5, 92.7, 100.8, 155.5, 59.9, 66.3, 53.4, 48.6, 43.4, 39.9],
+    [322.1, 166.0, 200.7, 165.4, 62.3, 56.9, 51.6, 49.3, 42.8, 40.8],
+    [355.1, 184.2, 350.3, 263.4, 87.7, 57.5, 59.4, 56.1, 48.7, 48.2],
+    [516.6, 340.4, 356.3, 333.4, 100.8, 54.1, 66.1, 60.1, 55.1, 45.0]
+  ],
+  "unidad": "$B valor marca",
+  "source_label": "Interbrand Best Global Brands",
+  "source_url": "https://interbrand.com/best-global-brands/",
+  "cierre_dato": "Apple triplica su valor de marca en 10 años ($98B → $516B, Interbrand 2024)",
+  "_fetched_at": "2026-09-15T00:00:00+00:00",
+  "_manual_curated": true
+}

@@ -1,0 +1,21 @@
+{
+  "titulo_video": "TOP 10 EMPRESAS por CAPITALIZACIÓN · 2010-2024",
+  "years": [2010, 2012, 2014, 2016, 2018, 2020, 2022, 2024],
+  "items": ["Apple", "Microsoft", "Nvidia", "Alphabet (Google)", "Amazon", "Saudi Aramco", "Meta (Facebook)", "Berkshire Hathaway", "TSMC", "Tesla"],
+  "data": [
+    [295, 235, 8.6, 194, 81, 0, 0, 199, 46, 0],
+    [500, 224, 12, 258, 116, 0, 63, 205, 82, 3.5],
+    [634, 383, 12, 393, 145, 0, 217, 356, 116, 27.7],
+    [617, 483, 30, 539, 356, 0, 331, 401, 141, 34],
+    [746, 780, 81, 723, 734, 0, 512, 493, 197, 57.4],
+    [2255, 1682, 323, 1185, 1634, 1877, 778, 542, 519, 668],
+    [2065, 1787, 364, 1145, 856, 2094, 320, 601, 385, 388],
+    [3400, 3050, 3200, 2200, 1930, 1780, 1420, 985, 830, 675]
+  ],
+  "unidad": "$B market cap",
+  "source_label": "Companiesmarketcap.com (histórico)",
+  "source_url": "https://companiesmarketcap.com/",
+  "cierre_dato": "Apple, Microsoft y Nvidia superan los $3T en 2024 — trío tecnológico dominante",
+  "_fetched_at": "2026-09-15T00:00:00+00:00",
+  "_manual_curated": true
+}

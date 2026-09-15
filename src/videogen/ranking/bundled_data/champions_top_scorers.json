@@ -1,0 +1,14 @@
+{
+  "titulo_video": "TOP 10 GOLEADORES HISTÓRICOS DE LA CHAMPIONS LEAGUE",
+  "years": [2024],
+  "items": ["Cristiano Ronaldo", "Lionel Messi", "Robert Lewandowski", "Karim Benzema", "Raúl", "Ruud van Nistelrooy", "Thomas Müller", "Thierry Henry", "Kylian Mbappé", "Alfredo Di Stéfano"],
+  "data": [
+    [140, 129, 105, 90, 71, 60, 57, 50, 48, 49]
+  ],
+  "unidad": "goles Champions",
+  "source_label": "UEFA Champions League oficial",
+  "source_url": "https://www.uefa.com/uefachampionsleague/history/records/",
+  "cierre_dato": "Cristiano Ronaldo lidera con 140 goles Champions — 11 goles más que Messi",
+  "_fetched_at": "2026-09-15T00:00:00+00:00",
+  "_manual_curated": true
+}

@@ -1,0 +1,14 @@
+{
+  "titulo_video": "TOP 10 PELÍCULAS MÁS TAQUILLERAS DE LA HISTORIA (2024)",
+  "years": [2024],
+  "items": ["Avatar (2009)", "Avengers: Endgame", "Avatar: Way of Water", "Titanic", "Star Wars VII", "Avengers: Infinity War", "Spider-Man No Way Home", "Inside Out 2", "Jurassic World", "The Lion King (2019)"],
+  "data": [
+    [2923, 2799, 2320, 2264, 2071, 2052, 1922, 1698, 1671, 1663]
+  ],
+  "unidad": "M$ taquilla mundial",
+  "source_label": "Box Office Mojo (IMDb Pro)",
+  "source_url": "https://www.boxofficemojo.com/chart/ww_top_lifetime_gross/",
+  "cierre_dato": "Avatar (2009) lidera con $2.923M — récord con re-estreno 2022",
+  "_fetched_at": "2026-09-15T00:00:00+00:00",
+  "_manual_curated": true
+}

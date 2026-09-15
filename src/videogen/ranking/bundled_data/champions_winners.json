@@ -1,0 +1,21 @@
+{
+  "titulo_video": "TOP 10 CLUBES CON MÁS CHAMPIONS · Histórico 1956-2024",
+  "years": [1990, 1995, 2000, 2005, 2010, 2015, 2020, 2024],
+  "items": ["Real Madrid", "AC Milan", "Bayern Múnich", "Liverpool", "FC Barcelona", "Ajax", "Manchester United", "Inter Milan", "Chelsea", "Juventus"],
+  "data": [
+    [6, 3, 3, 4, 0, 3, 1, 2, 0, 1],
+    [6, 5, 3, 4, 0, 4, 1, 2, 0, 1],
+    [8, 5, 4, 4, 1, 4, 2, 2, 0, 2],
+    [9, 6, 4, 5, 1, 4, 2, 2, 0, 2],
+    [9, 7, 4, 5, 3, 4, 3, 3, 1, 2],
+    [10, 7, 5, 5, 5, 4, 3, 3, 1, 2],
+    [13, 7, 6, 6, 5, 4, 3, 3, 2, 2],
+    [15, 7, 6, 6, 5, 4, 3, 3, 2, 2]
+  ],
+  "unidad": "títulos",
+  "source_label": "UEFA Champions League oficial",
+  "source_url": "https://www.uefa.com/uefachampionsleague/history/",
+  "cierre_dato": "Real Madrid lidera con 15 Champions (2024) — récord absoluto UEFA",
+  "_fetched_at": "2026-09-15T00:00:00+00:00",
+  "_manual_curated": true
+}

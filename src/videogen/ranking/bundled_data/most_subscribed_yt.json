@@ -1,0 +1,14 @@
+{
+  "titulo_video": "TOP 10 CANALES DE YOUTUBE CON MÁS SUSCRIPTORES · 2024",
+  "years": [2024],
+  "items": ["MrBeast", "T-Series", "Cocomelon", "SET India", "Kids Diana Show", "Vlad and Niki", "PewDiePie", "Like Nastya", "Zee Music Company", "WWE"],
+  "data": [
+    [318, 279, 189, 178, 128, 128, 111, 128, 111, 106]
+  ],
+  "unidad": "millones subs",
+  "source_label": "Social Blade (YouTube Data API)",
+  "source_url": "https://socialblade.com/youtube/top/500/mostsubscribed",
+  "cierre_dato": "MrBeast (318M) superó a T-Series en 2024 tras 5 años de segundo puesto",
+  "_fetched_at": "2026-09-15T00:00:00+00:00",
+  "_manual_curated": true
+}

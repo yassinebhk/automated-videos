@@ -1,0 +1,14 @@
+{
+  "titulo_video": "TOP 10 EDIFICIOS MÁS ALTOS DEL MUNDO · 2024",
+  "years": [2024],
+  "items": ["Burj Khalifa (Dubái)", "Merdeka 118 (KL)", "Shanghai Tower", "Abraj Al-Bait (Meca)", "Ping An Finance (Shenzhen)", "Lotte World Tower (Seúl)", "One WTC (NYC)", "Guangzhou CTF", "Tianjin CTF", "China Zun (Pekín)"],
+  "data": [
+    [828, 678.9, 632, 601, 599, 555, 541.3, 530, 530, 528]
+  ],
+  "unidad": "metros altura",
+  "source_label": "Council on Tall Buildings and Urban Habitat (CTBUH)",
+  "source_url": "https://www.skyscrapercenter.com/",
+  "cierre_dato": "Burj Khalifa lidera con 828 m desde 2010 — récord absoluto de 14 años",
+  "_fetched_at": "2026-09-15T00:00:00+00:00",
+  "_manual_curated": true
+}
