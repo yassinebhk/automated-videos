@@ -131,6 +131,10 @@ def pick_top_candidates(platform: str, n: int = 2, min_views: int = 20) -> list[
     return candidates[:n]
 
 
+# Último stderr yt-dlp para diagnóstico (se lee desde _post_to_platform)
+_LAST_YTDLP_ERR: str = ""
+
+
 def _ensure_vertical_local(cand: dict[str, Any]) -> Path | None:
     """Devuelve la ruta al mp4 vertical.
 
@@ -204,8 +208,11 @@ def _ensure_vertical_local(cand: dict[str, Any]) -> Path | None:
             src = "cookies+" if has_cookies else ""
             print(f"  backfill: descargado {path.stat().st_size // 1024}KB via {src}estrategia {i+1}")
             return path
-        stderr = (r.stderr or r.stdout or "")[:200]
-        print(f"  backfill: estrategia {i+1} falló ({video_id}) — {stderr}")
+        stderr = (r.stderr or r.stdout or "")[:300]
+        print(f"  backfill: estrategia {i+1} falló ({video_id}) rc={r.returncode} — {stderr}")
+        # Guarda el último stderr para que _post_to_platform lo propague al notify.
+        global _LAST_YTDLP_ERR
+        _LAST_YTDLP_ERR = f"rc={r.returncode} strat{i+1} ({extra[1] if len(extra)>1 else 'default'}): {stderr[:200]}"
 
     if not has_cookies:
         print("  backfill: sin YT_COOKIES secret — YT bloquea el runner. Setup en README.")
@@ -262,7 +269,7 @@ def _post_to_platform(platform: str, cand: dict[str, Any]) -> dict | None:
         vert = _ensure_vertical_local(cand)
         if not vert:
             print(f"  backfill {platform}: sin mp4 disponible para {cand['slug']}")
-            cand["fail_reason"] = "yt-dlp download fail (probable YT_COOKIES vacío/inválido/caducado)"
+            cand["fail_reason"] = f"yt-dlp: {_LAST_YTDLP_ERR or 'sin stderr (dep missing?)'}"
             return None
         cand["vertical_path"] = vert
 

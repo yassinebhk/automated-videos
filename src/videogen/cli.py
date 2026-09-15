@@ -1518,7 +1518,7 @@ def backfill_once_cmd(per_platform: int, platforms: str):
             for x in failed:
                 any_activity = True
                 reason = x.get("fail_reason") or "download/post falló"
-                lines.append(f"{icon} {plat} ❌: {x['title'][:60]}\n    ↳ {reason[:120]}")
+                lines.append(f"{icon} {plat} ❌: {x['title'][:60]}\n    ↳ {reason[:300]}")
         if any_activity or not results:
             try:
                 req = urllib.request.Request(
