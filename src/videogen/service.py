@@ -492,15 +492,21 @@ def publish(
         _notify_telegram(msg)
 
     # MP4 vertical → Telegram para descarga manual → TikTok
-    try:
-        from .notify_batch import send_video_for_tiktok
-        mp4 = dst / "video_es_vertical.mp4"
-        if mp4.exists():
-            title = getattr(scripts, "es").title
-            yt_url = links.get("es", "")
-            send_video_for_tiktok(mp4, "WaitWhy", title, yt_url)
-    except Exception as e:
-        print(f"  service: TT tg video fail — {e}")
+    # SOLO se dispara desde service.publish si NO hay YT_CHANNEL_PREFIX
+    # (canal WaitWhy default). Los otros canales (Tax/Legal/etc) tienen
+    # su propio _send_tt_video en channel_pipeline con el label correcto —
+    # aquí duplicaba envío + etiquetaba mal como "WaitWhy" (bug 15/09).
+    import os as _os
+    if not _os.environ.get("YT_CHANNEL_PREFIX", "").strip():
+        try:
+            from .notify_batch import send_video_for_tiktok
+            mp4 = dst / "video_es_vertical.mp4"
+            if mp4.exists():
+                title = getattr(scripts, "es").title
+                yt_url = links.get("es", "")
+                send_video_for_tiktok(mp4, "WaitWhy", title, yt_url)
+        except Exception as e:
+            print(f"  service: TT tg video fail — {e}")
 
     # Auto-crosspost RRSS (cierra gap 12/09/26: WaitWhy solo posteaba vía
     # social_boost cron independiente → email inactividad Threads). Ahora
