@@ -27,15 +27,40 @@ los archivos. El video es <100MB por Short, no impacta.
 """
 from __future__ import annotations
 
+import json
 import os
 import shutil
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Optional
 
 import requests
 
 from .config import ROOT
+
+
+IG_LOG_PATH = ROOT / "output" / "ig_publish_log.json"
+
+
+def _append_ig_log(entry: dict) -> None:
+    """Registra intento IG en output/ig_publish_log.json (últimos 100).
+
+    Sin esto no hay forma de saber por qué falla IG sin bucear en logs GH.
+    """
+    try:
+        IG_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+        if IG_LOG_PATH.exists():
+            log = json.loads(IG_LOG_PATH.read_text(encoding="utf-8"))
+        else:
+            log = []
+        entry["ts"] = datetime.now(timezone.utc).isoformat()
+        log.append(entry)
+        log = log[-100:]
+        IG_LOG_PATH.write_text(json.dumps(log, indent=2, ensure_ascii=False),
+                                encoding="utf-8")
+    except Exception as e:
+        print(f"  ig: log write failed: {e}")
 
 
 REELS_HOST_DIR = ROOT / "docs" / "reels"
@@ -225,7 +250,18 @@ def post_reel_to_instagram(video_title: str, video_url: str,
     access_token = os.environ.get("IG_TOKEN") or os.environ.get("IG_ACCESS_TOKEN")
     ig_account_id = os.environ.get("IG_USER_ID") or os.environ.get("IG_BUSINESS_ACCOUNT_ID")
     if not (access_token and ig_account_id):
-        print("  ig: skip — faltan IG_TOKEN o IG_USER_ID")
+        missing = []
+        if not access_token: missing.append("IG_TOKEN")
+        if not ig_account_id: missing.append("IG_USER_ID")
+        print(f"  ig: skip — faltan {'+'.join(missing)}")
+        _append_ig_log({"slug": slug, "title": video_title[:80],
+                         "status": "skip_no_token", "missing": missing})
+        try:
+            from .notify_batch import add
+            add(f"⚠️ <b>IG skip · {slug}</b> — faltan GH Secrets: {' + '.join(missing)}",
+                urgent=True)
+        except Exception:
+            pass
         return None
 
     from . import social_post
@@ -243,22 +279,36 @@ def post_reel_to_instagram(video_title: str, video_url: str,
     public_url = _prepare_public_reel(local_mp4, slug)
     if not public_url:
         print(f"  ig: no local mp4 → {local_mp4}")
+        _append_ig_log({"slug": slug, "title": video_title[:80],
+                         "status": "fail_no_mp4"})
         return None
 
     # 2) Container
     container_id = _create_media_container(access_token, ig_account_id, public_url, caption)
     if not container_id:
+        _append_ig_log({"slug": slug, "title": video_title[:80],
+                         "status": "fail_container_create",
+                         "public_url": public_url})
         return None
 
     # 3) Esperar procesamiento
     if not _wait_container_ready(access_token, container_id):
+        _append_ig_log({"slug": slug, "title": video_title[:80],
+                         "status": "fail_container_ready",
+                         "container_id": container_id,
+                         "public_url": public_url})
         return None
 
     # 4) Publish
     media_id = _publish_container(access_token, ig_account_id, container_id)
     if not media_id:
+        _append_ig_log({"slug": slug, "title": video_title[:80],
+                         "status": "fail_publish",
+                         "container_id": container_id})
         return None
 
     url = f"https://instagram.com/reel/{media_id}"
     print(f"  ig: ✅ Reel published → {url}")
+    _append_ig_log({"slug": slug, "title": video_title[:80],
+                     "status": "ok", "media_id": media_id, "url": url})
     return {"media_id": media_id, "url": url, "caption": caption}

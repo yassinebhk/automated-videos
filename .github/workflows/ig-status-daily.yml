@@ -1,0 +1,22 @@
+name: IG Status daily
+
+# Chequeo IG dedicado 1×/día: token + últimos 10 intentos de publicación.
+# Detecta problema "no se suben reels" con detalle específico (token vacío,
+# caducado, container ERROR, url no fetchable, etc).
+#
+# Cron: 05:23 UTC (justo después del healthcheck 04:37 para separación).
+
+on:
+  schedule:
+    - cron: "23 5 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  ig-status:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: ig-status
+    secrets: inherit

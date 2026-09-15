@@ -827,6 +827,71 @@ def waitwhy_analyze_cmd():
     print(json.dumps(result, indent=2, ensure_ascii=False, default=str))
 
 
+@cli.command(name="ig-status")
+def ig_status_cmd():
+    """Diagnóstico Instagram: token OK + últimos 10 intentos IG (log local).
+
+    Detecta las 4 causas más comunes de "no se suben reels":
+      1. IG_TOKEN / IG_USER_ID vacíos en env
+      2. Token caducado (60d) — la API responde HTTP 190
+      3. Container ERROR — IG rechaza el mp4 (aspect ratio, url no fetchable)
+      4. MP4 nunca generado o no encontrado
+
+    Notifica a Telegram el estado + últimos 5 intentos (para chequeo diario).
+    """
+    import os
+    from datetime import datetime, timezone, timedelta
+    lines_tg = ["📸 <b>IG Status</b>"]
+    print("\n═══ INSTAGRAM STATUS ═══\n")
+    tok = os.environ.get("IG_TOKEN") or os.environ.get("IG_ACCESS_TOKEN") or ""
+    uid = os.environ.get("IG_USER_ID") or os.environ.get("IG_BUSINESS_ACCOUNT_ID") or ""
+    tok_ok = bool(tok)
+    uid_ok = bool(uid)
+    print(f"IG_TOKEN presente: {'✅' if tok_ok else '❌ VACÍO'}")
+    print(f"IG_USER_ID presente: {'✅' if uid_ok else '❌ VACÍO'}")
+    lines_tg.append(f"IG_TOKEN: {'✅' if tok_ok else '❌ VACÍO en GH Secrets'}")
+    lines_tg.append(f"IG_USER_ID: {'✅' if uid_ok else '❌ VACÍO en GH Secrets'}")
+    if tok_ok and uid_ok:
+        from . import healthcheck
+        ok, msg = healthcheck._check_instagram()
+        print(f"Health API: {'✅' if ok else '❌'} — {msg}")
+        lines_tg.append(f"API: {'✅' if ok else '❌'} {msg}")
+    print("\n═══ ÚLTIMOS 10 INTENTOS IG ═══\n")
+    from .instagram_poster import IG_LOG_PATH
+    if not IG_LOG_PATH.exists():
+        msg = f"⚠️ Sin log local: aún no se registró ningún intento tras instrumentación."
+        print(msg)
+        lines_tg.append(msg)
+    else:
+        log = json.loads(IG_LOG_PATH.read_text(encoding="utf-8"))
+        # Conteo últimas 24h
+        cutoff = (datetime.now(timezone.utc) - timedelta(hours=24)).isoformat()
+        last24 = [e for e in log if e.get("ts","") > cutoff]
+        ok24 = sum(1 for e in last24 if e.get("status") == "ok")
+        fail24 = len(last24) - ok24
+        lines_tg.append(f"\n<b>Últimas 24h:</b> {ok24}✅ / {fail24}❌ (de {len(last24)})")
+        for e in log[-10:]:
+            icon = {"ok": "✅", "skip_no_token": "⏭️",
+                     "fail_no_mp4": "❌", "fail_container_create": "❌",
+                     "fail_container_ready": "❌", "fail_publish": "❌"}.get(
+                        e.get("status"), "❓")
+            print(f"{icon} {e.get('ts','?')[:19]} · {e.get('slug','?')[:40]:<40} · {e.get('status')}")
+        # Solo los últimos 5 al Telegram para no spammear
+        lines_tg.append("\n<b>Últimos 5 intentos:</b>")
+        for e in log[-5:]:
+            icon = {"ok": "✅", "skip_no_token": "⏭️",
+                     "fail_no_mp4": "❌", "fail_container_create": "❌",
+                     "fail_container_ready": "❌", "fail_publish": "❌"}.get(
+                        e.get("status"), "❓")
+            lines_tg.append(f"{icon} {e.get('slug','?')[:40]} · <i>{e.get('status')}</i>")
+
+    try:
+        from . import notify_batch
+        notify_batch.add("\n".join(lines_tg), urgent=True)
+    except Exception as e:
+        print(f"telegram notify fail: {e}")
+
+
 @cli.command(name="ambient-short")
 def ambient_short_cmd():
     """Genera + sube 1 Short ambient (40s) al canal MenteEnCalma como cebo
