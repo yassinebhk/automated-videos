@@ -178,11 +178,11 @@ def _ensure_vertical_local(cand: dict[str, Any]) -> Path | None:
     for i, extra in enumerate(strategies):
         cmd = [
             "yt-dlp",
-            # Formato robusto: mp4 muxable (video+audio separados que yt-dlp
-            # combina con ffmpeg) → fallback best mp4 single-file → best general.
-            # 'b[ext=mp4]/b' fallaba con YT_COOKIES en player=web porque YT
-            # sirve DASH y ese filtro no matcheaba streams separados (15/09).
-            "-f", "bv*[ext=mp4]+ba[ext=m4a]/best[ext=mp4]/best",
+            # Formato sin filtro extension — con player=android YT sirve
+            # WebM/VP9 y [ext=mp4] no matcheaba. --merge-output-format mp4
+            # re-empaqueta al final (ffmpeg ya instalado en runner).
+            # Verificado 15/09 con yt-cookies-check: esta cadena funciona.
+            "-f", "bv*+ba/b",
             "--merge-output-format", "mp4",
             "-o", str(path),
             "--no-warnings",
