@@ -83,26 +83,18 @@ TT_HASHTAGS: dict[str, str] = {
 
 
 def _tt_caption(channel_display: str, title: str, url_yt: str = "") -> str:
-    """Compone caption completo para el sendVideo — copy-paste friendly.
-    Incluye título sugerido + hashtags TT + tip de retention."""
-    # `channel_display` puede venir como "TaxHack ES · motivo…" — extraemos
-    # el nombre puro para buscar hashtags
+    """Compone caption directo para copy-paste a TikTok.
+
+    Sin encabezados ni etiquetas (título/hashtags/YT) — el user pega
+    TAL CUAL en el campo caption de TikTok: título + hashtags juntos
+    en un solo párrafo. Nunca incluye URL YT (algoritmo TT esconde
+    posts con enlaces externos).
+    """
     canal_pure = channel_display.split("·")[0].strip()
     hashtags = TT_HASHTAGS.get(canal_pure, "#parati #fyp #foryou #españa #curiosidades")
-    parts = [
-        f"📱 <b>TikTok · {channel_display}</b>",
-        "",
-        "📝 <b>TÍTULO</b> (copia/pega):",
-        title[:150],
-        "",
-        "#️⃣ <b>HASHTAGS</b>:",
-        hashtags,
-        "",
-        "⏱ Primeros 3s = 40% retention TT. Si no engancha, avisa y regenero.",
-    ]
-    if url_yt:
-        parts.append(f"🔗 YT: {url_yt}")
-    caption = "\n".join(parts)
+    # 1 solo párrafo: título + hashtags separados por espacio.
+    # Trunca a límite razonable (TikTok caption max 2200 chars, más que suficiente).
+    caption = f"{title[:150]} {hashtags}"
     return caption[:1024]  # límite Telegram sendVideo caption
 
 

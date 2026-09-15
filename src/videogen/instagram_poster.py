@@ -287,8 +287,10 @@ def post_reel_to_instagram(video_title: str, video_url: str,
         return None
 
     from . import social_post
+    # include_url=False: IG algoritmo esconde posts con links externos (YT).
     caption, _ = social_post.build_viral_post(
-        video_title, video_url, teaser=teaser, cross_platform=""
+        video_title, video_url, teaser=teaser, cross_platform="",
+        include_url=False,
     )
     # IG permite hasta 30 hashtags — nuestro build_viral_post ya los mete
     caption = caption[:2200]

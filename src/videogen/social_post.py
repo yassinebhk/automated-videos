@@ -64,11 +64,13 @@ def _clean_teaser(teaser: str) -> str:
 
 
 def build_viral_post(video_title: str, video_url: str, teaser: str = "",
-                     cross_platform: str = "") -> tuple[str, str]:
+                     cross_platform: str = "",
+                     include_url: bool = True) -> tuple[str, str]:
     """Devuelve (main_text, reply_text) — 2 posts para thread.
 
-    - main_text: hook + cifra + provocación + link + hashtags
+    - main_text: hook + cifra + provocación + [link opcional] + hashtags
     - reply_text: contexto extra (víctimas, consecuencia legal) para thread
+    - include_url: False para IG/TikTok (algoritmo esconde posts con links externos)
     """
     episode = _extract_episode(video_title)
     hook_emoji = _hook_for(episode)
@@ -77,10 +79,13 @@ def build_viral_post(video_title: str, video_url: str, teaser: str = "",
     teaser_clean = _clean_teaser(teaser)
 
     # Estructura fija en orden de prioridad:
-    #   caso · teaser · pregunta · URL · hashtags · cross_platform (opcional)
+    #   caso · teaser · pregunta · [URL] · hashtags · cross_platform (opcional)
     # Hashtags SIEMPRE sobreviven al truncado (esenciales para descubribilidad).
     TAGS = "#TrueCrime #España #Corrupción #Historia"
-    FOOTER = f"¿Justicia real o teatro judicial? 👇\n\n{video_url}\n\n{TAGS}"
+    if include_url:
+        FOOTER = f"¿Justicia real o teatro judicial? 👇\n\n{video_url}\n\n{TAGS}"
+    else:
+        FOOTER = f"¿Justicia real o teatro judicial? 👇\n\n{TAGS}"
     header = f"{hook_emoji} {case}"
 
     # Cuánto espacio queda para el teaser tras header + footer + separadores
