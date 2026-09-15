@@ -1,11 +1,16 @@
-name: Ranking daily (TopRanking ES)
+name: Ranking daily (TopRanking ES) — PAUSADO 15/09/26
 
-# 1 short ranking/día 15:00 UTC (17 CEST).
-# DESACTIVADO hasta setup: canal YT + 3 secrets YT_RANKING_*.
+# ⚠️ CRON DESACTIVADO 15/09/26 — user reportó datos FALSOS (Cristiano
+# 9º en 2024, ejemplo hipotético que Gemini inventó). Viola política
+# veracidad-obligatoria. Pipeline sigue disponible via workflow_dispatch
+# manual pero no publica automático hasta que:
+#   1. Sustituyamos generación LLM por datasets REALES bundled
+#      (Wikipedia/World Bank/UN/Forbes JSON estáticos)
+#   2. O el topic pool se limite a rankings donde Gemini SÍ tiene
+#      datos fiables (top 10 estáticos históricos consolidados)
 
 on:
-  schedule:
-    - cron: "33 15 * * *"
+  # schedule: DISABLED — reactivar tras fix datasets
   workflow_dispatch: {}
 
 permissions:
