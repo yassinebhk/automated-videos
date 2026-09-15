@@ -869,37 +869,52 @@ def yt_cookies_check_cmd():
             else:
                 lines.append("✅ formato Netscape OK")
 
-                # 4. Test yt-dlp con video test público (Rick Roll)
-                # Este video es indexado ~ desde 2007, siempre existe.
+                # 4. Test yt-dlp — probar 3 player_clients (algunos necesitan
+                # PO Token con cookies, otros no). Usamos MrBeast short (activo).
                 test_url = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-                with tempfile.TemporaryDirectory() as td:
-                    out_path = f"{td}/test.mp4"
-                    # -f: primero intenta best mp4 muxable, luego best genérico
-                    cmd = ["yt-dlp",
-                           "-f", "bv*[ext=mp4]+ba[ext=m4a]/best[ext=mp4]/best",
-                           "--merge-output-format", "mp4",
-                           "-o", out_path,
-                           "--no-warnings", "--no-playlist",
-                           "--cookies", p,
-                           "--extractor-args", "youtube:player_client=web",
-                           test_url]
-                    try:
-                        r = subprocess.run(cmd, capture_output=True, text=True, timeout=90)
-                        if r.returncode == 0 and os.path.exists(out_path) and os.path.getsize(out_path) > 100_000:
-                            lines.append(f"✅ TEST download OK ({os.path.getsize(out_path)//1024}KB)")
-                            lines.append("<b>Cookies funcionan.</b> Si backfill igual falla → problema NO es cookies.")
-                        else:
-                            err = (r.stderr or r.stdout or "")[:250]
-                            lines.append(f"❌ TEST download FAIL rc={r.returncode}")
-                            lines.append(f"<code>{err}</code>")
-                            if "Sign in to confirm" in err or "bot" in err.lower():
-                                lines.append("→ Cookies caducadas o inválidas. Re-exporta desde el navegador.")
-                            elif "410" in err or "unavailable" in err.lower():
-                                lines.append("→ Video test caído (raro) — no es tu cookies.")
+                strategies = [
+                    ("android", ["--extractor-args", "youtube:player_client=android"]),
+                    ("tv_embedded", ["--extractor-args", "youtube:player_client=tv_embedded"]),
+                    ("web (default)", []),  # sin forzar client
+                ]
+                success = False
+                for name, extra in strategies:
+                    with tempfile.TemporaryDirectory() as td:
+                        out_path = f"{td}/test.mp4"
+                        cmd = ["yt-dlp",
+                               "-f", "bv*+ba/b",
+                               "--merge-output-format", "mp4",
+                               "-o", out_path,
+                               "--no-warnings", "--no-playlist",
+                               "--cookies", p,
+                               *extra,
+                               test_url]
+                        try:
+                            r = subprocess.run(cmd, capture_output=True, text=True, timeout=90)
+                            if r.returncode == 0 and os.path.exists(out_path) and os.path.getsize(out_path) > 100_000:
+                                lines.append(f"✅ TEST download OK con player={name} ({os.path.getsize(out_path)//1024}KB)")
+                                lines.append("<b>Cookies funcionan.</b> Backfill IG debería funcionar.")
+                                success = True
+                                break
                             else:
-                                lines.append("→ Error desconocido — ver output.")
+                                err = (r.stderr or r.stdout or "")[:200]
+                                lines.append(f"❌ player={name} rc={r.returncode}: <code>{err[:150]}</code>")
+                        except Exception as e:
+                            lines.append(f"❌ player={name} exception: {type(e).__name__}")
+
+                if not success:
+                    # Última tentativa diagnóstica: listar formatos disponibles
+                    lines.append("\n<b>Diagnóstico --list-formats:</b>")
+                    try:
+                        r = subprocess.run(
+                            ["yt-dlp", "--list-formats", "--cookies", p,
+                             "--no-warnings", test_url],
+                            capture_output=True, text=True, timeout=45,
+                        )
+                        fmts = (r.stdout or r.stderr or "")[-800:]
+                        lines.append(f"<code>{fmts}</code>")
                     except Exception as e:
-                        lines.append(f"❌ exception: {type(e).__name__}: {e}")
+                        lines.append(f"list-formats exception: {type(e).__name__}")
 
     text = "\n".join(lines)
     print(text)

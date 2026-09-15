@@ -162,22 +162,18 @@ def _ensure_vertical_local(cand: dict[str, Any]) -> Path | None:
     has_cookies = os.path.exists(cookies_file) and os.path.getsize(cookies_file) > 100
     cookie_args = ["--cookies", cookies_file] if has_cookies else []
 
-    # Con cookies presentes → web client las USA (los otros clients las ignoran).
-    # Sin cookies → android/ios/tv_embedded intentan bypass sin auth.
-    if has_cookies:
-        strategies = [
-            ["--extractor-args", "youtube:player_client=web"],
-            ["--extractor-args", "youtube:player_client=web_safari"],
-            ["--extractor-args", "youtube:player_client=mweb"],
-        ]
-    else:
-        base_ua = "Mozilla/5.0 (Linux; Android 14; SM-S921B) AppleWebKit/537.36"
-        strategies = [
-            ["--extractor-args", "youtube:player_client=android,web_embedded", "--user-agent", base_ua],
-            ["--extractor-args", "youtube:player_client=ios"],
-            ["--extractor-args", "youtube:player_client=tv_embedded"],
-            [],
-        ]
+    # Estrategias: probamos varios player clients. `web` con cookies requiere
+    # PO Token desde 2024 (YT anti-bot) que yt-dlp no siempre puede generar
+    # → devuelve "Requested format is not available". android+tv_embedded
+    # aceptan cookies sin necesitar PO Token. Con o sin cookies mismos clients.
+    base_ua = "Mozilla/5.0 (Linux; Android 14; SM-S921B) AppleWebKit/537.36"
+    strategies = [
+        ["--extractor-args", "youtube:player_client=android", "--user-agent", base_ua],
+        ["--extractor-args", "youtube:player_client=tv_embedded"],
+        ["--extractor-args", "youtube:player_client=mweb"],
+        ["--extractor-args", "youtube:player_client=ios"],
+        [],  # default yt-dlp
+    ]
 
     for i, extra in enumerate(strategies):
         cmd = [
