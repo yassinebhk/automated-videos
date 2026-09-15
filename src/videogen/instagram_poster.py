@@ -183,20 +183,23 @@ def _create_media_container(access_token: str, ig_account_id: str,
     return data["id"]
 
 
+# Módulo-level: último error de container para pasar al log persistente.
+_LAST_CONTAINER_ERROR: dict = {}
+
+
 def _wait_container_ready(access_token: str, container_id: str, max_wait: int = 240) -> bool:
     """IG procesa el video en su lado. Esperar hasta status=FINISHED.
 
     IG puede fallar por: URL no fetchable, video mal formateado, aspect
-    ratio wrong. Logueamos toda la respuesta para diagnosticar.
+    ratio wrong. Logueamos toda la respuesta para diagnosticar. Guarda
+    el detalle en _LAST_CONTAINER_ERROR para persistir en ig_publish_log.
     """
+    global _LAST_CONTAINER_ERROR
+    _LAST_CONTAINER_ERROR = {}
     start = time.time()
     last_status = None
     poll_count = 0
     while time.time() - start < max_wait:
-        # graph.instagram.com/v21.0 (IG Business Login) SOLO soporta:
-        # status_code, status, error_message. Pedir video_title/video_status
-        # rompe la respuesta entera (IGApiException code 100). Con Facebook
-        # Login for Business endpoint sí funcionan pero usamos IG BL.
         r = requests.get(
             f"{IG_API_BASE}/{container_id}",
             params={"fields": "status_code,status,error_message",
@@ -213,13 +216,18 @@ def _wait_container_ready(access_token: str, container_id: str, max_wait: int = 
         if st == "FINISHED":
             return True
         if st == "ERROR":
-            # Log detallado del rechazo — 'status' extendido tiene la razón real
             ext_status = d.get("status", "")
             err_msg = d.get("error_message", "")
             print(f"  ig: container ERROR · status='{ext_status}' · error_message='{err_msg}' · full={d}")
+            _LAST_CONTAINER_ERROR = {
+                "status_ext": ext_status[:200],
+                "error_message": err_msg[:250],
+                "full": str(d)[:400],
+            }
             return False
         time.sleep(5)
     print(f"  ig: container timeout tras {max_wait}s")
+    _LAST_CONTAINER_ERROR = {"error_message": f"timeout {max_wait}s waiting FINISHED"}
     return False
 
 
@@ -296,7 +304,8 @@ def post_reel_to_instagram(video_title: str, video_url: str,
         _append_ig_log({"slug": slug, "title": video_title[:80],
                          "status": "fail_container_ready",
                          "container_id": container_id,
-                         "public_url": public_url})
+                         "public_url": public_url,
+                         **_LAST_CONTAINER_ERROR})
         return None
 
     # 4) Publish
