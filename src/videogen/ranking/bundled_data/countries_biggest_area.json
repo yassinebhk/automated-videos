@@ -1,0 +1,14 @@
+{
+  "titulo_video": "TOP 10 PAÍSES más GRANDES del mundo por superficie",
+  "years": [2024],
+  "items": ["Rusia", "Canadá", "Estados Unidos", "China", "Brasil", "Australia", "India", "Argentina", "Kazajistán", "Argelia"],
+  "data": [
+    [17098, 9985, 9834, 9597, 8516, 7692, 3287, 2780, 2725, 2382]
+  ],
+  "unidad": "miles km² superficie",
+  "source_label": "CIA World Factbook",
+  "source_url": "https://www.cia.gov/the-world-factbook/",
+  "cierre_dato": "Rusia lidera con 17.098.000 km² — el 11% de la superficie terrestre",
+  "_fetched_at": "2026-09-15T00:00:00+00:00",
+  "_manual_curated": true
+}

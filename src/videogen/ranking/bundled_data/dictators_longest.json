@@ -1,0 +1,14 @@
+{
+  "titulo_video": "TOP 10 LÍDERES políticos con más AÑOS en el poder",
+  "years": [2024],
+  "items": ["Fidel Castro (Cuba)", "Kim Il-Sung (Corea Norte)", "Chiang Kai-shek (China/Taiwán)", "Muammar Gaddafi (Libia)", "Omar Bongo (Gabón)", "Teodoro Obiang (Guinea Ec.)", "Paul Biya (Camerún)", "Ali Khamenei (Irán)", "Denis Sassou Nguesso (Congo)", "Yoweri Museveni (Uganda)"],
+  "data": [
+    [49, 46, 46, 42, 41, 45, 42, 35, 39, 38]
+  ],
+  "unidad": "años en el poder",
+  "source_label": "Wikipedia (longest ruling leaders)",
+  "source_url": "https://en.wikipedia.org/wiki/List_of_current_longest-serving_heads_of_state",
+  "cierre_dato": "Fidel Castro gobernó Cuba 49 años (1959-2008) — récord histórico moderno",
+  "_fetched_at": "2026-09-15T00:00:00+00:00",
+  "_manual_curated": true
+}

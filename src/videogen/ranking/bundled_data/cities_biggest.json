@@ -1,0 +1,14 @@
+{
+  "titulo_video": "TOP 10 CIUDADES más POBLADAS del mundo · 2024",
+  "years": [2024],
+  "items": ["Tokio (Japón)", "Delhi (India)", "Shanghái (China)", "Dhaka (Bangladesh)", "El Cairo (Egipto)", "São Paulo (Brasil)", "Ciudad de México", "Pekín (China)", "Bombay (India)", "Osaka (Japón)"],
+  "data": [
+    [37.4, 33.8, 29.9, 24.7, 22.9, 22.8, 22.5, 22.2, 21.7, 19.0]
+  ],
+  "unidad": "millones habitantes área metropolitana",
+  "source_label": "UN World Urbanization Prospects 2024",
+  "source_url": "https://population.un.org/wup/",
+  "cierre_dato": "Tokio lidera con 37,4M habitantes — la mayor área metropolitana del planeta",
+  "_fetched_at": "2026-09-15T00:00:00+00:00",
+  "_manual_curated": true
+}

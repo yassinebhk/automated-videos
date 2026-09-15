@@ -1,11 +1,10 @@
-"""Pool rankings TopRanking — 71 topics con dataset REAL.
+"""Pool rankings TopRanking — 76 topics con dataset REAL.
 
-15/09/26: expandido de 8 → 36 → 46 → 61 → 66 → 71 topics tras user
-request "cuanto más mejor". 36 World Bank + 35 bundled curated
-(JSON verificados). Batch 4 con enfoque España (IBEX35, bancos ES,
-Amancio Ortega ranking).
+15/09/26: expandido de 8 → 36 → 46 → 61 → 66 → 71 → 76 topics tras
+user request "cuanto más mejor". 36 World Bank + 40 bundled curated
+(JSON verificados). Batch 4/5 con enfoque España + curiosidades virales.
 
-Con cooldown 90d y 71 topics: ~215 días sin repetir = 7 meses de
+Con cooldown 90d y 76 topics: ~230 días sin repetir = 7.5 meses de
 contenido único diario. Cuando roten, mismos topics con datos actualizados.
 
 Fuentes 100% verificables + citables. Cero alucinación LLM.
@@ -349,6 +348,30 @@ TOPICS = [
      "titulo": "TOP 10 ESPAÑOLES más RICOS · Forbes 2024",
      "dataset_key": "spain_richest",
      "fuente": "Forbes Real-Time Billionaires 2024"},
+
+    # ═══════════════════════════════════════════════════════════
+    # BUNDLED DATA CURADA · BATCH 5 (15/09/26)
+    # ═══════════════════════════════════════════════════════════
+    {"key": "coches_mas_vendidos", "categoria": "empresas",
+     "titulo": "TOP 10 COCHES más VENDIDOS de la historia",
+     "dataset_key": "cars_bestselling",
+     "fuente": "Toyota / Ford / VW oficiales"},
+    {"key": "ciudades_mas_pobladas", "categoria": "demografia",
+     "titulo": "TOP 10 CIUDADES más POBLADAS del mundo · 2024",
+     "dataset_key": "cities_biggest",
+     "fuente": "UN World Urbanization Prospects 2024"},
+    {"key": "aeropuertos_mas_transitados", "categoria": "tecnologia",
+     "titulo": "TOP 10 AEROPUERTOS más TRANSITADOS del mundo · 2023",
+     "dataset_key": "airports_busiest",
+     "fuente": "Airports Council International (ACI)"},
+    {"key": "lideres_mas_largos", "categoria": "politica",
+     "titulo": "TOP 10 LÍDERES políticos con más AÑOS en el poder",
+     "dataset_key": "dictators_longest",
+     "fuente": "Wikipedia (longest ruling leaders)"},
+    {"key": "paises_mas_grandes", "categoria": "geografia",
+     "titulo": "TOP 10 PAÍSES más GRANDES del mundo por superficie",
+     "dataset_key": "countries_biggest_area",
+     "fuente": "CIA World Factbook"},
 ]
 
 

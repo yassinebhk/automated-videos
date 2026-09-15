@@ -1,0 +1,14 @@
+{
+  "titulo_video": "TOP 10 COCHES más VENDIDOS de la historia",
+  "years": [2024],
+  "items": ["Toyota Corolla", "Ford F-Series", "VW Golf", "VW Beetle", "Honda Civic", "Ford Escort", "Toyota Camry", "Nissan Sunny/Sentra", "Chevrolet Impala", "Ford Model T"],
+  "data": [
+    [50, 40, 37, 21.5, 27, 20, 21, 16, 14, 16.5]
+  ],
+  "unidad": "millones unidades vendidas",
+  "source_label": "Toyota / Ford / VW oficiales",
+  "source_url": "https://en.wikipedia.org/wiki/List_of_best-selling_automobiles",
+  "cierre_dato": "Toyota Corolla lidera con 50M unidades vendidas — el coche más vendido de la historia",
+  "_fetched_at": "2026-09-15T00:00:00+00:00",
+  "_manual_curated": true
+}

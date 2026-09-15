@@ -1,0 +1,14 @@
+{
+  "titulo_video": "TOP 10 AEROPUERTOS más TRANSITADOS del mundo · 2023",
+  "years": [2023],
+  "items": ["Atlanta ATL (EE.UU.)", "Dubái DXB (EAU)", "Dallas DFW (EE.UU.)", "Tokio HND (Japón)", "Londres LHR (RU)", "Denver DEN (EE.UU.)", "Estambul IST (Turquía)", "Los Ángeles LAX", "Chicago ORD", "Nueva Delhi DEL"],
+  "data": [
+    [104.7, 87.0, 81.8, 78.7, 79.2, 77.8, 76.0, 75.1, 73.9, 72.2]
+  ],
+  "unidad": "millones pasajeros/año",
+  "source_label": "Airports Council International (ACI) 2023",
+  "source_url": "https://aci.aero/wp-content/uploads/2024/04/Preliminary-Airport-Traffic-Ranking-2023.pdf",
+  "cierre_dato": "Atlanta ATL lidera con 104,7M pasajeros — el aeropuerto más transitado del mundo",
+  "_fetched_at": "2026-09-15T00:00:00+00:00",
+  "_manual_curated": true
+}
