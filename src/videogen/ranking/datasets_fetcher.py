@@ -65,17 +65,52 @@ def load_cached(key: str, max_age_days: int = 30) -> dict | None:
 # ─────────────────────────────────────────────────────────────
 
 _WB_TOP_COUNTRIES_BY = {
-    # Indicador → nombre display + unidad
+    # Indicador → (nombre display, unidad, "asc" para menor=top / "desc" default)
+    # ─── Economía ───
     "NY.GDP.MKTP.CD":    ("PIB en $USD", "$B"),
-    "SP.POP.TOTL":        ("Población total", "M"),
-    "SP.DYN.LE00.IN":     ("Esperanza de vida", "años"),
     "NY.GDP.PCAP.CD":     ("PIB per cápita", "$"),
+    "NE.EXP.GNFS.CD":     ("Exportaciones bienes+servicios", "$B"),
+    "NE.IMP.GNFS.CD":     ("Importaciones bienes+servicios", "$B"),
+    "BX.KLT.DINV.CD.WD":  ("Inversión extranjera directa entrante", "$B"),
+    "GC.DOD.TOTL.GD.ZS":  ("Deuda pública %PIB", "%"),
+    "FP.CPI.TOTL.ZG":     ("Inflación anual", "%"),
+    "NV.IND.TOTL.ZS":     ("% industria en PIB", "%"),
+    "NV.AGR.TOTL.ZS":     ("% agricultura en PIB", "%"),
+    "NV.SRV.TOTL.ZS":     ("% servicios en PIB", "%"),
+    # ─── Demografía / Sociedad ───
+    "SP.POP.TOTL":        ("Población total", "M"),
+    "SP.URB.TOTL.IN.ZS":  ("% población urbana", "%"),
+    "SP.POP.GROW":        ("Crecimiento población anual", "%"),
+    "SP.DYN.TFRT.IN":     ("Tasa fertilidad hijos/mujer", "hijos"),
+    "SP.POP.65UP.TO.ZS":  ("% mayores 65 años", "%"),
+    "SP.POP.0014.TO.ZS":  ("% menores 14 años", "%"),
+    # ─── Salud ───
+    "SP.DYN.LE00.IN":     ("Esperanza de vida", "años"),
+    "SH.DYN.MORT":        ("Mortalidad infantil <5", "por mil"),
+    "SH.STA.OBAS.MA.ZS":  ("% hombres adultos obesos", "%"),
+    "SH.MED.PHYS.ZS":     ("Médicos por 1000 hab", "/1000"),
+    # ─── Educación ───
+    "SE.XPD.TOTL.GD.ZS":  ("% PIB gasto educación", "%"),
+    "SE.ADT.LITR.ZS":     ("% alfabetización adultos", "%"),
+    # ─── Empleo ───
     "SL.UEM.TOTL.ZS":     ("% desempleo total", "%"),
+    "SL.UEM.1524.ZS":     ("% desempleo juvenil 15-24", "%"),
+    # ─── Tecnología / Infraestructura ───
     "IT.NET.USER.ZS":     ("% usuarios Internet", "%"),
+    "IT.CEL.SETS.P2":     ("Móviles por 100 hab", "/100"),
     "EG.USE.ELEC.KH.PC":  ("Consumo eléctrico per cápita", "kWh"),
+    "IS.AIR.PSGR":        ("Pasajeros aéreos totales", "M"),
+    # ─── Medio ambiente ───
     "EN.ATM.CO2E.PC":     ("Emisiones CO2 per cápita", "t"),
+    "EN.ATM.CO2E.KT":     ("Emisiones CO2 totales", "kt"),
+    "EG.FEC.RNEW.ZS":     ("% energías renovables consumo", "%"),
+    "AG.LND.FRST.ZS":     ("% superficie bosques", "%"),
+    # ─── Defensa ───
     "MS.MIL.XPND.CD":     ("Gasto militar", "$B"),
+    "MS.MIL.XPND.GD.ZS":  ("% PIB gasto militar", "%"),
+    # ─── Turismo ───
     "ST.INT.RCPT.CD":     ("Ingresos turismo", "$B"),
+    "ST.INT.ARVL":         ("Turistas internacionales llegados", "M"),
 }
 
 
@@ -178,16 +213,55 @@ def fetch_worldbank_top(indicator: str, from_year: int = 2000,
 # Refresh de todos los datasets configurados
 # ─────────────────────────────────────────────────────────────
 
-# Lista de datasets a refrescar en cada ejecución del cron weekly
+# Lista de datasets a refrescar cada ejecución del cron weekly.
+# 32 indicadores World Bank cubren categorías: economía, demografía,
+# salud, educación, empleo, tecnología, medio ambiente, defensa, turismo.
 DEFAULT_DATASETS_TO_REFRESH = [
-    ("NY.GDP.MKTP.CD", 2000, 2024),      # PIB
-    ("SP.POP.TOTL", 1970, 2024),          # Población
-    ("SP.DYN.LE00.IN", 1970, 2023),       # Esperanza vida
-    ("NY.GDP.PCAP.CD", 1990, 2024),       # PIB per cápita
-    ("SL.UEM.TOTL.ZS", 2000, 2024),       # Desempleo
-    ("IT.NET.USER.ZS", 2000, 2023),       # % Internet
-    ("EN.ATM.CO2E.PC", 1990, 2022),       # CO2 per cápita
-    ("MS.MIL.XPND.CD", 2000, 2024),       # Gasto militar
+    # Economía (10)
+    ("NY.GDP.MKTP.CD", 2000, 2024),
+    ("NY.GDP.PCAP.CD", 1990, 2024),
+    ("NE.EXP.GNFS.CD", 2000, 2024),
+    ("NE.IMP.GNFS.CD", 2000, 2024),
+    ("BX.KLT.DINV.CD.WD", 2000, 2024),
+    ("GC.DOD.TOTL.GD.ZS", 2000, 2024),
+    ("FP.CPI.TOTL.ZG", 2000, 2024),
+    ("NV.IND.TOTL.ZS", 2000, 2024),
+    ("NV.AGR.TOTL.ZS", 2000, 2024),
+    ("NV.SRV.TOTL.ZS", 2000, 2024),
+    # Demografía (6)
+    ("SP.POP.TOTL", 1970, 2024),
+    ("SP.URB.TOTL.IN.ZS", 1990, 2024),
+    ("SP.POP.GROW", 1970, 2024),
+    ("SP.DYN.TFRT.IN", 1970, 2023),
+    ("SP.POP.65UP.TO.ZS", 1970, 2024),
+    ("SP.POP.0014.TO.ZS", 1970, 2024),
+    # Salud (4)
+    ("SP.DYN.LE00.IN", 1970, 2023),
+    ("SH.DYN.MORT", 1990, 2023),
+    ("SH.STA.OBAS.MA.ZS", 2000, 2022),
+    ("SH.MED.PHYS.ZS", 2000, 2022),
+    # Educación (2)
+    ("SE.XPD.TOTL.GD.ZS", 2000, 2023),
+    ("SE.ADT.LITR.ZS", 2000, 2023),
+    # Empleo (2)
+    ("SL.UEM.TOTL.ZS", 2000, 2024),
+    ("SL.UEM.1524.ZS", 2000, 2024),
+    # Tecnología (4)
+    ("IT.NET.USER.ZS", 2000, 2023),
+    ("IT.CEL.SETS.P2", 2000, 2023),
+    ("EG.USE.ELEC.KH.PC", 1990, 2022),
+    ("IS.AIR.PSGR", 2000, 2023),
+    # Medio ambiente (4)
+    ("EN.ATM.CO2E.PC", 1990, 2022),
+    ("EN.ATM.CO2E.KT", 1990, 2022),
+    ("EG.FEC.RNEW.ZS", 2000, 2022),
+    ("AG.LND.FRST.ZS", 1990, 2022),
+    # Defensa (2)
+    ("MS.MIL.XPND.CD", 2000, 2024),
+    ("MS.MIL.XPND.GD.ZS", 2000, 2024),
+    # Turismo (2)
+    ("ST.INT.RCPT.CD", 2000, 2023),
+    ("ST.INT.ARVL", 2000, 2023),
 ]
 
 
