@@ -299,6 +299,15 @@
           "topic": "Caso Erial 2015: la trama de corrupción que desvió fondos públicos en Valencia y sus consecuencias judiciales."
         }
       ]
+    },
+    "23f_intento_golpe": {
+      "count": 1,
+      "history": [
+        {
+          "ts": "2026-09-15T11:42:28.711875+00:00",
+          "topic": "[ACTUALIDAD] El 23-F de 1981: qué pasó realmente en el Congreso de los Diputados, el papel institucional de la Corona y la sentencia firme del Tribunal Supremo contra Tejero y Milans del Bosch."
+        }
+      ]
     }
   }
 }
