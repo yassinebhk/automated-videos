@@ -843,17 +843,20 @@ def yt_cookies_check_cmd():
 
     # 1. Env var
     env_val = os.environ.get("YT_COOKIES", "")
-    if not env_val:
-        lines.append("❌ env YT_COOKIES <b>VACÍA</b> — secret GH no existe o no se propaga.")
-        lines.append("   Fix: crea secret YT_COOKIES_V2 con contenido cookies.txt (Netscape format).")
-    else:
+    if env_val:
         lines.append(f"✅ env YT_COOKIES presente ({len(env_val)} chars)")
+    else:
+        lines.append("⚠️ env YT_COOKIES vacía en este step (revisar propagación).")
 
-        # 2. Archivo
-        p = "/tmp/yt_cookies.txt"
-        if not os.path.exists(p):
-            lines.append(f"❌ {p} NO existe. Bug workflow — no se ejecutó el dump.")
-        else:
+    # 2. Archivo (puede existir aunque env esté vacía si el step 1 lo escribió)
+    p = "/tmp/yt_cookies.txt"
+    if not os.path.exists(p):
+        lines.append(f"❌ {p} NO existe.")
+        lines.append("   Fix: verifica secret YT_COOKIES_V2 (nombre exacto, no vacío) + step 'Reconstruir .env' del workflow.")
+    else:
+        # Reset lógica — el archivo existe, el test yt-dlp es lo que importa
+        env_val = env_val or "file-only"
+        if True:
             sz = os.path.getsize(p)
             lines.append(f"✅ {p} existe ({sz} bytes)")
 
