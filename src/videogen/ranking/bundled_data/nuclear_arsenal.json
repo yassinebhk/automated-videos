@@ -1,0 +1,14 @@
+{
+  "titulo_video": "TOP 10 PAÍSES con más ARMAS NUCLEARES · Estimación 2024",
+  "years": [2024],
+  "items": ["Rusia", "Estados Unidos", "China", "Francia", "Reino Unido", "Pakistán", "India", "Israel (estimado)", "Corea del Norte", "Total mundial"],
+  "data": [
+    [5580, 5044, 500, 290, 225, 170, 172, 90, 50, 12121]
+  ],
+  "unidad": "ojivas nucleares",
+  "source_label": "SIPRI Yearbook 2024",
+  "source_url": "https://www.sipri.org/yearbook/2024",
+  "cierre_dato": "Rusia y EE.UU. concentran el 88% de las 12.121 ojivas nucleares mundiales (SIPRI 2024)",
+  "_fetched_at": "2026-09-15T00:00:00+00:00",
+  "_manual_curated": true
+}

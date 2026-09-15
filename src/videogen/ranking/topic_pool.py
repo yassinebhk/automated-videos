@@ -1,9 +1,9 @@
-"""Pool rankings TopRanking — 36+ topics con dataset REAL.
+"""Pool rankings TopRanking — 66 topics con dataset REAL.
 
-15/09/26: expandido de 8 → 36 topics tras user request "más variedad".
-Todos con dataset_key apuntando a World Bank cache (fetch semanal).
+15/09/26: expandido de 8 → 36 → 46 → 61 → 66 topics tras user request
+"cuanto más mejor". 36 World Bank + 30 bundled curated (JSON verificados).
 
-Con cooldown 90d y 36 topics: ~120 días sin repetir = 4 meses de
+Con cooldown 90d y 66 topics: ~200 días sin repetir = 6.5 meses de
 contenido único diario. Cuando roten, mismos topics con datos actualizados.
 
 Fuentes 100% verificables + citables. Cero alucinación LLM.
@@ -235,6 +235,94 @@ TOPICS = [
      "titulo": "TOP 10 CANALES de YouTube con más suscriptores",
      "dataset_key": "most_subscribed_yt",
      "fuente": "Social Blade"},
+
+    # ═══════════════════════════════════════════════════════════
+    # BUNDLED DATA CURADA · BATCH 2 (15/09/26)
+    # ═══════════════════════════════════════════════════════════
+    {"key": "spotify_top_canciones", "categoria": "musica",
+     "titulo": "TOP 10 CANCIONES más escuchadas SPOTIFY histórico",
+     "dataset_key": "spotify_most_streamed",
+     "fuente": "Spotify Charts"},
+    {"key": "balon_de_oro_ranking", "categoria": "deporte",
+     "titulo": "TOP 10 JUGADORES con más Balones de Oro",
+     "dataset_key": "balon_de_oro",
+     "fuente": "France Football Ballon d'Or"},
+    {"key": "oscar_extranjero_paises", "categoria": "cine",
+     "titulo": "TOP 10 PAÍSES con más Óscares mejor película extranjera",
+     "dataset_key": "oscar_best_picture_country",
+     "fuente": "Academy of Motion Picture Arts and Sciences"},
+    {"key": "nobel_paises", "categoria": "ciencia",
+     "titulo": "TOP 10 PAÍSES con más PREMIOS NOBEL histórico",
+     "dataset_key": "nobel_by_country",
+     "fuente": "nobelprize.org"},
+    {"key": "videojuegos_vendidos", "categoria": "videojuegos",
+     "titulo": "TOP 10 VIDEOJUEGOS más VENDIDOS de la historia",
+     "dataset_key": "videogames_bestselling",
+     "fuente": "Wikipedia / oficiales devs"},
+    {"key": "apps_mas_descargadas", "categoria": "tecnologia",
+     "titulo": "TOP 10 APPS más DESCARGADAS · Global 2024",
+     "dataset_key": "most_downloaded_apps",
+     "fuente": "data.ai / Sensor Tower"},
+    {"key": "arsenal_nuclear", "categoria": "defensa",
+     "titulo": "TOP 10 PAÍSES con más ARMAS NUCLEARES",
+     "dataset_key": "nuclear_arsenal",
+     "fuente": "SIPRI Yearbook 2024"},
+    {"key": "idiomas_mas_hablados", "categoria": "cultura",
+     "titulo": "TOP 10 IDIOMAS más HABLADOS del mundo",
+     "dataset_key": "languages_most_spoken",
+     "fuente": "Ethnologue 2024"},
+    {"key": "paises_mas_turistas", "categoria": "turismo",
+     "titulo": "TOP 10 PAÍSES más VISITADOS del mundo · 2019-2023",
+     "dataset_key": "tourism_most_visited",
+     "fuente": "UN World Tourism Organization (UNWTO)"},
+    {"key": "deportistas_mejor_pagados", "categoria": "deporte",
+     "titulo": "TOP 10 DEPORTISTAS mejor PAGADOS del mundo",
+     "dataset_key": "highest_paid_athletes",
+     "fuente": "Forbes 2024 Highest-Paid Athletes"},
+    {"key": "religiones_seguidores", "categoria": "cultura",
+     "titulo": "TOP 10 RELIGIONES con MÁS seguidores del mundo",
+     "dataset_key": "religions_worldwide",
+     "fuente": "Pew Research Center"},
+    {"key": "rios_mas_largos", "categoria": "geografia",
+     "titulo": "TOP 10 RÍOS más LARGOS del mundo",
+     "dataset_key": "rivers_longest",
+     "fuente": "USGS / National Geographic"},
+    {"key": "montanas_mas_altas", "categoria": "geografia",
+     "titulo": "TOP 10 MONTAÑAS más ALTAS del mundo",
+     "dataset_key": "mountains_highest",
+     "fuente": "Nepal Survey / Wikipedia"},
+    {"key": "ejercitos_mas_grandes", "categoria": "defensa",
+     "titulo": "TOP 10 EJÉRCITOS más grandes del mundo",
+     "dataset_key": "military_active",
+     "fuente": "IISS Military Balance 2024"},
+    {"key": "goleadores_laliga_historicos", "categoria": "deporte",
+     "titulo": "TOP 10 GOLEADORES históricos de LA LIGA (España)",
+     "dataset_key": "liga_top_scorers",
+     "fuente": "LaLiga oficial"},
+
+    # ═══════════════════════════════════════════════════════════
+    # BUNDLED DATA CURADA · BATCH 3 (15/09/26)
+    # ═══════════════════════════════════════════════════════════
+    {"key": "grammy_artistas_top", "categoria": "musica",
+     "titulo": "TOP 10 ARTISTAS con más PREMIOS GRAMMY histórico",
+     "dataset_key": "grammy_most_awards",
+     "fuente": "The Recording Academy (Grammy.com)"},
+    {"key": "campeones_f1", "categoria": "deporte",
+     "titulo": "TOP 10 CAMPEONES de F1 con más TÍTULOS",
+     "dataset_key": "f1_champions",
+     "fuente": "FIA / Formula1.com"},
+    {"key": "anillos_nba", "categoria": "deporte",
+     "titulo": "TOP 10 EQUIPOS con más ANILLOS de la NBA",
+     "dataset_key": "nba_finals_winners",
+     "fuente": "NBA.com"},
+    {"key": "agencias_espaciales", "categoria": "ciencia",
+     "titulo": "TOP 10 AGENCIAS ESPACIALES por PRESUPUESTO · 2024",
+     "dataset_key": "space_agencies_budget",
+     "fuente": "Statista / Space Foundation Report"},
+    {"key": "redes_sociales_top", "categoria": "internet",
+     "titulo": "TOP 10 REDES SOCIALES con MÁS usuarios · 2024",
+     "dataset_key": "social_media_users",
+     "fuente": "DataReportal Global Digital Report 2024"},
 ]
 
 

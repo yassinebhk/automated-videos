@@ -1,0 +1,14 @@
+{
+  "titulo_video": "TOP 10 RÍOS más LARGOS del mundo",
+  "years": [2024],
+  "items": ["Nilo (África)", "Amazonas (Sudamérica)", "Yangtsé (China)", "Misisipi-Misuri (EE.UU.)", "Yeniséi (Rusia)", "Amarillo/Huang He (China)", "Ob-Irtysh (Rusia)", "Río de la Plata-Paraná", "Congo (África)", "Amur-Argun (Rusia/China)"],
+  "data": [
+    [6650, 6400, 6300, 6275, 5539, 5464, 5410, 4880, 4700, 4444]
+  ],
+  "unidad": "km longitud",
+  "source_label": "USGS / National Geographic",
+  "source_url": "https://education.nationalgeographic.org/resource/longest-rivers-world/",
+  "cierre_dato": "Nilo (6.650 km) supera al Amazonas por 250 km — el río más largo del mundo",
+  "_fetched_at": "2026-09-15T00:00:00+00:00",
+  "_manual_curated": true
+}

@@ -1,0 +1,14 @@
+{
+  "titulo_video": "TOP 10 REDES SOCIALES con MÁS usuarios · 2024",
+  "years": [2024],
+  "items": ["Facebook", "YouTube", "WhatsApp", "Instagram", "WeChat", "TikTok", "Facebook Messenger", "Telegram", "Douyin", "Snapchat"],
+  "data": [
+    [3070, 2500, 2000, 2000, 1382, 1590, 1010, 900, 750, 800]
+  ],
+  "unidad": "millones usuarios activos",
+  "source_label": "DataReportal Global Digital Report 2024",
+  "source_url": "https://datareportal.com/reports/digital-2024-global-overview-report",
+  "cierre_dato": "Facebook mantiene el liderazgo con 3.070M usuarios activos mensuales en 2024",
+  "_fetched_at": "2026-09-15T00:00:00+00:00",
+  "_manual_curated": true
+}

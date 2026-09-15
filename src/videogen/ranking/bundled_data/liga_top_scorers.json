@@ -1,0 +1,14 @@
+{
+  "titulo_video": "TOP 10 GOLEADORES históricos de LA LIGA (España)",
+  "years": [2024],
+  "items": ["Lionel Messi", "Cristiano Ronaldo", "Karim Benzema", "Telmo Zarra", "Hugo Sánchez", "Raúl", "Alfredo Di Stéfano", "César Rodríguez", "Quini", "Pahiño"],
+  "data": [
+    [474, 311, 238, 251, 234, 228, 227, 224, 219, 210]
+  ],
+  "unidad": "goles LaLiga",
+  "source_label": "LaLiga oficial (histórico)",
+  "source_url": "https://www.laliga.com/en-GB/laliga-easports/all-time-top-scorers",
+  "cierre_dato": "Messi lidera con 474 goles en LaLiga — récord absoluto histórico",
+  "_fetched_at": "2026-09-15T00:00:00+00:00",
+  "_manual_curated": true
+}

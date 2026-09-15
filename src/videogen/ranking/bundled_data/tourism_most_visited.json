@@ -1,0 +1,18 @@
+{
+  "titulo_video": "TOP 10 PAÍSES más VISITADOS del mundo · 2023",
+  "years": [2019, 2020, 2021, 2022, 2023],
+  "items": ["Francia", "España", "Estados Unidos", "China", "Italia", "Turquía", "México", "Alemania", "Tailandia", "Reino Unido"],
+  "data": [
+    [90, 84, 79, 66, 65, 52, 45, 39, 40, 39],
+    [42, 19, 19, 8, 25, 16, 24, 12, 7, 11],
+    [48, 32, 22, 8, 27, 30, 32, 12, 0.4, 10],
+    [80, 71, 51, 30, 50, 51, 38, 29, 12, 26],
+    [100, 85, 66, 33, 57, 55, 42, 34, 28, 30]
+  ],
+  "unidad": "millones turistas",
+  "source_label": "UN World Tourism Organization (UNWTO)",
+  "source_url": "https://www.unwto.org/tourism-data/global-and-regional-tourism-performance",
+  "cierre_dato": "Francia y España lideran turismo — juntas reciben 185M turistas al año (UNWTO 2023)",
+  "_fetched_at": "2026-09-15T00:00:00+00:00",
+  "_manual_curated": true
+}

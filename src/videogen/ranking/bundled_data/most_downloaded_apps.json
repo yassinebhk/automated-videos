@@ -1,0 +1,14 @@
+{
+  "titulo_video": "TOP 10 APPS más DESCARGADAS · Global 2024",
+  "years": [2024],
+  "items": ["TikTok", "Instagram", "Facebook", "WhatsApp", "Telegram", "Temu", "CapCut", "Threads", "SHEIN", "Snapchat"],
+  "data": [
+    [733, 545, 425, 421, 400, 356, 340, 234, 218, 200]
+  ],
+  "unidad": "millones descargas",
+  "source_label": "data.ai / Sensor Tower",
+  "source_url": "https://www.data.ai/en/insights/",
+  "cierre_dato": "TikTok domina con 733M descargas en 2024 — más que Instagram+WhatsApp juntas",
+  "_fetched_at": "2026-09-15T00:00:00+00:00",
+  "_manual_curated": true
+}

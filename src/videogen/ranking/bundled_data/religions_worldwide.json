@@ -1,0 +1,14 @@
+{
+  "titulo_video": "TOP 10 RELIGIONES con MÁS seguidores del mundo · 2024",
+  "years": [2024],
+  "items": ["Cristianismo", "Islam", "Hinduismo", "No afiliados", "Budismo", "Religiones étnicas", "Sijismo", "Judaísmo", "Espiritismo", "Otras"],
+  "data": [
+    [2500, 2000, 1200, 1200, 520, 400, 30, 15, 15, 100]
+  ],
+  "unidad": "millones seguidores",
+  "source_label": "Pew Research Center (proyecciones)",
+  "source_url": "https://www.pewresearch.org/religion/",
+  "cierre_dato": "Cristianismo e Islam suman 4.500M seguidores — más del 55% de la humanidad",
+  "_fetched_at": "2026-09-15T00:00:00+00:00",
+  "_manual_curated": true
+}

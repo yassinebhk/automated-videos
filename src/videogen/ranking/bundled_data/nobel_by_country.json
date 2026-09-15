@@ -1,0 +1,14 @@
+{
+  "titulo_video": "TOP 10 PAÍSES con MÁS PREMIOS NOBEL · Histórico 1901-2024",
+  "years": [2024],
+  "items": ["Estados Unidos", "Reino Unido", "Alemania", "Francia", "Suecia", "Suiza", "Rusia/URSS", "Japón", "Canadá", "Países Bajos"],
+  "data": [
+    [416, 138, 116, 74, 34, 33, 32, 32, 28, 23]
+  ],
+  "unidad": "premios Nobel",
+  "source_label": "The Nobel Prize (nobelprize.org)",
+  "source_url": "https://www.nobelprize.org/prizes/lists/all-nobel-prizes/",
+  "cierre_dato": "EE.UU. lidera con 416 Nobel — más que la suma de los siguientes 3 países",
+  "_fetched_at": "2026-09-15T00:00:00+00:00",
+  "_manual_curated": true
+}

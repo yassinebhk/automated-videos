@@ -1,0 +1,14 @@
+{
+  "titulo_video": "TOP 10 CAMPEONES de F1 con más TÍTULOS",
+  "years": [2024],
+  "items": ["Lewis Hamilton", "Michael Schumacher", "Juan Manuel Fangio", "Alain Prost", "Sebastian Vettel", "Max Verstappen", "Jack Brabham", "Jackie Stewart", "Niki Lauda", "Nelson Piquet"],
+  "data": [
+    [7, 7, 5, 4, 4, 4, 3, 3, 3, 3]
+  ],
+  "unidad": "títulos F1",
+  "source_label": "FIA / Formula1.com",
+  "source_url": "https://www.formula1.com/en/results.html",
+  "cierre_dato": "Hamilton y Schumacher empatan con 7 títulos — récord absoluto compartido",
+  "_fetched_at": "2026-09-15T00:00:00+00:00",
+  "_manual_curated": true
+}

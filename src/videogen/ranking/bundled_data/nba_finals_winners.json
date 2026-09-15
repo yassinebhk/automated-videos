@@ -1,0 +1,14 @@
+{
+  "titulo_video": "TOP 10 EQUIPOS con más ANILLOS de la NBA",
+  "years": [2024],
+  "items": ["Boston Celtics", "Los Angeles Lakers", "Golden State Warriors", "Chicago Bulls", "San Antonio Spurs", "Miami Heat", "Detroit Pistons", "Philadelphia 76ers", "Houston Rockets", "New York Knicks"],
+  "data": [
+    [18, 17, 7, 6, 5, 3, 3, 3, 2, 2]
+  ],
+  "unidad": "anillos NBA",
+  "source_label": "NBA.com",
+  "source_url": "https://www.nba.com/champions",
+  "cierre_dato": "Celtics adelantan a Lakers en 2024 (18 vs 17) — récord histórico NBA",
+  "_fetched_at": "2026-09-15T00:00:00+00:00",
+  "_manual_curated": true
+}

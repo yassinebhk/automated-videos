@@ -1,0 +1,14 @@
+{
+  "titulo_video": "TOP 10 AGENCIAS ESPACIALES por PRESUPUESTO · 2024",
+  "years": [2024],
+  "items": ["NASA (EE.UU.)", "CNSA (China)", "ESA (Europa)", "Roscosmos (Rusia)", "CNES (Francia)", "JAXA (Japón)", "ISRO (India)", "ASI (Italia)", "DLR (Alemania)", "UKSA (Reino Unido)"],
+  "data": [
+    [25400, 14100, 7800, 3400, 2900, 2100, 1800, 2200, 2500, 850]
+  ],
+  "unidad": "millones $ presupuesto",
+  "source_label": "Statista / Space Foundation Report",
+  "source_url": "https://www.spacefoundation.org/space_report/",
+  "cierre_dato": "NASA lidera con $25.400M — más que las siguientes 3 agencias juntas",
+  "_fetched_at": "2026-09-15T00:00:00+00:00",
+  "_manual_curated": true
+}

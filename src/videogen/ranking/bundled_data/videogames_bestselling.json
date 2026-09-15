@@ -1,0 +1,14 @@
+{
+  "titulo_video": "TOP 10 VIDEOJUEGOS más VENDIDOS de la historia",
+  "years": [2024],
+  "items": ["Minecraft", "Grand Theft Auto V", "Tetris (EA)", "Wii Sports", "PUBG", "Mario Kart 8 Deluxe", "Red Dead Redemption 2", "Super Mario Bros.", "Terraria", "The Witcher 3"],
+  "data": [
+    [300, 205, 202, 82.9, 75, 66, 65, 58, 58, 55]
+  ],
+  "unidad": "millones copias",
+  "source_label": "Wikipedia (fuentes oficiales devs)",
+  "source_url": "https://en.wikipedia.org/wiki/List_of_best-selling_video_games",
+  "cierre_dato": "Minecraft supera 300M copias — récord absoluto de la industria",
+  "_fetched_at": "2026-09-15T00:00:00+00:00",
+  "_manual_curated": true
+}

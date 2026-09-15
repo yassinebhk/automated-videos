@@ -1,0 +1,14 @@
+{
+  "titulo_video": "TOP 10 JUGADORES con MÁS Balones de Oro · Histórico 1956-2024",
+  "years": [2024],
+  "items": ["Lionel Messi", "Cristiano Ronaldo", "Michel Platini", "Johan Cruyff", "Marco van Basten", "Alfredo Di Stéfano", "Franz Beckenbauer", "Ronaldo Nazário", "Karim Benzema", "Kevin de Bruyne"],
+  "data": [
+    [8, 5, 3, 3, 3, 2, 2, 2, 1, 0]
+  ],
+  "unidad": "Balones de Oro",
+  "source_label": "France Football Ballon d'Or",
+  "source_url": "https://www.francefootball.fr/ballon-dor/",
+  "cierre_dato": "Messi lidera con 8 Balones de Oro — récord absoluto tras el de 2023",
+  "_fetched_at": "2026-09-15T00:00:00+00:00",
+  "_manual_curated": true
+}

@@ -1,0 +1,14 @@
+{
+  "titulo_video": "TOP 10 CANCIONES más escuchadas SPOTIFY · Histórico 2024",
+  "years": [2024],
+  "items": ["Blinding Lights (Weeknd)", "Shape of You (Ed Sheeran)", "Dance Monkey (Tones I)", "Someone You Loved (Lewis Capaldi)", "Sunflower (Post Malone)", "One Dance (Drake)", "Rockstar (Post Malone)", "Believer (Imagine Dragons)", "Closer (Chainsmokers)", "Starboy (Weeknd)"],
+  "data": [
+    [4600, 4000, 3200, 3100, 3050, 3000, 2900, 2850, 2800, 2750]
+  ],
+  "unidad": "millones streams",
+  "source_label": "Spotify Charts (histórico)",
+  "source_url": "https://charts.spotify.com/",
+  "cierre_dato": "'Blinding Lights' de The Weeknd es la 1ª canción en superar 4B streams (2024)",
+  "_fetched_at": "2026-09-15T00:00:00+00:00",
+  "_manual_curated": true
+}

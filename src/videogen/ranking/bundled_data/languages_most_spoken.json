@@ -1,0 +1,14 @@
+{
+  "titulo_video": "TOP 10 IDIOMAS más HABLADOS del mundo · 2024",
+  "years": [2024],
+  "items": ["Inglés (nativos+L2)", "Mandarín", "Hindi", "Español", "Francés", "Árabe", "Bengalí", "Portugués", "Ruso", "Urdu"],
+  "data": [
+    [1515, 1140, 610, 559, 310, 274, 273, 264, 255, 231]
+  ],
+  "unidad": "millones hablantes",
+  "source_label": "Ethnologue 2024",
+  "source_url": "https://www.ethnologue.com/insights/ethnologue200/",
+  "cierre_dato": "Inglés lidera 1.515M hablantes contando L2 — el español es 4º con 559M",
+  "_fetched_at": "2026-09-15T00:00:00+00:00",
+  "_manual_curated": true
+}

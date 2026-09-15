@@ -1,0 +1,14 @@
+{
+  "titulo_video": "TOP 10 EJÉRCITOS más grandes del mundo · 2024",
+  "years": [2024],
+  "items": ["China", "India", "Estados Unidos", "Corea del Norte", "Rusia", "Pakistán", "Corea del Sur", "Irán", "Vietnam", "Egipto"],
+  "data": [
+    [2035, 1455, 1328, 1280, 1150, 654, 555, 610, 470, 450]
+  ],
+  "unidad": "miles soldados activos",
+  "source_label": "IISS Military Balance 2024",
+  "source_url": "https://www.iiss.org/publications/the-military-balance/",
+  "cierre_dato": "China lidera con 2.035.000 soldados activos — el ejército más grande del mundo",
+  "_fetched_at": "2026-09-15T00:00:00+00:00",
+  "_manual_curated": true
+}

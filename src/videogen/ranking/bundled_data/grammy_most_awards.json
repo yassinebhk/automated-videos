@@ -1,0 +1,14 @@
+{
+  "titulo_video": "TOP 10 ARTISTAS con más PREMIOS GRAMMY histórico",
+  "years": [2024],
+  "items": ["Beyoncé", "Georg Solti", "Quincy Jones", "Alison Krauss", "Chick Corea", "Vladimir Horowitz", "Pierre Boulez", "Stevie Wonder", "John Williams", "U2"],
+  "data": [
+    [32, 31, 28, 27, 27, 25, 26, 25, 26, 22]
+  ],
+  "unidad": "premios Grammy",
+  "source_label": "The Recording Academy (Grammy.com)",
+  "source_url": "https://www.grammy.com/",
+  "cierre_dato": "Beyoncé lidera con 32 Grammys (récord absoluto) tras el histórico de 2023",
+  "_fetched_at": "2026-09-15T00:00:00+00:00",
+  "_manual_curated": true
+}

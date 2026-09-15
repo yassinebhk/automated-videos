@@ -1,0 +1,14 @@
+{
+  "titulo_video": "TOP 10 DEPORTISTAS mejor pagados del mundo · 2024",
+  "years": [2024],
+  "items": ["Cristiano Ronaldo", "Jon Rahm", "Lionel Messi", "LeBron James", "Giannis Antetokounmpo", "Kylian Mbappé", "Neymar Jr.", "Stephen Curry", "Lamar Jackson", "Tyson Fury"],
+  "data": [
+    [260, 218, 135, 128, 111, 110, 108, 102, 100, 100]
+  ],
+  "unidad": "millones $ anuales",
+  "source_label": "Forbes 2024 Highest-Paid Athletes",
+  "source_url": "https://www.forbes.com/athletes/",
+  "cierre_dato": "Cristiano lidera con $260M anuales (contrato Al-Nassr + patrocinios)",
+  "_fetched_at": "2026-09-15T00:00:00+00:00",
+  "_manual_curated": true
+}

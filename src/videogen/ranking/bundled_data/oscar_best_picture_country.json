@@ -1,0 +1,14 @@
+{
+  "titulo_video": "TOP 10 PAÍSES con MÁS ÓSCARES a mejor película extranjera",
+  "years": [2024],
+  "items": ["Italia", "Francia", "España", "Japón", "Dinamarca", "Suecia", "Alemania", "Países Bajos", "Rusia/URSS", "República Checa"],
+  "data": [
+    [14, 12, 4, 5, 4, 3, 3, 3, 4, 3]
+  ],
+  "unidad": "Óscares extranjero",
+  "source_label": "Academy of Motion Picture Arts and Sciences",
+  "source_url": "https://www.oscars.org/",
+  "cierre_dato": "Italia y Francia lideran con 14 y 12 Óscares a mejor película extranjera",
+  "_fetched_at": "2026-09-15T00:00:00+00:00",
+  "_manual_curated": true
+}

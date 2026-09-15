@@ -310,3 +310,75 @@ def list_available_datasets() -> list[str]:
     if not CACHE_ROOT.exists():
         return []
     return [p.stem for p in CACHE_ROOT.glob("*.json")]
+
+
+# ─────────────────────────────────────────────────────────────
+# Wikidata SPARQL (https://query.wikidata.org/sparql)
+# ─────────────────────────────────────────────────────────────
+
+WIKIDATA_ENDPOINT = "https://query.wikidata.org/sparql"
+WIKIDATA_UA = "videogen/1.0 (ranking-datasets; contact: local)"
+
+
+def fetch_wikidata_sparql(sparql_query: str, key: str, *,
+                            title: str, unit: str, source_url_ref: str,
+                            item_var: str = "label", value_var: str = "count",
+                            top_n: int = 10) -> dict | None:
+    """Ejecuta SPARQL en Wikidata y guarda como dataset ranking estático.
+
+    La query debe devolver `?label` (o item_var) y `?count` (o value_var).
+    Se ordena por value_var desc y se toman top_n.
+    Los datos son snapshot único (year=año actual), no evolución temporal.
+    """
+    try:
+        r = requests.get(WIKIDATA_ENDPOINT,
+                          params={"query": sparql_query, "format": "json"},
+                          headers={"User-Agent": WIKIDATA_UA,
+                                    "Accept": "application/sparql-results+json"},
+                          timeout=60)
+        if r.status_code != 200:
+            print(f"  Wikidata fetch fail {key}: HTTP {r.status_code}")
+            return None
+        payload = r.json()
+    except Exception as e:
+        print(f"  Wikidata fetch fail {key}: {e}")
+        return None
+
+    bindings = (payload.get("results") or {}).get("bindings") or []
+    if not bindings:
+        return None
+
+    rows: list[tuple[str, float]] = []
+    for b in bindings:
+        lbl = (b.get(item_var) or {}).get("value")
+        v = (b.get(value_var) or {}).get("value")
+        if not lbl or v is None:
+            continue
+        try:
+            fv = float(v)
+        except (ValueError, TypeError):
+            continue
+        rows.append((str(lbl), fv))
+
+    rows.sort(key=lambda x: -x[1])
+    rows = rows[:top_n]
+    if not rows:
+        return None
+
+    items = [r[0] for r in rows]
+    data = [[round(r[1], 2) for r in rows]]
+    year = datetime.now(timezone.utc).year
+    dataset = {
+        "key": key,
+        "titulo_video": title,
+        "years": [year],
+        "items": items,
+        "data": data,
+        "unidad": unit,
+        "source_label": "Wikidata (Wikipedia)",
+        "source_url": source_url_ref,
+        "cierre_dato": f"Datos consultados en Wikidata SPARQL a {year}",
+    }
+    _save(key, dataset)
+    print(f"  ✅ Wikidata {key} guardado ({len(items)} items)")
+    return dataset

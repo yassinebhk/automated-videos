@@ -1,0 +1,14 @@
+{
+  "titulo_video": "TOP 10 MONTAÑAS más ALTAS del mundo",
+  "years": [2024],
+  "items": ["Everest (Nepal/China)", "K2 (Pakistán)", "Kangchenjunga", "Lhotse", "Makalu", "Cho Oyu", "Dhaulagiri", "Manaslu", "Nanga Parbat", "Annapurna I"],
+  "data": [
+    [8848.86, 8611, 8586, 8516, 8485, 8188, 8167, 8163, 8126, 8091]
+  ],
+  "unidad": "metros altura",
+  "source_label": "Nepal Survey / oficial 2020",
+  "source_url": "https://en.wikipedia.org/wiki/List_of_highest_mountains_on_Earth",
+  "cierre_dato": "Everest (8.848,86 m) — altura oficial revisada Nepal 2020",
+  "_fetched_at": "2026-09-15T00:00:00+00:00",
+  "_manual_curated": true
+}
