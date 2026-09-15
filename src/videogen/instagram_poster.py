@@ -142,20 +142,34 @@ def _prepare_public_reel(local_mp4: Path, slug: str) -> Optional[str]:
                                     cwd=ROOT, capture_output=True, timeout=30)
                 if p.returncode == 0:
                     print(f"  ig: mp4 pushed → poll activo GH Pages")
-                    # Poll hasta que GH Pages devuelva 200 (rebuild puede
-                    # tardar 30s-5min). Max 6 min total.
+                    # Poll GET (no HEAD) con Range: 0-1023 y User-Agent de Meta.
+                    # HEAD 200 no garantiza GET 200 en todos los edges GH Pages
+                    # (verificado 15/09 tras fail_container_ready 404: HEAD ok pero
+                    # Meta ve 404 en su edge). Tras GET 200, sleep 30s para que
+                    # todos los edges GH Pages propaguen antes de que Meta fetche.
                     url_check = f"{PUBLIC_REELS_BASE}/{dst.stem}.mp4"
+                    headers_meta = {
+                        "User-Agent": "facebookexternalhit/1.1",
+                        "Range": "bytes=0-1023",
+                    }
+                    got_200 = False
                     for i in range(36):
                         time.sleep(10)
                         try:
-                            head = requests.head(url_check, timeout=10)
-                            if head.status_code == 200:
-                                print(f"  ig: ✓ GH Pages OK tras {(i+1)*10}s")
+                            r_check = requests.get(url_check, headers=headers_meta, timeout=15)
+                            # 200 (rango completo servido) o 206 (partial content)
+                            if r_check.status_code in (200, 206) and len(r_check.content) > 100:
+                                print(f"  ig: ✓ GH Pages GET-Meta OK tras {(i+1)*10}s (rc={r_check.status_code}, {len(r_check.content)}b)")
+                                got_200 = True
+                                # Wait extra para que TODOS los edges propaguen
+                                # (Meta fetcha desde CDN distinto al que sirvió al runner)
+                                print(f"  ig: esperando 30s para propagación edge...")
+                                time.sleep(30)
                                 break
                         except Exception:
                             pass
-                    else:
-                        print(f"  ig: ⚠ GH Pages no respondió 200 tras 360s")
+                    if not got_200:
+                        print(f"  ig: ⚠ GH Pages GET-Meta no OK tras 360s — IG probablemente fallará 404")
                     break
     except Exception as e:
         print(f"  ig: commit mp4 falló ({type(e).__name__}: {e}) — IG puede fallar")
