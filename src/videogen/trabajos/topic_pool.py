@@ -1,0 +1,118 @@
+"""Pool de curiosidades laborales ES (Shorts formato lista Top N).
+
+Datos base verificables (BLS/Eurostat/INE/WEF/OCDE/Glassdoor); Gemini enriquece
+con cifras concretas 2026. Rotación: ledger trabajos_ledger.json, cooldown 90d.
+Schema compatible con topic_refresher (key/audiencia/categoria/titulo/hook/cifra_ancla).
+"""
+from __future__ import annotations
+
+
+TOPICS = [
+    {"key": "mejor_pagados_mundo", "audiencia": "general", "categoria": "sueldos",
+     "titulo": "TOP 10 trabajos mejor pagados del mundo 2026",
+     "hook": "¿Sabes cuál paga más de medio millón al año?",
+     "cifra_ancla": "$150k-500k/año"},
+    {"key": "mas_demandados_2026", "audiencia": "general", "categoria": "demanda",
+     "titulo": "5 trabajos MÁS demandados en 2026",
+     "hook": "Las empresas se pelean por estos perfiles",
+     "cifra_ancla": "+30% demanda (WEF)"},
+    {"key": "desapareceran_2030", "audiencia": "general", "categoria": "futuro",
+     "titulo": "5 trabajos que DESAPARECERÁN antes de 2030",
+     "hook": "Si haces uno de estos, cuidado",
+     "cifra_ancla": "-40% empleos (WEF)"},
+    {"key": "raros_bien_pagados", "audiencia": "general", "categoria": "rarezas",
+     "titulo": "5 trabajos RAROS que pagan más de 100.000€",
+     "hook": "Existen y casi nadie los conoce",
+     "cifra_ancla": "€100k+"},
+    {"key": "mas_vacaciones", "audiencia": "general", "categoria": "condiciones",
+     "titulo": "TOP 5 trabajos con MÁS vacaciones",
+     "hook": "Hasta 2 meses libres al año",
+     "cifra_ancla": "40-60 días/año"},
+    {"key": "remotos_mejor_pagados", "audiencia": "general", "categoria": "sueldos",
+     "titulo": "5 trabajos remotos mejor pagados 2026",
+     "hook": "Desde casa y en la parte alta del sueldo",
+     "cifra_ancla": "€60k-120k remoto"},
+    {"key": "sin_estudios_bien_pagados", "audiencia": "jovenes", "categoria": "sueldos",
+     "titulo": "5 trabajos SIN carrera que pagan muy bien",
+     "hook": "No necesitas universidad para ganar €50k+",
+     "cifra_ancla": "€40k-90k sin título"},
+    {"key": "mas_peligrosos", "audiencia": "general", "categoria": "condiciones",
+     "titulo": "TOP 10 trabajos MÁS peligrosos del mundo",
+     "hook": "Ganan bien, pero el riesgo es real",
+     "cifra_ancla": "muertes por 100k (BLS)"},
+    {"key": "mas_felices", "audiencia": "general", "categoria": "condiciones",
+     "titulo": "5 trabajos con MAYOR satisfacción laboral",
+     "hook": "La gente más feliz trabajando hace esto",
+     "cifra_ancla": "score satisfacción"},
+    {"key": "sueldos_por_pais_europa", "audiencia": "general", "categoria": "sueldos",
+     "titulo": "TOP 10 países de Europa por sueldo medio",
+     "hook": "¿En qué puesto crees que está España?",
+     "cifra_ancla": "€ salario medio (Eurostat)"},
+    {"key": "profesiones_futuro_ia", "audiencia": "general", "categoria": "futuro",
+     "titulo": "5 profesiones que la IA hará CRECER",
+     "hook": "La IA no solo destruye empleo, crea estos",
+     "cifra_ancla": "+X% empleo (WEF)"},
+    {"key": "mas_solitarios", "audiencia": "general", "categoria": "rarezas",
+     "titulo": "5 trabajos para gente que odia a la gente",
+     "hook": "Cero jefes, cero compañeros, buen sueldo",
+     "cifra_ancla": "0 contacto social"},
+    {"key": "peor_pagados", "audiencia": "general", "categoria": "sueldos",
+     "titulo": "TOP 5 trabajos PEOR pagados (y por qué)",
+     "hook": "Trabajan igual y cobran la mitad",
+     "cifra_ancla": "salario mínimo"},
+    {"key": "mas_horas", "audiencia": "general", "categoria": "condiciones",
+     "titulo": "5 profesiones que MÁS horas trabajan",
+     "hook": "80 horas a la semana es su normalidad",
+     "cifra_ancla": "60-80h/semana (OCDE)"},
+    {"key": "propinas_altas", "audiencia": "general", "categoria": "rarezas",
+     "titulo": "5 trabajos donde las PROPINAS superan el sueldo",
+     "hook": "El sueldo base es lo de menos aquí",
+     "cifra_ancla": "propinas > base"},
+    {"key": "teletrabajo_paises", "audiencia": "general", "categoria": "condiciones",
+     "titulo": "TOP 10 países con MÁS teletrabajo",
+     "hook": "En estos países casi nadie va a la oficina",
+     "cifra_ancla": "% teletrabaja (Eurostat)"},
+    {"key": "mas_estables", "audiencia": "general", "categoria": "futuro",
+     "titulo": "5 trabajos a PRUEBA de crisis",
+     "hook": "Pase lo que pase, estos no se van al paro",
+     "cifra_ancla": "paro <2%"},
+    {"key": "jovenes_demandados", "audiencia": "jovenes", "categoria": "demanda",
+     "titulo": "5 trabajos MÁS buscados para menores de 25",
+     "hook": "Si tienes menos de 25, esto te interesa",
+     "cifra_ancla": "N vacantes (SEPE)"},
+    {"key": "brecha_sectores_es", "audiencia": "general", "categoria": "sueldos",
+     "titulo": "TOP 5 sectores mejor pagados en España",
+     "hook": "El sector lo cambia TODO en tu nómina",
+     "cifra_ancla": "€ bruto anual (INE)"},
+    {"key": "semana_4_dias", "audiencia": "general", "categoria": "condiciones",
+     "titulo": "5 países que ya prueban la SEMANA de 4 días",
+     "hook": "Trabajar menos cobrando igual, ya pasa",
+     "cifra_ancla": "4 días/semana"},
+    {"key": "ia_no_reemplaza", "audiencia": "general", "categoria": "futuro",
+     "titulo": "5 trabajos que la IA NUNCA reemplazará",
+     "hook": "Por más que avance, estos son seguros",
+     "cifra_ancla": "~0% automatizable (WEF)"},
+    {"key": "rapido_crecimiento", "audiencia": "general", "categoria": "demanda",
+     "titulo": "TOP 10 empleos de MÁS rápido crecimiento",
+     "hook": "Los que más van a crecer esta década",
+     "cifra_ancla": "+X% 2024-2034 (BLS)"},
+    {"key": "beneficios_curiosos", "audiencia": "general", "categoria": "rarezas",
+     "titulo": "5 beneficios laborales MÁS locos de grandes empresas",
+     "hook": "Vacaciones ilimitadas es solo el principio",
+     "cifra_ancla": "beneficios reales"},
+    {"key": "mas_rapido_ricos", "audiencia": "jovenes", "categoria": "sueldos",
+     "titulo": "5 trabajos donde te haces rico MÁS joven",
+     "hook": "Millonarios antes de los 30 con estos",
+     "cifra_ancla": "€100k+ antes de 30"},
+]
+
+
+def all_topics() -> list[dict]:
+    return list(TOPICS)
+
+
+def by_key(key: str) -> dict | None:
+    for t in TOPICS:
+        if t["key"] == key:
+            return t
+    return None

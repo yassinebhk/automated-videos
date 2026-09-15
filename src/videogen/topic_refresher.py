@@ -56,6 +56,10 @@ NICHE_RSS = {
         "https://www.bde.es/wbe/es/publicaciones/analisis-economico-investigacion/",
         "https://www.ine.es/rss/rss_ine.xml",
     ],
+    "trabajos": [
+        "https://www.ine.es/rss/rss_ine.xml",
+        "https://cincodias.elpais.com/rss/economia/trabajo.xml",
+    ],
 }
 
 
@@ -155,6 +159,13 @@ def _niche_context(niche: str) -> dict:
             "categorias": "economia, demografia, empresas, cine, musica, deporte, españa",
             "fuentes_oficiales": "World Bank, IMF, UN, INE, IFPI, Box Office Mojo",
             "cifra_typical": "top 10 con valores numéricos",
+        },
+        "trabajos": {
+            "canal": "CuriosLaboral ES",
+            "audiencias": "general, jovenes",
+            "categorias": "sueldos, demanda, futuro, rarezas, condiciones",
+            "fuentes_oficiales": "BLS, Eurostat, INE, OCDE, WEF Future of Jobs, SEPE, Glassdoor",
+            "cifra_typical": "€X sueldo · N% · top N",
         },
     }.get(niche, {})
 

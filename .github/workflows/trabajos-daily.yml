@@ -1,0 +1,20 @@
+name: Trabajos daily (Curiosidades Laborales ES)
+
+# Canal curiosidades laborales (sueldos/profesiones/futuro empleo). 1 short/día.
+# Reusa channel_pipeline + prompt propio + canal YT_TRABAJOS_*. 100% gratis.
+# Cron 10:07 UTC (12:07 CEST). Catchup 20:37 rescata. ACTIVO con secrets YT_TRABAJOS_*.
+
+on:
+  schedule:
+    - cron: "7 10 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  trabajos:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: trabajos-once
+    secrets: inherit
