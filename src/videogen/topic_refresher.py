@@ -60,6 +60,10 @@ NICHE_RSS = {
         "https://www.ine.es/rss/rss_ine.xml",
         "https://cincodias.elpais.com/rss/economia/trabajo.xml",
     ],
+    "criminopatia": [
+        "https://www.20minutos.es/rss/sucesos/",
+        "https://elpais.com/rss/sociedad.xml",
+    ],
 }
 
 
@@ -166,6 +170,13 @@ def _niche_context(niche: str) -> dict:
             "categorias": "sueldos, demanda, futuro, rarezas, condiciones",
             "fuentes_oficiales": "BLS, Eurostat, INE, OCDE, WEF Future of Jobs, SEPE, Glassdoor",
             "cifra_typical": "€X sueldo · N% · top N",
+        },
+        "criminopatia": {
+            "canal": "Criminopatía",
+            "audiencias": "general",
+            "categorias": "forense, criminologia, juicios, psicologia, casos",
+            "fuentes_oficiales": "sentencias firmes, tribunales, prensa seria, revistas forenses",
+            "cifra_typical": "sentencia firme + tribunal + año",
         },
     }.get(niche, {})
 
