@@ -881,8 +881,10 @@ def yt_cookies_check_cmd():
                 for name, extra in strategies:
                     with tempfile.TemporaryDirectory() as td:
                         out_path = f"{td}/test.mp4"
+                        # -f: limita a 1080p max. Sin límite YT servía 4K (485MB)
+                        # y se agotaba timeout 90s (15/09).
                         cmd = ["yt-dlp",
-                               "-f", "bv*+ba/b",
+                               "-f", "bv*[height<=1080]+ba/b[height<=1080]/b",
                                "--merge-output-format", "mp4",
                                "-o", out_path,
                                "--no-warnings", "--no-playlist",
@@ -890,7 +892,7 @@ def yt_cookies_check_cmd():
                                *extra,
                                test_url]
                         try:
-                            r = subprocess.run(cmd, capture_output=True, text=True, timeout=90)
+                            r = subprocess.run(cmd, capture_output=True, text=True, timeout=180)
                             if r.returncode == 0 and os.path.exists(out_path) and os.path.getsize(out_path) > 100_000:
                                 lines.append(f"✅ TEST download OK con player={name} ({os.path.getsize(out_path)//1024}KB)")
                                 lines.append("<b>Cookies funcionan.</b> Backfill IG debería funcionar.")

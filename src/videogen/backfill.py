@@ -185,11 +185,11 @@ def _ensure_vertical_local(cand: dict[str, Any]) -> Path | None:
     for i, extra in enumerate(strategies):
         cmd = [
             "yt-dlp",
-            # Formato sin filtro extension — con player=android YT sirve
-            # WebM/VP9 y [ext=mp4] no matcheaba. --merge-output-format mp4
-            # re-empaqueta al final (ffmpeg ya instalado en runner).
-            # Verificado 15/09 con yt-cookies-check: esta cadena funciona.
-            "-f", "bv*+ba/b",
+            # Formato con límite 1080p — sin límite YT servía 4K/1440p
+            # con cookies autenticadas (485MB video) → timeout 180s. Con
+            # 1080p ~29MB → <30s. --merge-output-format mp4 re-empaqueta
+            # con ffmpeg (ya instalado en runner).
+            "-f", "bv*[height<=1080]+ba/b[height<=1080]/b",
             "--merge-output-format", "mp4",
             "-o", str(path),
             "--no-warnings",
