@@ -25,24 +25,53 @@ import googleapiclient.discovery
 from .upload_youtube import _get_credentials
 
 
-# Categorías con keywords (lowercase, substring match sobre título)
+# Categorías con keywords AMPLIADOS 15/09/26 tras análisis performance —
+# antes 58/100 videos caían en "otros" por keywords estrechos.
 CATEGORIES: dict[str, list[str]] = {
-    "corrupción": ["corrupción", "corrupto", "sobornos", "mordidas",
-                    "cohecho", "prevaricación", "malversación"],
-    "crimen violento": ["asesinato", "asesino", "crimen", "homicidio",
-                         "matanza", "cadáver", "descuartizad", "acuchill"],
-    "estafa": ["estafa", "fraude", "engaño", "pirámide", "phishing",
-                "timo", "esquema", "chiringuito"],
-    "robo/atraco": ["robo", "atraco", "hurto", "asalto", "butrón"],
-    "casos famosos ES": ["mario conde", "bárcenas", "gürtel", "kio",
-                          "banesto", "matesa", "roldán", "urdangarin",
-                          "villarejo"],
-    "casos sin resolver": ["sin resolver", "cold case", "misterio",
-                            "desaparición", "desaparecido", "impune"],
-    "narcotráfico": ["narco", "cocaína", "droga", "cartel", "marbella"],
-    "político": ["político", "polític", "expresidente", "ministro",
-                  "diputado", "alcalde"],
-    "empresarial": ["empresa", "banco", "bolsa", "quiebra", "caso koldo"],
+    "corrupción política": [
+        "corrupción", "corrupto", "sobornos", "mordidas", "cohecho",
+        "prevaricación", "malversación", "comisiones", "3%", "koldo",
+        "ábalos", "bárcenas", "gürtel", "púnica", "erial", "camps",
+        "millet", "palau", "ere andalucía", "faisán", "chivatazo",
+        "financiación", "trama", "psoe", "pp valencia", "cdc",
+    ],
+    "fraude económico/financiero": [
+        "estafa", "fraude", "timo", "esquema", "pirámide", "phishing",
+        "chiringuito", "banesto", "bankia", "blesa", "tarjetas black",
+        "preferentes", "fórum filatélico", "afinsa", "rumasa", "kio",
+        "de la rosa", "tibidabo", "ballena blanca", "emperador",
+        "nueva rumasa", "300 millones", "millones evaporados",
+        "millones robados", "desaparecieron", "desaparecidos",
+        "torres kio", "psv", "grupo sindical", "innova farma",
+        "matesa", "ausbanc", "ibercorp",
+    ],
+    "casos judiciales/impunidad": [
+        "impune", "impunes", "condenado", "condenados", "sentencia",
+        "sin resolver", "cold case", "dívar", "roldán", "urdangarin",
+        "villarejo", "operación", "juicio", "juzgado", "supremo",
+        "audiencia nacional", "prisión", "cárcel",
+    ],
+    "crimen violento": [
+        "asesinato", "asesino", "crimen", "homicidio", "matanza",
+        "cadáver", "descuartizad", "acuchill", "muerte", "muerto",
+        "desaparecid",
+    ],
+    "narco/mafia": [
+        "narco", "cocaína", "droga", "cartel", "marbella", "camorra",
+        "mafia", "costa del sol", "ley del silencio", "clan",
+    ],
+    "urbanismo/inmobiliario": [
+        "urbanismo", "urbanístic", "andratx", "vivienda", "constructoras",
+        "obras", "sobrecostes", "ave perpiñán", "concesión",
+    ],
+    "actualidad histórica": [
+        "opep", "otán", "otan", "ceuta", "melilla", "euro", "maastricht",
+        "guerra fría", "tratado", "onu", "1973", "brexit",
+    ],
+    "internacional": [
+        "panama papers", "pandora papers", "dieselgate", "volkswagen",
+        "airtel", "telekom", "ftx",
+    ],
 }
 
 
