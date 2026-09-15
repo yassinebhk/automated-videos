@@ -1,0 +1,40 @@
+name: Backfill IG manual
+
+# Sube manualmente varios Shorts YT históricos a Instagram Reels (@waitwhy_).
+# Útil para "poblar" la cuenta IG con contenido que ya tiene tracción en YT.
+#
+# Uso: Actions → "Backfill IG manual" → Run workflow → ajusta `count` y `platforms`.
+#
+# El backfill:
+# - Busca los top-N Shorts YT por views (min 20 views, sin backfill previo a IG)
+# - Descarga el mp4 vertical con yt-dlp si no está local (runner fresco)
+# - Postea a IG Reels vía instagram_poster
+# - Registra en output/backfill_log.json (idempotente — no repite)
+# - Registra cada intento en output/ig_publish_log.json con status
+
+on:
+  workflow_dispatch:
+    inputs:
+      count:
+        description: "Cuántos reels IG subir (recomendado 5-10 para no saturar)"
+        required: true
+        type: string
+        default: "8"
+      platforms:
+        description: "Plataformas coma-sep (default 'instagram' solo; 'instagram,threads' para además)"
+        required: false
+        type: string
+        default: "instagram"
+
+permissions:
+  contents: write
+
+jobs:
+  backfill:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: backfill-once
+      extra_env: |
+        BACKFILL_PER_PLATFORM=${{ inputs.count }}
+        BACKFILL_PLATFORMS=${{ inputs.platforms }}
+    secrets: inherit

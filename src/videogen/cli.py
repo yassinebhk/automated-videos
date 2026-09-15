@@ -1343,13 +1343,27 @@ def narrative_post_cmd():
 @cli.command(name="backfill-once")
 @click.option("--per-platform", type=int, default=2,
               help="Cuántos videos backfillear por plataforma (default 2)")
-def backfill_once_cmd(per_platform: int):
+@click.option("--platforms", type=str, default="",
+              help="Plataformas coma-sep: 'instagram' | 'tiktok,threads' | vacío=todas")
+def backfill_once_cmd(per_platform: int, platforms: str):
     """Repostea top-N Shorts YT históricos a TikTok + IG + Threads.
     Idempotente vía ledger output/backfill_log.json."""
     from . import backfill
     import os, json, urllib.request
 
-    results = backfill.backfill_once(per_platform=per_platform)
+    # Env vars overrides (para workflow_dispatch que solo puede pasar env vars)
+    env_platforms = os.environ.get("BACKFILL_PLATFORMS", "").strip()
+    env_per_platform = os.environ.get("BACKFILL_PER_PLATFORM", "").strip()
+    if env_platforms:
+        platforms = env_platforms
+    if env_per_platform:
+        try:
+            per_platform = int(env_per_platform)
+        except ValueError:
+            pass
+    plats = [p.strip() for p in platforms.split(",") if p.strip()] if platforms else None
+    print(f"backfill-once: platforms={plats or 'ALL'} per_platform={per_platform}")
+    results = backfill.backfill_once(per_platform=per_platform, platforms=plats)
 
     # Report a Telegram si está configurado
     tok = os.environ.get("TELEGRAM_BOT_TOKEN")
