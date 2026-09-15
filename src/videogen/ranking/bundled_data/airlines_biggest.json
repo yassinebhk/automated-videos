@@ -1,0 +1,14 @@
+{
+  "titulo_video": "TOP 10 AEROLÍNEAS más grandes del mundo por pasajeros · 2023",
+  "years": [2023],
+  "items": ["American Airlines", "Delta Airlines", "United Airlines", "Ryanair", "Southwest Airlines", "China Southern", "Turkish Airlines", "Lufthansa", "IndiGo", "Air China"],
+  "data": [
+    [219, 190, 174, 168, 137, 132, 83, 122, 100, 76]
+  ],
+  "unidad": "millones pasajeros",
+  "source_label": "IATA World Air Transport Statistics 2024",
+  "source_url": "https://www.iata.org/en/publications/",
+  "cierre_dato": "American Airlines lidera con 219M pasajeros — la mayor aerolínea del mundo",
+  "_fetched_at": "2026-09-15T00:00:00+00:00",
+  "_manual_curated": true
+}

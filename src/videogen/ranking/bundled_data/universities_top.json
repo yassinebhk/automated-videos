@@ -1,0 +1,14 @@
+{
+  "titulo_video": "TOP 10 UNIVERSIDADES del mundo · Shanghai Ranking 2024",
+  "years": [2024],
+  "items": ["Harvard (EE.UU.)", "Stanford (EE.UU.)", "MIT (EE.UU.)", "Cambridge (RU)", "Berkeley (EE.UU.)", "Princeton (EE.UU.)", "Oxford (RU)", "Columbia (EE.UU.)", "Caltech (EE.UU.)", "Chicago (EE.UU.)"],
+  "data": [
+    [100, 76.9, 68.8, 68.8, 66.9, 60.5, 58.6, 58.2, 55.4, 51.9]
+  ],
+  "unidad": "puntos ARWU (Harvard=100)",
+  "source_label": "Academic Ranking of World Universities (Shanghai)",
+  "source_url": "https://www.shanghairanking.com/rankings/arwu/2024",
+  "cierre_dato": "Harvard mantiene el 1º puesto en el Shanghai Ranking por 22º año consecutivo",
+  "_fetched_at": "2026-09-15T00:00:00+00:00",
+  "_manual_curated": true
+}

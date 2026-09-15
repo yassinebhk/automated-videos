@@ -1,0 +1,14 @@
+{
+  "titulo_video": "TOP 10 LIGAS de FÚTBOL con más INGRESOS · 2022-23",
+  "years": [2023],
+  "items": ["Premier League (ING)", "Bundesliga (ALE)", "LaLiga (ESP)", "Serie A (ITA)", "Ligue 1 (FRA)", "MLS (EE.UU.)", "Süper Lig (TUR)", "Eredivisie (NED)", "Liga Portugal", "Championship (ING)"],
+  "data": [
+    [6947, 3563, 3410, 2452, 2261, 1200, 800, 660, 550, 500]
+  ],
+  "unidad": "millones € ingresos",
+  "source_label": "Deloitte Football Money League 2024",
+  "source_url": "https://www2.deloitte.com/uk/en/pages/sports-business-group/articles/annual-review-of-football-finance.html",
+  "cierre_dato": "Premier League domina con €6.947M — casi 2× LaLiga y Bundesliga juntas",
+  "_fetched_at": "2026-09-15T00:00:00+00:00",
+  "_manual_curated": true
+}

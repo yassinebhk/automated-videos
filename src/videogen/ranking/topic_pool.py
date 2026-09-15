@@ -1,10 +1,9 @@
-"""Pool rankings TopRanking — 76 topics con dataset REAL.
+"""Pool rankings TopRanking — 81 topics con dataset REAL.
 
-15/09/26: expandido de 8 → 36 → 46 → 61 → 66 → 71 → 76 topics tras
-user request "cuanto más mejor". 36 World Bank + 40 bundled curated
-(JSON verificados). Batch 4/5 con enfoque España + curiosidades virales.
+15/09/26: expandido de 8 → 36 → 46 → 61 → 66 → 71 → 76 → 81 topics.
+36 World Bank + 45 bundled curated (JSON verificados).
 
-Con cooldown 90d y 76 topics: ~230 días sin repetir = 7.5 meses de
+Con cooldown 90d y 81 topics: ~245 días sin repetir = 8 meses de
 contenido único diario. Cuando roten, mismos topics con datos actualizados.
 
 Fuentes 100% verificables + citables. Cero alucinación LLM.
@@ -372,6 +371,30 @@ TOPICS = [
      "titulo": "TOP 10 PAÍSES más GRANDES del mundo por superficie",
      "dataset_key": "countries_biggest_area",
      "fuente": "CIA World Factbook"},
+
+    # ═══════════════════════════════════════════════════════════
+    # BUNDLED DATA CURADA · BATCH 6 (15/09/26)
+    # ═══════════════════════════════════════════════════════════
+    {"key": "actores_mejor_pagados", "categoria": "cine",
+     "titulo": "TOP 10 ACTORES mejor PAGADOS del mundo",
+     "dataset_key": "actors_highest_paid",
+     "fuente": "Forbes World's Highest-Paid Actors"},
+    {"key": "youtubers_espanoles_top", "categoria": "internet",
+     "titulo": "TOP 10 YOUTUBERS ESPAÑOLES con más SUSCRIPTORES",
+     "dataset_key": "spanish_youtubers",
+     "fuente": "Social Blade"},
+    {"key": "ligas_futbol_ingresos", "categoria": "deporte",
+     "titulo": "TOP 10 LIGAS de FÚTBOL con más INGRESOS · 2023",
+     "dataset_key": "leagues_football_revenue",
+     "fuente": "Deloitte Football Money League 2024"},
+    {"key": "universidades_top", "categoria": "educacion",
+     "titulo": "TOP 10 UNIVERSIDADES del mundo · Shanghai Ranking",
+     "dataset_key": "universities_top",
+     "fuente": "Shanghai Ranking (ARWU)"},
+    {"key": "aerolineas_mas_grandes", "categoria": "empresas",
+     "titulo": "TOP 10 AEROLÍNEAS más grandes por PASAJEROS · 2023",
+     "dataset_key": "airlines_biggest",
+     "fuente": "IATA World Air Transport Statistics 2024"},
 ]
 
 

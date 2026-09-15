@@ -1,0 +1,14 @@
+{
+  "titulo_video": "TOP 10 YOUTUBERS ESPAÑOLES con más SUSCRIPTORES",
+  "years": [2024],
+  "items": ["El Rubius", "Vegetta777", "TheGrefg", "AuronPlay", "Wismichu", "Dalas Review", "Willyrex", "iTownGamePlay", "elrubius (segundo)", "Alexby11"],
+  "data": [
+    [40.4, 34.1, 21.5, 30.3, 8.2, 7.7, 10.9, 8.5, 21.5, 5.2]
+  ],
+  "unidad": "millones suscriptores",
+  "source_label": "Social Blade / YouTube público",
+  "source_url": "https://socialblade.com/youtube/top/country/es",
+  "cierre_dato": "El Rubius lidera con 40,4M subs — el youtuber español más grande de la historia",
+  "_fetched_at": "2026-09-15T00:00:00+00:00",
+  "_manual_curated": true
+}
