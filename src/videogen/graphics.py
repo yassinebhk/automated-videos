@@ -447,7 +447,7 @@ def generate_graphic_specs(loc: LocalizedScript) -> list[GraphicSpec]:
         temperature=0.5,
         max_output_tokens=2048,
     )
-    models = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-flash-latest"]
+    models = ["gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-flash-latest"]
     client = genai.Client(api_key=gemini_key())
     last_err = None
     for model in models:

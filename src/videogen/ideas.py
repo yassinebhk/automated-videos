@@ -13,7 +13,7 @@ from google.genai import types
 
 from .config import PROMPTS_DIR, gemini_key
 
-MODELS = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-flash-latest"]
+MODELS = ["gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-flash-latest"]
 NICHE_PATH = PROMPTS_DIR / "niche.md"
 
 IDEAS_SYSTEM = """Eres un estratega de contenido para un canal de SHORTS con DOS vías:

@@ -229,7 +229,7 @@ def refresh_topics_for(niche: str, n: int = 15) -> list[dict] | None:
             f"Prioriza NOVEDADES 2026 y temas long-tail infravalorados."
         )
         resp = client.models.generate_content(
-            model="gemini-2.5-flash-lite",
+            model="gemini-3.5-flash-lite",
             contents=prompt,
             config=types.GenerateContentConfig(
                 temperature=1.0,
@@ -353,7 +353,7 @@ def refresh_longform_topics_for(niche: str, n: int = 8) -> list[dict] | None:
             f"3-5 capítulos distintos."
         )
         resp = client.models.generate_content(
-            model="gemini-2.5-flash-lite",
+            model="gemini-3.5-flash-lite",
             contents=prompt,
             config=types.GenerateContentConfig(
                 temperature=0.9,

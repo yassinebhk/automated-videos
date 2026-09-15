@@ -30,8 +30,8 @@ from typing import Any
 # 14/09/26 expandido de 2 → 5 modelos. Free tier son 20 req/día PER MODEL,
 # así que 5 modelos = ~100 req/día capacidad total antes de saturar todos.
 GEMINI_MODELS = [
-    "gemini-2.5-flash",
-    "gemini-2.5-flash-lite",
+    "gemini-3.5-flash",
+    "gemini-3.5-flash-lite",
     "gemini-2.0-flash",
     "gemini-1.5-flash",
     "gemini-1.5-flash-8b",

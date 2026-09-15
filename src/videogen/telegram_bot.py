@@ -228,7 +228,7 @@ def _classify_message(text: str) -> dict:
         from google.genai import types
         client = genai.Client(api_key=key)
         resp = client.models.generate_content(
-            model="gemini-2.5-flash-lite",
+            model="gemini-3.5-flash-lite",
             contents=f"Message: {text}",
             config=types.GenerateContentConfig(
                 system_instruction=system,

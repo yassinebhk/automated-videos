@@ -138,7 +138,7 @@ def _gemini_topics(prompt: str, temperature: float) -> list[dict] | None:
             return None
         client = genai.Client(api_key=key)
         resp = client.models.generate_content(
-            model="gemini-2.5-flash-lite",
+            model="gemini-3.5-flash-lite",
             contents=prompt,
             config=types.GenerateContentConfig(
                 temperature=temperature,

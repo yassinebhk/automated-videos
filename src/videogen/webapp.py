@@ -519,7 +519,7 @@ th{{color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:11px;let
       </table>
       <h3>Robustez</h3>
       <ul>
-        <li><b>Cadena de modelos de respaldo:</b> <code>gemini-2.5-flash → flash-lite → flash-latest</code>. Si uno da error 429/503, prueba el siguiente.</li>
+        <li><b>Cadena de modelos de respaldo:</b> <code>gemini-3.5-flash → flash-lite → flash-latest</code>. Si uno da error 429/503, prueba el siguiente.</li>
         <li><b>Reintento de JSON:</b> si la respuesta llega truncada, reintenta (límite subido a 16.384 tokens).</li>
         <li><b>Escrito "para el oído":</b> el prompt pide texto con pocas comas para que la voz fluya sin pausas raras.</li>
       </ul>

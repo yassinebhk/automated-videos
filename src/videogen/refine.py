@@ -35,7 +35,7 @@ def refine_visual_keywords(scripts: GeneratedScripts) -> GeneratedScripts:
     client = genai.Client(api_key=api_key)
     payload = scripts.model_dump()
     response = client.models.generate_content(
-        model="gemini-2.5-flash",
+        model="gemini-3.5-flash",
         contents=json.dumps(payload, ensure_ascii=False),
         config=types.GenerateContentConfig(
             system_instruction=REFINE_SYSTEM,

@@ -26,7 +26,7 @@ def _veracity_preamble() -> str:
         return VERACITY_PATH.read_text(encoding="utf-8") + "\n\n---\n\n"
     return ""
 # Cadena de modelos: si el primario da 503/429, cae al siguiente.
-MODELS = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-flash-latest"]
+MODELS = ["gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-flash-latest"]
 
 
 def _system_prompt() -> str:

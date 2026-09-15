@@ -1,0 +1,14 @@
+{
+  "titulo_video": "TOP 10 EMPRESAS del IBEX 35 · Capitalización 2024",
+  "years": [2024],
+  "items": ["Inditex", "Iberdrola", "Banco Santander", "BBVA", "CaixaBank", "Amadeus", "Ferrovial", "Repsol", "Cellnex", "Aena"],
+  "data": [
+    [149, 82, 71, 60, 39, 30, 26, 17, 24, 27]
+  ],
+  "unidad": "miles millones € capitalización",
+  "source_label": "Bolsa de Madrid (BME) / Reuters",
+  "source_url": "https://www.bolsamadrid.es/esp/aspx/Mercados/Precios.aspx?indice=ESI100000000",
+  "cierre_dato": "Inditex lidera IBEX35 con €149B — Amancio Ortega la convirtió en el gigante retail global",
+  "_fetched_at": "2026-09-15T00:00:00+00:00",
+  "_manual_curated": true
+}
