@@ -1,0 +1,20 @@
+name: Satisfying daily (Infinite Fractals — global)
+
+# Canal 'satisfying' generativo (fractal zoom). GLOBAL, sin idioma. 100% procedural
+# (numpy/matplotlib) + música Pixabay. Canal YT_SATISFYING_*. Cron 18:07 UTC.
+# ACTIVO con secrets YT_SATISFYING_REFRESH_TOKEN/CLIENT_ID/CLIENT_SECRET.
+
+on:
+  schedule:
+    - cron: "7 18 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  satisfying:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: satisfying-once
+    secrets: inherit
