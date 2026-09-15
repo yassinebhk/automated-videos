@@ -874,7 +874,11 @@ def yt_cookies_check_cmd():
                 test_url = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
                 with tempfile.TemporaryDirectory() as td:
                     out_path = f"{td}/test.mp4"
-                    cmd = ["yt-dlp", "-f", "b[ext=mp4]/b", "-o", out_path,
+                    # -f: primero intenta best mp4 muxable, luego best genérico
+                    cmd = ["yt-dlp",
+                           "-f", "bv*[ext=mp4]+ba[ext=m4a]/best[ext=mp4]/best",
+                           "--merge-output-format", "mp4",
+                           "-o", out_path,
                            "--no-warnings", "--no-playlist",
                            "--cookies", p,
                            "--extractor-args", "youtube:player_client=web",

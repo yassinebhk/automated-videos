@@ -182,7 +182,12 @@ def _ensure_vertical_local(cand: dict[str, Any]) -> Path | None:
     for i, extra in enumerate(strategies):
         cmd = [
             "yt-dlp",
-            "-f", "b[ext=mp4]/b",
+            # Formato robusto: mp4 muxable (video+audio separados que yt-dlp
+            # combina con ffmpeg) → fallback best mp4 single-file → best general.
+            # 'b[ext=mp4]/b' fallaba con YT_COOKIES en player=web porque YT
+            # sirve DASH y ese filtro no matcheaba streams separados (15/09).
+            "-f", "bv*[ext=mp4]+ba[ext=m4a]/best[ext=mp4]/best",
+            "--merge-output-format", "mp4",
             "-o", str(path),
             "--no-warnings",
             "--no-playlist",
