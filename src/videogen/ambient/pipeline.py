@@ -50,3 +50,49 @@ def _notify(text: str, urgent: bool = False) -> None:
     urgent=True → envía inmediatamente (fallos críticos)."""
     from ..notify_batch import add
     add(text, urgent=urgent)
+
+
+def run_short() -> dict[str, Any] | None:
+    """Genera + sube 1 Short ambient al canal MenteEnCalma (cebo → long-form)."""
+    from . import shorts as ambient_shorts
+    from ..upload_youtube import upload_video
+    from pathlib import Path
+
+    print("=== MenteEnCalma Short · start ===")
+    meta = ambient_shorts.generate_ambient_short()
+    if not meta:
+        _notify("❌ MenteEnCalma Short: generación falló", urgent=True)
+        return None
+
+    # Sube al canal YT_AMBIENT
+    prev_prefix = os.environ.get("YT_CHANNEL_PREFIX", "")
+    os.environ["YT_CHANNEL_PREFIX"] = "YT_AMBIENT"
+    try:
+        vid = upload_video(
+            Path(meta["video_path"]),
+            title=meta["title"][:100],
+            description=meta["description"][:4900],
+            tags=meta.get("tags", []),
+            category_id="10",  # Music
+            is_short=True,
+            privacy="public",
+        )
+        url = f"https://youtube.com/shorts/{vid}"
+        _notify(f"🌙 <b>MenteEnCalma Short</b>\n<i>{meta['title'][:80]}</i>\n{url}")
+        # MP4 al Telegram para TikTok
+        try:
+            from ..notify_batch import send_video_for_tiktok
+            send_video_for_tiktok(meta["video_path"], "MenteEnCalma",
+                                     meta["title"], url)
+        except Exception:
+            pass
+        return {"generated": meta, "url": url}
+    except Exception as e:
+        _notify(f"⚠️ MenteEnCalma Short upload fail: {type(e).__name__}: {str(e)[:150]}",
+                 urgent=True)
+        return {"generated": meta, "error": str(e)}
+    finally:
+        if prev_prefix:
+            os.environ["YT_CHANNEL_PREFIX"] = prev_prefix
+        else:
+            os.environ.pop("YT_CHANNEL_PREFIX", None)

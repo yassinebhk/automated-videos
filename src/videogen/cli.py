@@ -803,6 +803,17 @@ def ambient_once_cmd():
     print(json.dumps(result, indent=2, default=str))
 
 
+@cli.command(name="ambient-short")
+def ambient_short_cmd():
+    """Genera + sube 1 Short ambient (40s) al canal MenteEnCalma como cebo
+    para long-form. Cross-fade imgs vertical + overlay CTA."""
+    from .ambient import pipeline
+    result = pipeline.run_short()
+    if not result:
+        raise SystemExit(1)
+    print(json.dumps(result, indent=2, default=str))
+
+
 @cli.command(name="social-boost")
 def social_boost_cmd():
     """Postea a Bluesky + Mastodon + Threads un top-YT reciente con hook fresco."""
