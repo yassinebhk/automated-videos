@@ -7,7 +7,7 @@ on:
   workflow_dispatch: {}
 
 permissions:
-  contents: read
+  contents: write  # requerido por _videogen-job.yml (commit stats step)
 
 jobs:
   check:
