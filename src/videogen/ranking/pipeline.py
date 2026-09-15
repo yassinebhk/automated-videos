@@ -109,7 +109,7 @@ def run_once() -> dict[str, Any]:
     _mark_used(topic["key"])
 
     # Cross-post RRSS
-    cross = _crosspost(meta["title"], up["url"], topic)
+    cross = _crosspost(meta["title"], up["url"], topic, meta=meta)
     cross_summary = " · ".join(f"{k}{'✅' if v else '❌'}" for k, v in cross.items())
     _notify(f"✅ <b>TopRanking ES</b> · {up['url']}\n"
             f"<i>{meta['title'][:60]}</i> · RRSS {cross_summary}")
@@ -125,22 +125,30 @@ def run_once() -> dict[str, Any]:
             "topic_key": topic["key"], "crosspost": cross}
 
 
-def _crosspost(title: str, url: str, topic: dict) -> dict[str, bool]:
-    """Cross-post ranking a Bluesky/Mastodon/Threads con marca 📊."""
-    result: dict[str, bool] = {}
+def _crosspost(title: str, url: str, topic: dict, meta: dict | None = None) -> dict[str, bool]:
+    """Cross-post ranking a Bluesky/Mastodon/Threads/Instagram con marca 📊.
+
+    IG lo hace vía crosspost_full — usa el mp4 del slug ranking. Sin mp4 → skip IG.
+    """
+    from pathlib import Path
+    from .. import crosspost_full
+    from ..config import UPLOADED_DIR, PENDING_DIR
     teaser = f"📊 Ranking · {topic.get('fuente','')} · dato clave: {topic.get('cifra_ancla','')}"
-    for name, poster_mod, icon in [
-        ("bluesky", "videogen.bluesky_poster", "🦋"),
-        ("mastodon", "videogen.mastodon_poster", "🐘"),
-        ("threads", "videogen.threads_poster", "🧵"),
-    ]:
-        try:
-            import importlib
-            mod = importlib.import_module(poster_mod)
-            fn = getattr(mod, f"post_short_to_{name}")
-            r = fn(title, url, teaser=teaser)
-            result[icon] = bool(r)
-        except Exception as e:
-            print(f"  ranking {name} fail: {e}")
-            result[icon] = False
-    return result
+
+    # Buscar dst_dir del slug para que IG encuentre el mp4 vertical
+    slug = meta.get("slug") if meta else None
+    dst_dir: Path | None = None
+    if slug:
+        for base in (UPLOADED_DIR, PENDING_DIR):
+            p = base / slug
+            if p.exists():
+                dst_dir = p
+                break
+    if dst_dir is None:
+        # Fallback: mp4 sin dst_dir → solo RRSS texto
+        return crosspost_full.crosspost_short_from_mp4(
+            Path(meta.get("video_path", "")) if meta else Path(""),
+            title, url, teaser=teaser, channel_label="ranking", slug=slug,
+        )
+    return crosspost_full.crosspost_short(dst_dir, title, url,
+                                            teaser=teaser, channel_label="ranking")

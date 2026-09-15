@@ -141,4 +141,15 @@ def run_once() -> dict[str, Any]:
     _mark_used(topic["key"])
     _notify(f"✅ <b>{DISPLAY_NAME}</b> · {up['url']}\n<i>{meta['title'][:60]}</i>")
     _send_tt_video(meta, up["url"])
+    # Crosspost RRSS unificado (BS + MA + TH + IG @waitwhy_)
+    try:
+        from .. import crosspost_full
+        teaser = f"📊 Global ranking · {topic.get('fuente','')} · verified data"
+        cross = crosspost_full.crosspost_short_from_mp4(
+            Path(meta["video_path"]), meta["title"], up["url"],
+            teaser=teaser, channel_label="rankings-en", slug=meta["slug"],
+        )
+        _notify(f"📊 <b>Rankings EN · RRSS</b> {crosspost_full.summary_line(cross)}")
+    except Exception as e:
+        print(f"  rankings-en crosspost fail: {e}")
     return {"status": "ok", "slug": meta["slug"], "url": up["url"], "topic_key": topic["key"]}

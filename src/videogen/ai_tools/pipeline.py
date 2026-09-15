@@ -206,6 +206,26 @@ def run_once() -> dict[str, Any]:
         _notify(f"✅ <b>{DISPLAY_NAME}</b> · {url}\n"
                 f"<i>{topic.get('titulo','')[:60]}</i>")
         _send_tt_video(slug, _load_video_title(slug) or topic.get("titulo", ""), url)
+        # Crosspost RRSS unificado (BS + MA + TH + IG @waitwhy_)
+        try:
+            from ..config import UPLOADED_DIR, PENDING_DIR
+            from .. import crosspost_full
+            dst_dir = None
+            for base in (UPLOADED_DIR, PENDING_DIR):
+                p = base / slug
+                if p.exists():
+                    dst_dir = p
+                    break
+            if dst_dir:
+                title = _load_video_title(slug) or topic.get("titulo", "")
+                teaser = f"🤖 AI tool · {topic.get('categoria','')}"
+                cross = crosspost_full.crosspost_short(
+                    dst_dir, title, url, teaser=teaser,
+                    channel_label="aitools",
+                )
+                _notify(f"🤖 <b>AI Tools · RRSS</b> {crosspost_full.summary_line(cross)}")
+        except Exception as e:
+            print(f"  aitools crosspost fail: {e}")
         return {"status": "ok", "slug": slug, "url": url, "topic_key": topic["key"]}
     except Exception as e:
         import traceback

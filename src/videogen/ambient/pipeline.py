@@ -86,6 +86,17 @@ def run_short() -> dict[str, Any] | None:
                                      meta["title"], url)
         except Exception:
             pass
+        # Crosspost RRSS unificado (BS + MA + TH + IG @waitwhy_)
+        try:
+            from .. import crosspost_full
+            teaser = "🌙 Sonido ambient para relajarte — audio real royalty-free"
+            cross = crosspost_full.crosspost_short_from_mp4(
+                Path(meta["video_path"]), meta["title"], url,
+                teaser=teaser, channel_label="menteencalma",
+            )
+            _notify(f"🌙 <b>MenteEnCalma · RRSS</b> {crosspost_full.summary_line(cross)}")
+        except Exception as e:
+            print(f"  menteencalma crosspost fail: {e}")
         return {"generated": meta, "url": url}
     except Exception as e:
         _notify(f"⚠️ MenteEnCalma Short upload fail: {type(e).__name__}: {str(e)[:150]}",
