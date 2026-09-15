@@ -1,0 +1,20 @@
+name: Pádel daily (Pádel Pro ES)
+
+# Canal consejos de pádel con jugada recreada en pista. Voz Edge (guion curado,
+# 0 LLM) + animación matplotlib. Canal YT_PADEL_*. Cron 09:07 UTC.
+# ACTIVO con secrets YT_PADEL_REFRESH_TOKEN/CLIENT_ID/CLIENT_SECRET.
+
+on:
+  schedule:
+    - cron: "7 9 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  padel:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: padel-once
+    secrets: inherit

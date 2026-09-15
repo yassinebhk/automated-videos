@@ -132,13 +132,23 @@ def pick_top_candidates(platform: str, n: int = 2, min_views: int = 20) -> list[
 
 
 def _ensure_vertical_local(cand: dict[str, Any]) -> Path | None:
-    """Devuelve la ruta al mp4 vertical. Si no existe local (típico en GH
-    Actions runner tras fresh checkout), descarga el Short desde YouTube via
-    yt-dlp usando el video_id. Los Shorts son públicos → download OK sin auth.
+    """Devuelve la ruta al mp4 vertical.
+
+    Prioridad de fuentes:
+      1. output/uploaded/{slug}/video_es_vertical.mp4 (LOCAL Mac)
+      2. docs/reels/{slug}.mp4 (commiteado — disponible en runner GH tras checkout)
+      3. yt-dlp descarga desde YT (necesita YT_COOKIES en runner para bypass bot-check)
     """
     path: Path = cand["vertical_path"]
     if path.exists() and path.stat().st_size > 100_000:
         return path
+
+    # Fuente 2: docs/reels/{slug}.mp4 — mp4 que YA está en el repo (backfill IG
+    # inicial usó esto porque yt-dlp está bloqueado en runners GH sin YT_COOKIES).
+    docs_reel = ROOT / "docs" / "reels" / f"{cand['slug']}.mp4"
+    if docs_reel.exists() and docs_reel.stat().st_size > 100_000:
+        print(f"  backfill: usando {docs_reel.relative_to(ROOT)} ({docs_reel.stat().st_size//1024}KB)")
+        return docs_reel
 
     path.parent.mkdir(parents=True, exist_ok=True)
     video_id = cand["video_id"]

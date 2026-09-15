@@ -1116,6 +1116,16 @@ def satisfying_once_cmd():
         raise SystemExit(1)
 
 
+@cli.command(name="padel-once")
+def padel_once_cmd():
+    """Genera + sube 1 consejo de pádel (jugada en pista) al canal Pádel Pro ES (YT_PADEL)."""
+    from .padel import pipeline
+    result = pipeline.run_once()
+    print(json.dumps(result, indent=2, ensure_ascii=False))
+    if result.get("status") not in ("ok",):
+        raise SystemExit(1)
+
+
 @cli.command(name="precache-scripts")
 @click.option("--n", default=3, type=int, help="Scripts a generar por canal (default 3)")
 def precache_scripts_cmd(n: int):

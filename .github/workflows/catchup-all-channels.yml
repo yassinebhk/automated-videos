@@ -150,6 +150,14 @@ jobs:
       command: satisfying-once
     secrets: inherit
 
+  padel_short:
+    if: ${{ always() && (inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue') }}
+    needs: [satisfying_short]
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: padel-once
+    secrets: inherit
+
   # ─── LONG-FORM (dominicales) ───
 
   waitwhy_long:
