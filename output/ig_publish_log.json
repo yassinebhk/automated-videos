@@ -588,5 +588,18 @@
     "media_id": "17877795834548705",
     "url": "https://instagram.com/reel/17877795834548705",
     "ts": "2026-09-16T21:45:47.519266+00:00"
+  },
+  {
+    "slug": "caso-naseiro-corruption-wiretaps",
+    "title": "Caso Naseiro — 6M€ de comisiones y NADIE fue a la cárcel · #1",
+    "status": "fail_container_ready",
+    "container_id": "18095542445188569",
+    "public_url": "https://yassinebhk.github.io/automated-videos/reels/caso-naseiro-corruption-wiretaps.mp4",
+    "attempts": 4,
+    "catbox_status": "rc=412 body=Invalid uploader",
+    "status_ext": "ERROR",
+    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
+    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095542445188569'}",
+    "ts": "2026-09-16T22:24:12.731270+00:00"
   }
 ]
