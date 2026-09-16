@@ -216,5 +216,17 @@
     "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
     "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095480000188569'}",
     "ts": "2026-09-16T12:42:53.481026+00:00"
+  },
+  {
+    "slug": "nueva-cuota-autonomos-2026",
+    "title": "Nuevos tramos cuota autónomos 2026 · €230 a €590 · #1",
+    "status": "fail_container_ready",
+    "container_id": "18095482289188569",
+    "public_url": "https://yassinebhk.github.io/automated-videos/reels/nueva-cuota-autonomos-2026.mp4",
+    "attempts": 3,
+    "status_ext": "ERROR",
+    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
+    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095482289188569'}",
+    "ts": "2026-09-16T13:01:15.815250+00:00"
   }
 ]
