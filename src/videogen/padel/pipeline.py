@@ -13,7 +13,7 @@ from . import generator, topic_pool
 
 LEDGER = ROOT / "output" / "padel_ledger.json"
 YT_PREFIX = "YT_PADEL"
-DISPLAY_NAME = "Pádel Pro ES"
+DISPLAY_NAME = "Padel Pro"
 
 
 def _load_ledger() -> dict[str, str]:
