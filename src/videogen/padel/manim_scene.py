@@ -58,28 +58,35 @@ class PadelLob(Scene):
         self.play(FadeIn(lab, shift=DOWN * 0.3), run_time=0.5)
         self.wait(0.5)
 
-        # ---- TRAYECTORIA COMPLETA (una sola, continua): globo + rebote en cristal ----
+        # ---- TRAYECTORIA COMPLETA (una sola, continua): globo + REBOTE en cristal ----
         start = pt(3.3, 3.6)
-        land = pt(3.6, 18.3)                       # cae en el fondo rival (cerca del cristal)
-        after = pt(5.2, 15.5)                      # sale del rebote hacia el centro
+        land = pt(3.5, 19.5)                       # LLEGA AL CRISTAL del fondo
+        after = pt(5.4, 15.8)                      # sale rebotado hacia el centro
         arc1 = ArcBetweenPoints(start, land, angle=TAU / 7, color=YELLOW, stroke_width=10)
-        arc2 = ArcBetweenPoints(land, after, angle=-TAU / 9, color=YELLOW, stroke_width=8)
+        arc2 = ArcBetweenPoints(land, after, angle=-TAU / 6, color=YELLOW, stroke_width=9)  # rebote marcado
 
         self.play(Transform(lab, title("Lob deep over them")), run_time=0.5)
         self.play(Create(arc1), run_time=0.6)
 
-        zone = Circle(radius=1.2, stroke_color=YELLOW, stroke_width=5,
-                      fill_color=YELLOW, fill_opacity=0.16).move_to(land)
+        zone = Circle(radius=1.05, stroke_color=YELLOW, stroke_width=5,
+                      fill_color=YELLOW, fill_opacity=0.16).move_to(pt(3.5, 18.2))
         self.play(FadeIn(zone), run_time=0.3)
 
-        # bola veloz con estela recorriendo TODO el arco (no un segmento)
+        # bola veloz con estela recorriendo TODO el arco
         ball = Dot(start, radius=0.30, color="#e8ff2a").set_z_index(6)
         trail = TracedPath(ball.get_center, stroke_color="#fff59d",
                            stroke_width=7, dissipating_time=0.45)
         self.add(trail, ball)
-        self.play(MoveAlongPath(ball, arc1), rate_func=linear, run_time=0.75)   # globo rápido
-        self.play(Flash(land, color=WHITE, line_length=0.6), run_time=0.25)     # rebote pared
-        self.play(Create(arc2), MoveAlongPath(ball, arc2), rate_func=linear, run_time=0.5)  # sale del cristal
+        self.play(MoveAlongPath(ball, arc1), rate_func=linear, run_time=0.7)   # globo rápido hasta el cristal
+
+        # REBOTE VISIBLE: destello + el cristal del fondo se ilumina + "Off the glass!"
+        wall_glow = Line(pt(1.5, 20), pt(5.5, 20), color=YELLOW, stroke_width=16).set_z_index(2)
+        bounce_lab = Text("Off the glass!", font_size=40, color=YELLOW, weight=BOLD).next_to(zone, DOWN, buff=0.2)
+        self.play(Flash(land, color=WHITE, line_length=0.9, num_lines=16),
+                  FadeIn(wall_glow, rate_func=there_and_back),
+                  FadeIn(bounce_lab, scale=1.2), run_time=0.5)
+        self.play(Create(arc2), MoveAlongPath(ball, arc2), rate_func=rush_from, run_time=0.6)  # sale rebotada
+        self.play(FadeOut(bounce_lab), run_time=0.2)
         self.wait(0.3)
 
         # ---- REACCIÓN: rivales retroceden, tú subes a la red ----
