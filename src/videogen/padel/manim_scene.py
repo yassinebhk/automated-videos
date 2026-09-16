@@ -9,11 +9,10 @@ Render vertical 9:16 para Shorts. Se renderiza en CI (apt: cairo/pango/ffmpeg).
 from manim import *
 import numpy as np
 
-config.frame_height = 12.0  # con -r 1080,1920 → frame_width ≈ 6.75 (vertical)
-
-# court en metros: cx∈[0,10] ancho, cy∈[0,20] largo (cy=0 abajo/cerca, 20 arriba/lejos)
+# Frame vertical por defecto (8 alto × 4.5 ancho con -r 1080,1920).
+# El campo (10m×20m, ratio 1:2) LLENA el vertical: alto 6.8 (85%), ancho 3.4.
 def pt(cx, cy):
-    return np.array([-1.5 + cx / 10.0 * 3.0, -4.5 + cy / 20.0 * 9.0, 0.0])
+    return np.array([-1.7 + cx / 10.0 * 3.4, -3.4 + cy / 20.0 * 6.8, 0.0])
 
 
 class PadelLob(Scene):
