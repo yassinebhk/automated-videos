@@ -53,30 +53,49 @@ def run_once() -> dict[str, Any]:
         _notify(f"❌ Pádel falló generación · {topic['key']}", urgent=True)
         return {"status": "gen_fail", "topic_key": topic["key"]}
 
+    # YT upload opcional: si no hay secret YT_PADEL_REFRESH_TOKEN, skip
+    # → mp4 sigue subiéndose a IG+TT (útil hasta que se cree el canal YT).
     from ..upload_youtube import upload_video
     prev = os.environ.get("YT_CHANNEL_PREFIX", "")
     os.environ["YT_CHANNEL_PREFIX"] = YT_PREFIX
-    print(f"  padel: prefix={YT_PREFIX} · has_refresh={bool(os.environ.get(YT_PREFIX + '_REFRESH_TOKEN'))}")
-    try:
-        vid = upload_video(Path(meta["video_path"]), title=meta["title"][:100],
-                           description=meta["description"][:4900], tags=meta.get("tags", []),
-                           category_id="17", is_short=True, privacy="public")
-        url = f"https://youtube.com/shorts/{vid}"
-    except Exception as e:
-        print(f"  padel upload fail: {type(e).__name__}: {e}")
-        _notify(f"⚠️ Pádel {topic['key']} generado, upload falló", urgent=True)
-        return {"status": "upload_fail", "topic_key": topic["key"]}
-    finally:
-        if prev:
-            os.environ["YT_CHANNEL_PREFIX"] = prev
-        else:
-            os.environ.pop("YT_CHANNEL_PREFIX", None)
+    has_creds = bool(os.environ.get(YT_PREFIX + "_REFRESH_TOKEN"))
+    print(f"  padel: prefix={YT_PREFIX} · has_refresh={has_creds}")
+    url = ""
+    yt_status = "skip_no_creds"
+    if has_creds:
+        try:
+            vid = upload_video(Path(meta["video_path"]), title=meta["title"][:100],
+                               description=meta["description"][:4900], tags=meta.get("tags", []),
+                               category_id="17", is_short=True, privacy="public")
+            url = f"https://youtube.com/shorts/{vid}"
+            yt_status = "ok"
+        except Exception as e:
+            print(f"  padel upload fail: {type(e).__name__}: {e}")
+            yt_status = f"fail: {type(e).__name__}"
+    if prev:
+        os.environ["YT_CHANNEL_PREFIX"] = prev
+    else:
+        os.environ.pop("YT_CHANNEL_PREFIX", None)
 
     _mark_used(topic["key"])
-    _notify(f"✅ <b>{DISPLAY_NAME}</b> · {url}\n<i>{topic['titulo']}</i>")
+    yt_line = url if url else yt_status
+    _notify(f"✅ <b>{DISPLAY_NAME}</b> · YT: {yt_line}\n<i>{topic['titulo']}</i>")
+    # Crosspost IG (no requiere URL YT)
+    try:
+        from .. import crosspost_full
+        cross = crosspost_full.crosspost_short_from_mp4(
+            Path(meta["video_path"]), meta["title"], url,
+            teaser=f"🎾 Pádel · {topic.get('cifra_ancla','')}",
+            channel_label="padel", slug=meta["slug"],
+        )
+        _notify(f"🎾 <b>Pádel · RRSS</b> {crosspost_full.summary_line(cross)}")
+    except Exception as e:
+        print(f"  padel crosspost fail: {e}")
+    # TT video para subida manual
     try:
         from ..notify_batch import send_video_for_tiktok
         send_video_for_tiktok(meta["video_path"], DISPLAY_NAME, topic["titulo"], url)
     except Exception as e:
         print(f"  padel: TT tg fail — {e}")
-    return {"status": "ok", "slug": meta["slug"], "url": url, "topic_key": topic["key"]}
+    return {"status": "ok", "slug": meta["slug"], "url": url,
+            "topic_key": topic["key"], "yt_status": yt_status}

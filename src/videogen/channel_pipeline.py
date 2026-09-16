@@ -149,30 +149,35 @@ def _load_video_title(slug: str) -> str | None:
 
 
 def _crosspost(cfg: ChannelConfig, slug: str, url: str, topic: dict) -> dict[str, bool]:
-    """Cross-post RRSS con marca del nicho (emoji audiencia + cifra)."""
+    """Cross-post RRSS con marca del nicho (emoji audiencia + cifra).
+
+    url puede ser vacía si el canal aún no tiene YT (subimos solo a IG
+    que no requiere URL, y skip BS/MA/TH que sí la necesitan)."""
     result: dict[str, bool] = {}
     title = _load_video_title(slug) or topic.get("titulo", "")
-    if not title or not url or url == "?":
+    if not title:
         return result
 
     aud = topic.get("audiencia", "")
     emoji = cfg.audience_emoji.get(aud, "📺")
     teaser = f"{emoji} {cfg.display_name} · {aud} · {topic.get('cifra_ancla', '')}"
 
-    for name, poster_mod, icon in [
-        ("bluesky", "videogen.bluesky_poster", "🦋"),
-        ("mastodon", "videogen.mastodon_poster", "🐘"),
-        ("threads", "videogen.threads_poster", "🧵"),
-    ]:
-        try:
-            import importlib
-            mod = importlib.import_module(poster_mod)
-            fn = getattr(mod, f"post_short_to_{name}")
-            r = fn(title, url, teaser=teaser)
-            result[icon] = bool(r)
-        except Exception as e:
-            print(f"  {cfg.slug} {name} fail: {e}")
-            result[icon] = False
+    # BS/MA/TH SÍ requieren URL — skip si vacía
+    if url and url != "?":
+        for name, poster_mod, icon in [
+            ("bluesky", "videogen.bluesky_poster", "🦋"),
+            ("mastodon", "videogen.mastodon_poster", "🐘"),
+            ("threads", "videogen.threads_poster", "🧵"),
+        ]:
+            try:
+                import importlib
+                mod = importlib.import_module(poster_mod)
+                fn = getattr(mod, f"post_short_to_{name}")
+                r = fn(title, url, teaser=teaser)
+                result[icon] = bool(r)
+            except Exception as e:
+                print(f"  {cfg.slug} {name} fail: {e}")
+                result[icon] = False
 
     # Instagram Reels — sube el video mp4 real, no solo link
     try:
@@ -351,19 +356,34 @@ def run_channel_once(cfg: ChannelConfig) -> dict[str, Any]:
         slug = service.generate(topic_prompt, ("es",),
                                  lambda m: print(f"  {m}"), ai_hero=True,
                                  precached_scripts=cached_scripts)
-        print(f"  {cfg.slug}: subiendo al canal {cfg.display_name}…")
-        links = service.publish(slug, ("es",), privacy="public",
-                                 progress=lambda m: print(f"  {m}"), notify=False)
+        # YT-upload optional: si no hay secret YT_{prefix}_REFRESH_TOKEN,
+        # skip subida YT y va directo a IG+TT (mp4 local ya generado).
+        has_yt_creds = bool(os.environ.get(cfg.yt_prefix + "_REFRESH_TOKEN"))
+        url = ""
+        yt_status = "skip_no_creds"
+        if has_yt_creds:
+            try:
+                print(f"  {cfg.slug}: subiendo al canal {cfg.display_name}…")
+                links = service.publish(slug, ("es",), privacy="public",
+                                         progress=lambda m: print(f"  {m}"), notify=False)
+                url = links.get("es", "?")
+                yt_status = "ok"
+            except Exception as e:
+                print(f"  {cfg.slug}: YT upload falló ({type(e).__name__}): sigue con IG+TT")
+                yt_status = f"fail: {type(e).__name__}"
+        else:
+            print(f"  {cfg.slug}: sin YT creds → skip YT, sube directo a IG+TT")
+
         _mark_used(ROOT / "output" / cfg.ledger_filename, topic["key"])
-        url = links.get("es", "?")
         cross = _crosspost(cfg, slug, url, topic)
         cross_summary = " · ".join(f"{k}{'✅' if v else '❌'}" for k, v in cross.items())
-        _notify(f"✅ <b>{cfg.display_name}</b> · {url}\n"
+        yt_line = f"YT: {url}" if url and url != "?" else f"YT {yt_status}"
+        _notify(f"✅ <b>{cfg.display_name}</b> · {yt_line}\n"
                 f"<i>{topic.get('titulo','')[:60]}</i> · RRSS {cross_summary}")
         # Envía MP4 vertical a Telegram para descarga manual → TikTok
         _send_tt_video(cfg, slug, topic.get("titulo", ""), url)
         return {"status": "ok", "slug": slug, "url": url,
-                "topic_key": topic["key"], "crosspost": cross}
+                "topic_key": topic["key"], "crosspost": cross, "yt_status": yt_status}
     except Exception as e:
         import traceback
         traceback.print_exc()
