@@ -30,12 +30,13 @@ jobs:
           cd src/videogen/padel
           manim -qm -r 1080,1920 manim_scene.py PadelLob
           echo "--- output ---"; find . -name "PadelLob.mp4"
-      - name: extract frames
+      - name: extract frames (momentos clave)
         run: |
           OUT=$(find . -name "PadelLob.mp4" | head -1)
-          echo "video: $OUT"
-          ffmpeg -y -i "$OUT" -vf "thumbnail" -frames:v 1 frame_thumb.jpg || true
-          ffmpeg -y -sseof -1.5 -i "$OUT" -frames:v 1 frame_end.jpg || true
+          echo "video: $OUT · duración:"; ffprobe -v quiet -show_entries format=duration -of csv=p=0 "$OUT" || true
+          ffmpeg -y -ss 5.0 -i "$OUT" -frames:v 1 frame_arc.jpg || true    # flecha dibujada + zona
+          ffmpeg -y -ss 6.6 -i "$OUT" -frames:v 1 frame_ball.jpg || true   # bola en vuelo
+          ffmpeg -y -sseof -1.5 -i "$OUT" -frames:v 1 frame_end.jpg || true # resolución
           ls -la frame_*.jpg || true
       - uses: actions/upload-artifact@v4
         with:
