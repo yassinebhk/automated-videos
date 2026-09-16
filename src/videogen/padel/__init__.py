@@ -1,6 +1,6 @@
-"""Canal Padel Pro (EN) — consejos de pádel con la jugada recreada en pista
-en perspectiva 2.5D + jugadores + subtítulos. EN (audiencia internacional).
+"""Canal Padel Pro (EN) — consejos de pádel sobre METRAJE REAL (Pexels).
 
-Voz Edge en-US con subtítulos sincronizados (WordBoundary), guion curado (0 LLM),
-animación PIL frame-a-frame → ffmpeg. Upload YT_PADEL. Coste cero.
+Reusa el pipeline narrado probado (service.generate): B-roll real de pádel +
+subtítulos + voz Edge en-US. Sin diagramas (se descartó el motor v2 por cutre).
+Upload YT_PADEL + IG (hashtags padel) + TikTok. Coste cero.
 """
