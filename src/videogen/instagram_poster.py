@@ -271,9 +271,34 @@ def _publish_container(access_token: str, ig_account_id: str, container_id: str)
     return d.get("id")
 
 
+def _cap_hashtags(text: str, n: int = 5) -> str:
+    """Deja como máximo n hashtags (Meta 2026 penaliza el exceso)."""
+    import re as _re
+    seen = [0]
+    def _r(m):
+        seen[0] += 1
+        return m.group(0) if seen[0] <= n else ""
+    out = _re.sub(r"#\w+", _r, text)
+    return _re.sub(r"[ \t]{2,}", " ", out).strip()
+
+
+def _ig_creds():
+    """Creds IG por canal (IG_<SUFIJO>_TOKEN/USER_ID via YT_CHANNEL_PREFIX),
+    con fallback a la cuenta compartida IG_TOKEN/IG_USER_ID."""
+    prefix = os.environ.get("YT_CHANNEL_PREFIX", "").strip()
+    if prefix.startswith("YT_"):
+        suf = prefix[3:]
+        tok = os.environ.get(f"IG_{suf}_TOKEN")
+        uid = os.environ.get(f"IG_{suf}_USER_ID")
+        if tok and uid:
+            return tok, uid
+    return (os.environ.get("IG_TOKEN") or os.environ.get("IG_ACCESS_TOKEN"),
+            os.environ.get("IG_USER_ID") or os.environ.get("IG_BUSINESS_ACCOUNT_ID"))
+
+
 def post_reel_to_instagram(video_title: str, video_url: str,
                             local_mp4: Path, slug: str,
-                            teaser: str = "", dry_run: bool = False) -> dict[str, Any] | None:
+                            teaser: str = "", caption_override: str = "", dry_run: bool = False) -> dict[str, Any] | None:
     """Publica un Reel en IG. Requiere que el video esté disponible en URL
     pública — lo copiamos a docs/reels/<slug>.mp4 que sirve GH Pages.
     """
@@ -281,8 +306,7 @@ def post_reel_to_instagram(video_title: str, video_url: str,
     # (developers.facebook.com → app → Instagram → API setup). Los nombres
     # legacy IG_ACCESS_TOKEN + IG_BUSINESS_ACCOUNT_ID se mantienen como
     # fallback por si el entorno los tiene con la nomenclatura antigua.
-    access_token = os.environ.get("IG_TOKEN") or os.environ.get("IG_ACCESS_TOKEN")
-    ig_account_id = os.environ.get("IG_USER_ID") or os.environ.get("IG_BUSINESS_ACCOUNT_ID")
+    access_token, ig_account_id = _ig_creds()
     if not (access_token and ig_account_id):
         missing = []
         if not access_token: missing.append("IG_TOKEN")
@@ -300,12 +324,15 @@ def post_reel_to_instagram(video_title: str, video_url: str,
 
     from . import social_post
     # include_url=False: IG algoritmo esconde posts con links externos (YT).
-    caption, _ = social_post.build_viral_post(
-        video_title, video_url, teaser=teaser, cross_platform="",
-        include_url=False,
-    )
-    # IG permite hasta 30 hashtags — nuestro build_viral_post ya los mete
-    caption = caption[:2200]
+    if caption_override:
+        caption = caption_override
+    else:
+        caption, _ = social_post.build_viral_post(
+            video_title, video_url, teaser=teaser, cross_platform="",
+            include_url=False,
+        )
+    # Meta 2026: máx ~5 hashtags relevantes (más = señal de spam/shadowban)
+    caption = _cap_hashtags(caption, 5)[:2200]
 
     if dry_run:
         print(f"  ig DRY-RUN — {len(caption)} chars:\n{caption}")

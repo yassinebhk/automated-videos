@@ -104,7 +104,7 @@ def run_once() -> dict[str, Any]:
         print(f"  satisfying: TT tg fail — {e}")
     try:
         from .. import social_reels
-        social_reels.post_ig_reel(meta["video_path"], meta["title"], url, meta["slug"])
+        social_reels.post_ig_reel(meta["video_path"], meta["title"], url, meta["slug"], hashtags=meta.get("tags"), prefix=YT_PREFIX)
     except Exception as _e:
         print(f"  satisfying: ig fail — {_e}")
     return {"status": "ok", "slug": meta["slug"], "url": url,

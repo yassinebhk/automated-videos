@@ -233,7 +233,10 @@ def run_once() -> dict[str, Any]:
                          if (b / slug / "video_en_vertical.mp4").exists()), None)
             if _mp4:
                 social_reels.post_ig_reel(_mp4, _load_video_title(slug) or topic.get("titulo", ""),
-                                          url, slug, teaser=topic.get("hook", ""))
+                                          url, slug, teaser=topic.get("hook", ""),
+                                          hashtags=["ai", "aitools", "artificialintelligence", "tech",
+                                                    "chatgpt", "productivity", "software", "aitutorial"],
+                                          prefix=YT_PREFIX)
         except Exception as _e:
             print(f"  aitools: ig fail — {_e}")
         return {"status": "ok", "slug": slug, "url": url, "topic_key": topic["key"]}

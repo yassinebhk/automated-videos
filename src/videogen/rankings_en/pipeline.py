@@ -154,7 +154,7 @@ def run_once() -> dict[str, Any]:
         print(f"  rankings-en crosspost fail: {e}")
     try:
         from .. import social_reels
-        social_reels.post_ig_reel(meta["video_path"], meta.get("title", ""), up["url"], meta["slug"])
+        social_reels.post_ig_reel(meta["video_path"], meta.get("title", ""), up["url"], meta["slug"], hashtags=meta.get("tags"), prefix=YT_PREFIX)
     except Exception as _e:
         print(f"  rankings-en: ig fail — {_e}")
     return {"status": "ok", "slug": meta["slug"], "url": up["url"], "topic_key": topic["key"]}

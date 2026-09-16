@@ -99,7 +99,7 @@ def run_once() -> dict[str, Any]:
         print(f"  padel: TT tg fail — {e}")
     try:
         from .. import social_reels
-        social_reels.post_ig_reel(meta["video_path"], meta["title"], url, meta["slug"], teaser=topic.get("hook", ""))
+        social_reels.post_ig_reel(meta["video_path"], meta["title"], url, meta["slug"], teaser=topic.get("hook", ""), hashtags=meta.get("tags"), prefix=YT_PREFIX)
     except Exception as _e:
         print(f"  padel: ig fail — {_e}")
     return {"status": "ok", "slug": meta["slug"], "url": url,
