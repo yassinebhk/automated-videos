@@ -272,5 +272,17 @@
     "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
     "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095489585188569'}",
     "ts": "2026-09-16T13:59:56.145191+00:00"
+  },
+  {
+    "slug": "top-3-conciertos-historicos-50-aniversario",
+    "title": "TOP 3 conciertos históricos · 50 aniversario · #1",
+    "status": "fail_container_ready",
+    "container_id": "18095491535188569",
+    "public_url": "https://yassinebhk.github.io/automated-videos/reels/top-3-conciertos-historicos-50-aniversario.mp4",
+    "attempts": 3,
+    "status_ext": "ERROR",
+    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
+    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095491535188569'}",
+    "ts": "2026-09-16T14:14:55.018068+00:00"
   }
 ]
