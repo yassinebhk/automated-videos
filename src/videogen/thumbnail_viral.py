@@ -62,51 +62,97 @@ def extract_first_frame(video_path: Path, dest: Path, at_seconds: float = 1.0) -
         return None
 
 
+# Mapeo canal → keywords Pexels específicas al nicho.
+# Se detecta el canal por env YT_CHANNEL_PREFIX (seteado por cada pipeline
+# antes del upload). Si no hay match, cae al detector genérico del título.
+_CHANNEL_PEXELS_KEYWORDS: dict[str, list[str]] = {
+    "YT_WAITWHY":    ["courtroom judge gavel", "spanish police handcuffs",
+                        "prison cell dark", "corruption money briefcase",
+                        "detective investigation"],
+    "YT_TAX":        ["tax documents desk", "calculator invoice spain",
+                        "spanish tax office", "money euros papers office"],
+    "YT_LEGAL":      ["legal documents contract", "lawyer signing papers",
+                        "spanish court law books", "employee reading contract"],
+    "YT_AYUDAS":     ["spanish family paperwork", "elderly hands documents",
+                        "help form government spain", "single mother office"],
+    "YT_MOTOR":      ["car dealership spain", "used car keys handover",
+                        "mechanic inspection car", "steering wheel dashboard"],
+    "YT_POV":        ["ancient history reenactment", "vintage spain photo",
+                        "historical archive documents", "old spanish street"],
+    "YT_RANKING":    ["stock chart bar graph", "money stack comparison",
+                        "top ranking podium", "business people meeting"],
+    "YT_AMBIENT":    ["forest fog peaceful", "ocean waves sunset",
+                        "mountain lake calm", "starry night sky"],
+    "YT_IA":         ["laptop office professional", "person using ai chatbot",
+                        "modern workspace tech", "spanish freelancer computer"],
+    "YT_AITOOLS":    ["laptop ai interface", "modern tech office",
+                        "person coding ai", "digital workspace"],
+    "YT_CRIMINOPATIA": ["forensic evidence lab", "crime scene tape",
+                          "detective files desk", "spanish police officer"],
+    "YT_TRABAJOS":   ["colleagues office spain", "boss employee meeting",
+                        "workplace conflict", "labor rights protest"],
+}
+
+
 def _fetch_pexels_background(title: str, dest: Path, w: int = 1280,
                                 h: int = 720) -> Path | None:
-    """Descarga imagen HD real de Pexels como fondo del thumbnail.
+    """Descarga foto HD real de Pexels temáticamente relevante al canal.
 
-    Fix 14/09/26: user detectó que los thumbnails se veían "muñecos AI"
-    porque el frame extraído del video era imagen Pollinations Flux (que
-    a veces sale con proporciones raras). Pexels devuelve foto real
-    profesional relacionada al topic → mucho más creíble y llamativo.
-
-    Extrae 2-3 keywords del título en inglés (Pexels es EN) para buscar.
+    Mejora 16/09/26 tras feedback user "las portadas no representan el tema":
+    - Prioridad 1: keywords específicas del canal (YT_CHANNEL_PREFIX env)
+    - Prioridad 2: keywords extraídas del título (fallback)
+    - Prueba 2-3 queries hasta encontrar fotos → mejor variedad temática
     """
     import os
     key = os.environ.get("PEXELS_API_KEY", "").strip()
     if not key:
         return None
+
+    # Construir lista de queries a probar (canal contextual → título → fallback)
+    queries: list[str] = []
+    channel_prefix = os.environ.get("YT_CHANNEL_PREFIX", "").strip()
+    if channel_prefix in _CHANNEL_PEXELS_KEYWORDS:
+        import random as _r
+        opts = _CHANNEL_PEXELS_KEYWORDS[channel_prefix]
+        # 2 queries del canal (variedad entre shorts consecutivos)
+        queries.extend(_r.sample(opts, k=min(2, len(opts))))
+
+    # Query fallback del título (por si canal keywords no dan fotos)
+    words = re.findall(r"\b[A-ZÁÉÍÓÚÑ][a-záéíóúñA-Z]+\b", title)
+    stopwords_es = {"El", "La", "Los", "Las", "De", "Del", "Al", "Un",
+                      "Una", "Con", "Para", "Por", "En", "Sin"}
+    title_kws = [w for w in words if w not in stopwords_es][:3]
+    if title_kws:
+        queries.append(" ".join(title_kws))
+
+    # Último recurso: query genérica plausible
+    if not queries:
+        queries = ["professional office spain", "business dramatic lighting"]
+
     try:
         import requests
         import random as _r
-        # Traduce keywords ES → EN aproximado: quita stopwords + toma
-        # nombres/números primeros como query
-        words = re.findall(r"\b[A-ZÁÉÍÓÚÑ][a-záéíóúñA-Z]+\b", title)
-        stopwords_es = {"El", "La", "Los", "Las", "De", "Del", "Al", "Un",
-                          "Una", "Con", "Para", "Por", "En", "Sin", "Con"}
-        keywords = [w for w in words if w not in stopwords_es][:3]
-        query = " ".join(keywords) or title[:40]
-
-        r = requests.get(
-            "https://api.pexels.com/v1/search",
-            headers={"Authorization": key},
-            params={"query": query, "per_page": 15, "orientation": "landscape",
-                     "size": "large"},
-            timeout=15,
-        )
-        if r.status_code != 200:
-            return None
-        photos = r.json().get("photos", [])
-        if not photos:
-            return None
-        photo = _r.choice(photos[:8])
-        url = (photo.get("src") or {}).get("large2x") or photo["src"]["large"]
-        img = requests.get(url, timeout=20).content
-        dest.parent.mkdir(parents=True, exist_ok=True)
-        dest.write_bytes(img)
-        print(f"  thumb: bg pexels OK query='{query}' ({len(img)}b)")
-        return dest
+        for query in queries:
+            r = requests.get(
+                "https://api.pexels.com/v1/search",
+                headers={"Authorization": key},
+                params={"query": query, "per_page": 15, "orientation": "landscape",
+                         "size": "large"},
+                timeout=15,
+            )
+            if r.status_code != 200:
+                continue
+            photos = r.json().get("photos", [])
+            if not photos:
+                continue
+            photo = _r.choice(photos[:8])
+            url = (photo.get("src") or {}).get("large2x") or photo["src"]["large"]
+            img = requests.get(url, timeout=20).content
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            dest.write_bytes(img)
+            print(f"  thumb: bg pexels OK query='{query}' ({len(img)}b, canal={channel_prefix or '?'})")
+            return dest
+        return None
     except Exception as e:
         print(f"  thumb: pexels bg fail: {e}")
         return None
@@ -132,24 +178,11 @@ def _draw_outlined_text(draw, xy, text, font, fill, outline="black", stroke_w=8)
 
 
 def _try_ai_face(dest_dir: Path, title: str) -> Path | None:
-    """Genera cara AI expresiva vía Pollinations para el thumbnail (canales
-    tax/finanzas): persona sorprendida/preocupada con documentos, oficina.
-    Rota entre estilos para variedad. Fallback silencioso si falla."""
-    try:
-        from . import aimages
-    except Exception:
-        return None
-    import random
-    styles = [
-        "spanish person shocked face looking at tax documents, office desk, dramatic lighting",
-        "worried spanish businesswoman with calculator and papers, office, cinematic",
-        "surprised spanish autonomo looking at phone, home office, warm light",
-        "spanish accountant frustrated with paperwork, calculator, dramatic pose",
-        "young spanish entrepreneur shocked expression pointing at laptop screen",
-    ]
-    prompt = random.choice(styles)
-    return aimages.generate_image(prompt, dest_dir, seed=random.randint(1, 999999),
-                                    width=720, height=720)
+    """DESHABILITADO 16/09/26 — user detectó que las caras Pollinations
+    tenían "look AI" (ojos raros, sonrisa forzada) que ahuyentaba
+    audiencia. Portadas ahora usan solo Pexels + texto shock.
+    Función queda por compatibilidad de firma."""
+    return None
 
 
 def build_viral_thumbnail(
