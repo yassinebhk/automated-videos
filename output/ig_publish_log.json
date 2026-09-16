@@ -466,5 +466,17 @@
     "media_id": "18026219984856734",
     "url": "https://instagram.com/reel/18026219984856734",
     "ts": "2026-09-16T18:03:13.472310+00:00"
+  },
+  {
+    "slug": "thyssen-museo-madrid-arte-contemporaneo",
+    "title": "TOP 3 datos del Thyssen · 350 obras contemporáneas · #1",
+    "status": "fail_container_ready",
+    "container_id": "18095522726188569",
+    "public_url": "https://yassinebhk.github.io/automated-videos/reels/thyssen-museo-madrid-arte-contemporaneo.mp4",
+    "attempts": 4,
+    "status_ext": "ERROR",
+    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
+    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095522726188569'}",
+    "ts": "2026-09-16T18:27:37.688110+00:00"
   }
 ]
