@@ -5,7 +5,7 @@ name: Motor long-form weekly (Motor60s)
 
 on:
   schedule:
-    - cron: "52 14 * * 0"
+    - cron: "7 11 * * 5"
   workflow_dispatch: {}
 
 permissions:

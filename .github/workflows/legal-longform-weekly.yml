@@ -5,7 +5,7 @@ name: Legal long-form weekly (TusDerechos ES)
 
 on:
   schedule:
-    - cron: "37 10 * * 0"
+    - cron: "47 10 * * 2"
   workflow_dispatch: {}
 
 permissions:
