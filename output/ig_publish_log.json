@@ -534,5 +534,18 @@
     "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
     "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095532029188569'}",
     "ts": "2026-09-16T20:18:39.155419+00:00"
+  },
+  {
+    "slug": "short_ambient_espacial_dormir_20260916_203010",
+    "title": "Musica Ambient Espacial para Dormir Profundo",
+    "status": "fail_container_ready",
+    "container_id": "18095535503188569",
+    "public_url": "https://yassinebhk.github.io/automated-videos/reels/short_ambient_espacial_dormir_20260916_203010.mp4",
+    "attempts": 4,
+    "catbox_status": "rc=412 body=Invalid uploader",
+    "status_ext": "ERROR",
+    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
+    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095535503188569'}",
+    "ts": "2026-09-16T20:45:49.871116+00:00"
   }
 ]
