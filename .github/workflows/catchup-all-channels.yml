@@ -38,6 +38,14 @@ on:
 permissions:
   contents: write
 
+# Concurrency: solo 1 catchup-all corriendo a la vez. Los disparos extra
+# esperan (cancel-in-progress: false). Antes: 4 catchups en paralelo →
+# race condition en pushes docs/reels/ → GH Pages no propaga a tiempo →
+# IG rechaza con 404. Fix 16/09/26 tras user reportar fails.
+concurrency:
+  group: catchup-all-channels
+  cancel-in-progress: false
+
 jobs:
   waitwhy_short:
     if: ${{ always() && (inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts') }}

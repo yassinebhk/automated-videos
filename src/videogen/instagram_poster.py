@@ -346,16 +346,19 @@ def post_reel_to_instagram(video_title: str, video_url: str,
                          "status": "fail_no_mp4"})
         return None
 
-    # 2+3) Container + wait ready, con retry si Meta devuelve 404 URL.
-    # GH Pages tiene edges asincronos: mi GET desde runner puede ver 200
-    # pero el edge que Meta usa aún tener 404. Retry con espera 60s
-    # entre intentos deja tiempo a que TODOS los edges propaguen.
+    # 2+3) Container + wait ready, con backoff exponencial si Meta devuelve
+    # 404 URL. Antes: 3×60s (3 min total) insuficiente cuando GH Pages
+    # está saturado por 4+ pushes/min. Ahora backoff 60→120→240→300s
+    # = 13min total. Tras 4 intentos si sigue 404 → hoisting a backfill
+    # nocturno (el mp4 ya está en docs/reels/, el backfill lo reintenta
+    # tras horas cuando propagación garantizada).
     container_id = None
-    for attempt in range(3):
+    backoff = [60, 120, 240, 300]  # segundos entre intentos
+    for attempt in range(len(backoff)):
         container_id = _create_media_container(access_token, ig_account_id, public_url, caption)
         if not container_id:
-            print(f"  ig: retry {attempt+1}/3 — container_create devolvió None")
-            time.sleep(60)
+            print(f"  ig: retry {attempt+1}/{len(backoff)} — container_create devolvió None")
+            time.sleep(backoff[attempt])
             continue
 
         if _wait_container_ready(access_token, container_id):
@@ -364,9 +367,12 @@ def post_reel_to_instagram(video_title: str, video_url: str,
         # Container ERROR — mira si fue 404. Si sí, retry con container nuevo.
         err_msg = _LAST_CONTAINER_ERROR.get("error_message", "").lower()
         is_404 = "404" in err_msg or "not found" in err_msg or "media could not be fetched" in err_msg
-        if is_404 and attempt < 2:
-            print(f"  ig: retry {attempt+1}/3 tras 404 URL — esperando 60s propagación edges Meta")
-            time.sleep(60)
+        is_timeout = "timeout" in err_msg
+        # Timeout también reintentar (Meta puede reintentar internamente y fallar)
+        if (is_404 or is_timeout) and attempt < len(backoff) - 1:
+            wait_s = backoff[attempt]
+            print(f"  ig: retry {attempt+1}/{len(backoff)} tras {'404' if is_404 else 'timeout'} — espera {wait_s}s (backoff)")
+            time.sleep(wait_s)
             container_id = None
             continue
         # Error no-404 (aspect ratio, codec, etc) → no retry, propagar fallo
@@ -378,10 +384,11 @@ def post_reel_to_instagram(video_title: str, video_url: str,
                          **_LAST_CONTAINER_ERROR})
         return None
     else:
-        # 3 intentos agotados sin FINISHED
+        # 4 intentos agotados sin FINISHED
         _append_ig_log({"slug": slug, "title": video_title[:80],
                          "status": "fail_container_retries_exhausted",
                          "public_url": public_url,
+                         "attempts": len(backoff),
                          **_LAST_CONTAINER_ERROR})
         return None
 
