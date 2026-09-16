@@ -259,11 +259,15 @@
       ]
     },
     "naseiro": {
-      "count": 1,
+      "count": 2,
       "history": [
         {
           "ts": "2026-09-08T10:31:12.572180+00:00",
           "topic": "El caso Naseiro: la financiación ilegal del PP valenciano y la sentencia de 1994"
+        },
+        {
+          "ts": "2026-09-16T17:03:50.439607+00:00",
+          "topic": "Caso Naseiro (1990): cómo las escuchas telefónicas destaparon la financiación ilegal del Partido Popular y el Supremo archivó el caso"
         }
       ]
     },
