@@ -114,10 +114,22 @@ def _prepare_public_reel(local_mp4: Path, slug: str) -> Optional[str]:
     if _reencode_for_ig(local_mp4, dst):
         print(f"  ig: re-encoded H.264+AAC · {dst.stat().st_size//1024}KB")
     else:
-        # Fallback: copia directa (mejor que abortar)
-        print(f"  ig: re-encode falló, uso mp4 original")
-        if not dst.exists() or dst.stat().st_size != local_mp4.stat().st_size:
-            shutil.copy2(local_mp4, dst)
+        # Fallback: ffmpeg stream-copy con -t 89 (rápido, sin re-encode,
+        # pero garantiza duración ≤89s → IG max 90s). Si eso también falla,
+        # copy directo — riesgo IG reject si mp4 original >90s.
+        print(f"  ig: re-encode falló, intento stream-copy con trim 89s")
+        import subprocess as _sp
+        r_copy = _sp.run(
+            ["ffmpeg", "-y", "-i", str(local_mp4),
+             "-c", "copy", "-t", "89", "-movflags", "+faststart", str(dst)],
+            capture_output=True, text=True, timeout=60,
+        )
+        if r_copy.returncode == 0 and dst.exists() and dst.stat().st_size > 10000:
+            print(f"  ig: stream-copy OK · {dst.stat().st_size//1024}KB")
+        else:
+            print(f"  ig: stream-copy falló también, uso mp4 original (riesgo >90s reject)")
+            if not dst.exists() or dst.stat().st_size != local_mp4.stat().st_size:
+                shutil.copy2(local_mp4, dst)
 
     # Commit + push del mp4 antes de que IG intente descargarlo. Silencioso
     # si falla — el flujo sigue y IG lo notificará como container ERROR.
