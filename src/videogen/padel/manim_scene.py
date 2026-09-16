@@ -1,9 +1,9 @@
-"""Escena Manim (CE) — táctica de pádel: EL GLOBO. Prioridad: CLARIDAD.
+"""Escena Manim (CE) — táctica de pádel: EL GLOBO. Prioridad: CLARIDAD + ritmo.
 
-Orientación: TÚ (azul) abajo (tu lado, cerca) · rivales (rojo) en la red.
-Jugada: globo por encima de los rojos al fondo → ellos retroceden → tú subes a la red.
-Campo a escala que llena el 9:16 + flecha que se dibuja + zona resaltada + bola con
-easing + jugadores que reaccionan + etiquetas legibles. Render en CI.
+Orientación: TÚ (azul) abajo · rivales (rojo) en la red.
+Jugada: globo RÁPIDO y continuo por encima de los rojos → rebota en el cristal del
+fondo → los rojos retroceden → tú subes a la red. Campo a escala que llena el 9:16,
+flecha, zona, bola veloz con estela, jugadores que reaccionan, etiquetas legibles.
 
     manim -qm manim_scene.py PadelLob
 """
@@ -16,8 +16,7 @@ config.pixel_width = 1080
 config.pixel_height = 1920
 config.frame_rate = 30
 
-# court metros: cx∈[0,10] ancho, cy∈[0,20] largo. cy=0 abajo (tu fondo), cy=20 arriba.
-# Deja margen arriba (1.8) para el título. x±3.5, y de -7 a +6.2.
+
 def pt(cx, cy):
     return np.array([-3.5 + cx / 10.0 * 7.0, -7.0 + cy / 20.0 * 13.2, 0.0])
 
@@ -35,8 +34,7 @@ class PadelLob(Scene):
         walls = VGroup(*[Line(pt(*a), pt(*b), color="#bfe6f2", stroke_width=11)
                          for a, b in [((0, 0), (10, 0)), ((0, 20), (10, 20)),
                                       ((0, 0), (0, 20)), ((10, 0), (10, 20))]])
-        court_g = VGroup(court, walls, serv, net)
-        self.play(FadeIn(court_g), run_time=0.7)
+        self.play(FadeIn(VGroup(court, walls, serv, net)), run_time=0.5)
 
         def player(cx, cy, color, label):
             dot = Dot(pt(cx, cy), radius=0.42, color=color).set_z_index(3)
@@ -44,12 +42,11 @@ class PadelLob(Scene):
             txt = Text(label, font_size=26, color=WHITE, weight=BOLD).move_to(pt(cx, cy)).set_z_index(4)
             return VGroup(dot, ring, txt)
 
-        # TÚ abajo (fondo cercano), rivales en la red
         blue1 = player(3.3, 3.0, BLUE, "YOU")
         blue2 = player(6.7, 3.0, BLUE, "YOU")
         red1 = player(3.5, 12.0, RED, "R")
         red2 = player(6.5, 12.5, RED, "R")
-        self.play(*[FadeIn(p) for p in (blue1, blue2, red1, red2)], run_time=0.6)
+        self.play(*[FadeIn(p) for p in (blue1, blue2, red1, red2)], run_time=0.5)
 
         def title(text, color=YELLOW):
             t = Text(text, font_size=56, color=color, weight=BOLD)
@@ -58,30 +55,39 @@ class PadelLob(Scene):
             return t.to_edge(UP, buff=0.35)
 
         lab = title("Pinned at the back?")
-        self.play(FadeIn(lab, shift=DOWN * 0.3)); self.wait(0.6)
+        self.play(FadeIn(lab, shift=DOWN * 0.3), run_time=0.5)
+        self.wait(0.5)
 
-        # globo: de un YOU (abajo) por encima de los rojos al fondo rival (arriba)
-        start, end = pt(3.3, 3.6), pt(3.4, 18.0)
-        arc = ArcBetweenPoints(start, end, angle=TAU / 6, color=YELLOW, stroke_width=10)
-        self.play(Transform(lab, title("Lob deep over them")))
-        self.play(Create(arc), run_time=1.0)
+        # ---- TRAYECTORIA COMPLETA (una sola, continua): globo + rebote en cristal ----
+        start = pt(3.3, 3.6)
+        land = pt(3.6, 18.3)                       # cae en el fondo rival (cerca del cristal)
+        after = pt(5.2, 15.5)                      # sale del rebote hacia el centro
+        arc1 = ArcBetweenPoints(start, land, angle=TAU / 7, color=YELLOW, stroke_width=10)
+        arc2 = ArcBetweenPoints(land, after, angle=-TAU / 9, color=YELLOW, stroke_width=8)
 
-        zone = Circle(radius=1.4, stroke_color=YELLOW, stroke_width=5,
-                      fill_color=YELLOW, fill_opacity=0.18).move_to(end)
-        self.play(FadeIn(zone), Flash(end, color=YELLOW, line_length=0.5))
+        self.play(Transform(lab, title("Lob deep over them")), run_time=0.5)
+        self.play(Create(arc1), run_time=0.6)
 
-        ball = Dot(start, radius=0.28, color="#e8ff2a").set_z_index(6)
-        self.add(ball)
-        self.play(MoveAlongPath(ball, arc), rate_func=rate_functions.ease_in_out_sine, run_time=1.2)
-        self.play(Flash(end, color=WHITE, line_length=0.4),
-                  ball.animate.move_to(pt(3.7, 15.5)), rate_func=rush_from, run_time=0.4)
-        self.wait(0.6)
+        zone = Circle(radius=1.2, stroke_color=YELLOW, stroke_width=5,
+                      fill_color=YELLOW, fill_opacity=0.16).move_to(land)
+        self.play(FadeIn(zone), run_time=0.3)
 
-        # rivales retroceden al fondo, tú subes a la red
+        # bola veloz con estela recorriendo TODO el arco (no un segmento)
+        ball = Dot(start, radius=0.30, color="#e8ff2a").set_z_index(6)
+        trail = TracedPath(ball.get_center, stroke_color="#fff59d",
+                           stroke_width=7, dissipating_time=0.45)
+        self.add(trail, ball)
+        self.play(MoveAlongPath(ball, arc1), rate_func=linear, run_time=0.75)   # globo rápido
+        self.play(Flash(land, color=WHITE, line_length=0.6), run_time=0.25)     # rebote pared
+        self.play(Create(arc2), MoveAlongPath(ball, arc2), rate_func=linear, run_time=0.5)  # sale del cristal
+        self.wait(0.3)
+
+        # ---- REACCIÓN: rivales retroceden, tú subes a la red ----
         self.play(
-            red1.animate.move_to(pt(3.5, 16.2)), red2.animate.move_to(pt(6.5, 16.6)),
+            red1.animate.move_to(pt(3.5, 16.5)), red2.animate.move_to(pt(6.5, 16.9)),
             blue1.animate.move_to(pt(3.3, 8.5)), blue2.animate.move_to(pt(6.7, 8.5)),
-            FadeOut(ball), FadeOut(zone), FadeOut(arc), run_time=1.2)
+            FadeOut(ball), FadeOut(trail), FadeOut(zone), FadeOut(arc1), FadeOut(arc2),
+            run_time=1.0)
         self.play(Transform(lab, title("Now YOU take the net", color=GREEN)),
-                  Indicate(VGroup(blue1, blue2), color=GREEN, scale_factor=1.3))
-        self.wait(1.5)
+                  Indicate(VGroup(blue1, blue2), color=GREEN, scale_factor=1.3), run_time=0.6)
+        self.wait(1.2)
