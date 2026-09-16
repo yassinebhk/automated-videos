@@ -204,5 +204,17 @@
     "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
     "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095474225188569'}",
     "ts": "2026-09-16T11:37:54.515275+00:00"
+  },
+  {
+    "slug": "estafa-cooperativa-psv-1993",
+    "title": "Caso PSV — 20.000 familias sin casa ni ahorros · #1",
+    "status": "fail_container_ready",
+    "container_id": "18095480000188569",
+    "public_url": "https://yassinebhk.github.io/automated-videos/reels/estafa-cooperativa-psv-1993.mp4",
+    "attempts": 3,
+    "status_ext": "ERROR",
+    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
+    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095480000188569'}",
+    "ts": "2026-09-16T12:42:53.481026+00:00"
   }
 ]
