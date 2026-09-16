@@ -91,6 +91,10 @@ _CHANNEL_PEXELS_KEYWORDS: dict[str, list[str]] = {
                           "detective files desk", "spanish police officer"],
     "YT_TRABAJOS":   ["colleagues office spain", "boss employee meeting",
                         "workplace conflict", "labor rights protest"],
+    "YT_SATISFYING": ["abstract colorful pattern", "mandelbrot fractal art",
+                        "geometric spiral colorful", "psychedelic pattern art"],
+    "YT_RANKINGS":   ["stock chart bar graph english", "global business meeting",
+                        "money stack comparison", "top ranking podium winner"],
 }
 
 
