@@ -238,5 +238,15 @@
     "attempts": 1,
     "error_message": "timeout 240s waiting FINISHED",
     "ts": "2026-09-16T13:23:38.069305+00:00"
+  },
+  {
+    "slug": "modelo-130-excepcion-autonomos",
+    "title": "Evita el Modelo 130 · hasta 20% ahorro · #1",
+    "status": "fail_container_ready",
+    "container_id": "18095486081188569",
+    "public_url": "https://yassinebhk.github.io/automated-videos/reels/modelo-130-excepcion-autonomos.mp4",
+    "attempts": 1,
+    "error_message": "timeout 240s waiting FINISHED",
+    "ts": "2026-09-16T13:34:28.700146+00:00"
   }
 ]
