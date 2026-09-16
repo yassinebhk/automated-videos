@@ -78,14 +78,31 @@ def build_viral_post(video_title: str, video_url: str, teaser: str = "",
     number = _extract_number(teaser or video_title)
     teaser_clean = _clean_teaser(teaser)
 
-    # Estructura fija en orden de prioridad:
-    #   caso · teaser · pregunta · [URL] · hashtags · cross_platform (opcional)
-    # Hashtags SIEMPRE sobreviven al truncado (esenciales para descubribilidad).
-    TAGS = "#TrueCrime #España #Corrupción #Historia"
+    # Rotación de tags + preguntas para no repetir texto literal en Threads/IG
+    # (Meta borró posts WaitWhy 16/09 por "contenido repetido" — footer fijo era match perfecto).
+    import random as _r_rot
+    TAG_POOL = [
+        "#TrueCrime #España #Corrupción #Historia",
+        "#EstafasES #España #Justicia #Cronica",
+        "#CasosReales #España #TrueCrimeES #Sentencia",
+        "#CorrupcionES #España #Justicia #Documental",
+        "#Historia #España #Investigación #Crimen",
+    ]
+    QUESTION_POOL = [
+        "¿Justicia real o teatro judicial? 👇",
+        "¿Te acordabas de este caso? 👇",
+        "¿Qué opinas sobre la sentencia? 👇",
+        "¿Debería reabrirse este caso? 👇",
+        "¿Cómo se puede tapar algo así? 👇",
+        "¿Recuerdas qué pasó después? 👇",
+        "¿Y tú, qué habrías hecho? 👇",
+    ]
+    TAGS = _r_rot.choice(TAG_POOL)
+    question = _r_rot.choice(QUESTION_POOL)
     if include_url:
-        FOOTER = f"¿Justicia real o teatro judicial? 👇\n\n{video_url}\n\n{TAGS}"
+        FOOTER = f"{question}\n\n{video_url}\n\n{TAGS}"
     else:
-        FOOTER = f"¿Justicia real o teatro judicial? 👇\n\n{TAGS}"
+        FOOTER = f"{question}\n\n{TAGS}"
     header = f"{hook_emoji} {case}"
 
     # Cuánto espacio queda para el teaser tras header + footer + separadores
@@ -103,15 +120,25 @@ def build_viral_post(video_title: str, video_url: str, teaser: str = "",
     if cross_platform and len(main) + len(cross_platform) + 5 < 300:
         main += f"\n→ {cross_platform}"
 
-    # Reply: contexto extra (número exacto + consecuencia)
+    # Reply: contexto + CTA rotativo. Meta borró posts 16/09 por reply
+    # LITERAL idéntico en cada post ("Todos los casos que subo..."). Ahora
+    # se rota entre 8 variantes + solo se genera el 40% del tiempo (evita
+    # thread automático 2-posts que dispara detector "bot volumen").
+    CTA_POOL = [
+        "Todos con sentencia firme. Sígueme si quieres más casos así.",
+        "Verificado con fuentes oficiales. Sígueme para no perderte los siguientes.",
+        "Datos citables + disclaimer legal. Sígueme si te enganchan estas historias.",
+        "Cada caso, referencia jurídica al pie. Sígueme para el próximo.",
+        "Sin especulación. Sentencias reales, no rumores. Sígueme si quieres más.",
+        "Investigación con fuentes citables. ¿Sigues para el próximo caso?",
+        "Verificado antes de subir. Sígueme y no te pierdes el siguiente.",
+        "Todo con base documental. Te espero en el próximo caso.",
+    ]
     reply_parts = []
     if number:
         reply_parts.append(f"La cifra concreta: {number}")
-    reply_parts.append("")
-    reply_parts.append(
-        "Todos los casos que subo tienen sentencia firme — nada especulativo. "
-        "Sígueme si quieres que te descubra los siguientes."
-    )
+        reply_parts.append("")
+    reply_parts.append(_r_rot.choice(CTA_POOL))
     reply = "\n".join(reply_parts)
 
     return main[:299], reply[:299]  # Bluesky límite 300

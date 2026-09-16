@@ -87,24 +87,18 @@ def post_short_to_threads(video_title: str, video_url: str,
         print(f"  threads DRY-RUN — reply {len(reply_text)} chars:\n{reply_text}")
         return {"dry_run": True, "main": main_text, "reply": reply_text}
 
-    # Main post
+    # Main post SOLO — sin reply automático desde 16/09/26.
+    # Meta borró posts anteriores por "usar medios automáticos para gran
+    # volumen de interacciones". El thread automático de 2 posts duplicaba
+    # nuestro volumen efectivo (24 posts/día en vez de 12). Ahora 1 post
+    # por short. Si quieres profundizar en un caso, hazlo manual.
     container = _create_thread(access_token, user_id, main_text)
     if not container:
         return None
     main_id = _publish_thread(access_token, user_id, container)
     if not main_id:
         return None
-    print(f"  threads: ✅ main → {main_id}")
-
-    # Reply thread
-    try:
-        reply_container = _create_thread(access_token, user_id, reply_text, reply_to=main_id)
-        if reply_container:
-            reply_id = _publish_thread(access_token, user_id, reply_container)
-            if reply_id:
-                print(f"  threads: ✅ reply → {reply_id}")
-    except Exception as e:
-        print(f"  threads: ⚠ reply falló ({type(e).__name__}: {e}) — main OK")
+    print(f"  threads: ✅ main → {main_id} (reply auto desactivado)")
 
     url = f"https://threads.net/@{user_id}/post/{main_id}"
     return {"main_id": main_id, "url": url, "text": main_text}
