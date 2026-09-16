@@ -97,5 +97,10 @@ def run_once() -> dict[str, Any]:
         send_video_for_tiktok(meta["video_path"], DISPLAY_NAME, topic["titulo"], url)
     except Exception as e:
         print(f"  padel: TT tg fail — {e}")
+    try:
+        from .. import social_reels
+        social_reels.post_ig_reel(meta["video_path"], meta["title"], url, meta["slug"], teaser=topic.get("hook", ""))
+    except Exception as _e:
+        print(f"  padel: ig fail — {_e}")
     return {"status": "ok", "slug": meta["slug"], "url": url,
             "topic_key": topic["key"], "yt_status": yt_status}

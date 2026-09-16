@@ -226,6 +226,16 @@ def run_once() -> dict[str, Any]:
                 _notify(f"🤖 <b>AI Tools · RRSS</b> {crosspost_full.summary_line(cross)}")
         except Exception as e:
             print(f"  aitools crosspost fail: {e}")
+        try:
+            from ..config import UPLOADED_DIR, PENDING_DIR
+            from .. import social_reels
+            _mp4 = next((b / slug / "video_en_vertical.mp4" for b in (UPLOADED_DIR, PENDING_DIR)
+                         if (b / slug / "video_en_vertical.mp4").exists()), None)
+            if _mp4:
+                social_reels.post_ig_reel(_mp4, _load_video_title(slug) or topic.get("titulo", ""),
+                                          url, slug, teaser=topic.get("hook", ""))
+        except Exception as _e:
+            print(f"  aitools: ig fail — {_e}")
         return {"status": "ok", "slug": slug, "url": url, "topic_key": topic["key"]}
     except Exception as e:
         import traceback

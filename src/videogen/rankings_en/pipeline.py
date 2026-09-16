@@ -152,4 +152,9 @@ def run_once() -> dict[str, Any]:
         _notify(f"📊 <b>Rankings EN · RRSS</b> {crosspost_full.summary_line(cross)}")
     except Exception as e:
         print(f"  rankings-en crosspost fail: {e}")
+    try:
+        from .. import social_reels
+        social_reels.post_ig_reel(meta["video_path"], meta.get("title", ""), up["url"], meta["slug"])
+    except Exception as _e:
+        print(f"  rankings-en: ig fail — {_e}")
     return {"status": "ok", "slug": meta["slug"], "url": up["url"], "topic_key": topic["key"]}
