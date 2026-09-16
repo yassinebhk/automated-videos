@@ -102,34 +102,86 @@ def _reencode_for_ig(local_mp4: Path, dest: Path) -> bool:
     return dest.exists() and dest.stat().st_size > 10000
 
 
+def _upload_to_catbox(mp4_path: Path) -> Optional[str]:
+    """Sube mp4 a catbox.moe (anónimo, sin API key, propagación instantánea).
+
+    Retorna URL directa `https://files.catbox.moe/xxxxxx.mp4` o None si falla.
+    Elimina el problema de propagación edge de GH Pages verificado 15-16/09.
+    Límite catbox: 200MB/archivo. Nuestros mp4 ≤30MB, dentro de sobra.
+    """
+    try:
+        with open(mp4_path, "rb") as f:
+            r = requests.post(
+                "https://catbox.moe/user/api.php",
+                data={"reqtype": "fileupload"},
+                files={"fileToUpload": (mp4_path.name, f, "video/mp4")},
+                timeout=120,
+            )
+        if r.status_code == 200 and r.text.startswith("https://"):
+            url = r.text.strip()
+            print(f"  ig: catbox OK → {url} ({mp4_path.stat().st_size//1024}KB)")
+            return url
+        print(f"  ig: catbox fail rc={r.status_code} body={r.text[:200]}")
+        return None
+    except Exception as e:
+        print(f"  ig: catbox exception {type(e).__name__}: {e}")
+        return None
+
+
 def _prepare_public_reel(local_mp4: Path, slug: str) -> Optional[str]:
-    """Re-encode strict IG + copia a docs/reels/<slug>.mp4, commit + push
-    para que jsDelivr lo sirva. Devuelve URL pública o None."""
+    """Re-encode strict IG + sube a catbox.moe. Retorna URL pública o None.
+
+    16/09/26: cambio arquitectura. Antes usábamos docs/reels/ + GH Pages,
+    pero la propagación asíncrona de edges GH causaba 40% fails IG por
+    404. Catbox propaga instantáneo (single origin, sin edges) → 0 espera.
+    Ademas elimina 3GB de basura de docs/reels/ (crecía sin control).
+
+    Fallback a GH Pages si catbox falla (protege contra caída del servicio).
+    """
     if not local_mp4.exists():
         return None
-    REELS_HOST_DIR.mkdir(parents=True, exist_ok=True)
-    dst = REELS_HOST_DIR / f"{slug}.mp4"
-    # Re-encode STRICT antes de subir (fix container ERROR silencioso 2026).
-    # Si el codec no es exactamente H.264+AAC, IG lo rechaza sin detalle.
-    if _reencode_for_ig(local_mp4, dst):
-        print(f"  ig: re-encoded H.264+AAC · {dst.stat().st_size//1024}KB")
+
+    # Re-encode primero a un archivo temporal (compatible IG H.264+AAC, ≤89s)
+    import tempfile
+    tmp_dir = Path(tempfile.mkdtemp(prefix="ig_reel_"))
+    encoded = tmp_dir / f"{slug}.mp4"
+    if _reencode_for_ig(local_mp4, encoded):
+        print(f"  ig: re-encoded H.264+AAC · {encoded.stat().st_size//1024}KB")
+        mp4_to_upload = encoded
     else:
-        # Fallback: ffmpeg stream-copy con -t 89 (rápido, sin re-encode,
-        # pero garantiza duración ≤89s → IG max 90s). Si eso también falla,
-        # copy directo — riesgo IG reject si mp4 original >90s.
+        # Fallback: ffmpeg stream-copy con -t 89 (rápido, sin re-encode)
         print(f"  ig: re-encode falló, intento stream-copy con trim 89s")
         import subprocess as _sp
         r_copy = _sp.run(
             ["ffmpeg", "-y", "-i", str(local_mp4),
-             "-c", "copy", "-t", "89", "-movflags", "+faststart", str(dst)],
+             "-c", "copy", "-t", "89", "-movflags", "+faststart", str(encoded)],
             capture_output=True, text=True, timeout=60,
         )
-        if r_copy.returncode == 0 and dst.exists() and dst.stat().st_size > 10000:
-            print(f"  ig: stream-copy OK · {dst.stat().st_size//1024}KB")
+        if r_copy.returncode == 0 and encoded.exists() and encoded.stat().st_size > 10000:
+            print(f"  ig: stream-copy OK · {encoded.stat().st_size//1024}KB")
+            mp4_to_upload = encoded
         else:
-            print(f"  ig: stream-copy falló también, uso mp4 original (riesgo >90s reject)")
-            if not dst.exists() or dst.stat().st_size != local_mp4.stat().st_size:
-                shutil.copy2(local_mp4, dst)
+            print(f"  ig: stream-copy falló, uso mp4 original")
+            mp4_to_upload = local_mp4
+
+    # 1) Intenta catbox.moe (propagación instantánea, sin GH Pages waits)
+    url = _upload_to_catbox(mp4_to_upload)
+    if url:
+        try:
+            shutil.rmtree(tmp_dir, ignore_errors=True)
+        except Exception:
+            pass
+        return url
+
+    # 2) Fallback: GH Pages viejo (mantiene compat si catbox down)
+    print(f"  ig: catbox falló, fallback a GH Pages")
+    REELS_HOST_DIR.mkdir(parents=True, exist_ok=True)
+    dst = REELS_HOST_DIR / f"{slug}.mp4"
+    shutil.copy2(mp4_to_upload, dst)
+    try:
+        shutil.rmtree(tmp_dir, ignore_errors=True)
+    except Exception:
+        pass
 
     # Commit + push del mp4 antes de que IG intente descargarlo. Silencioso
     # si falla — el flujo sigue y IG lo notificará como container ERROR.
