@@ -192,5 +192,17 @@
     "media_id": "18088392356396857",
     "url": "https://instagram.com/reel/18088392356396857",
     "ts": "2026-09-16T02:09:14.502263+00:00"
+  },
+  {
+    "slug": "caso-itv-cataluna-millones-sentencia-1",
+    "title": "Caso ITV Cataluña — 30M€ desviados con sentencia · #1",
+    "status": "fail_container_ready",
+    "container_id": "18095474225188569",
+    "public_url": "https://yassinebhk.github.io/automated-videos/reels/caso-itv-cataluna-millones-sentencia-1.mp4",
+    "attempts": 3,
+    "status_ext": "ERROR",
+    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
+    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095474225188569'}",
+    "ts": "2026-09-16T11:37:54.515275+00:00"
   }
 ]

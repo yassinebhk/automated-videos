@@ -312,6 +312,15 @@
           "topic": "[ACTUALIDAD] El 23-F de 1981: qué pasó realmente en el Congreso de los Diputados, el papel institucional de la Corona y la sentencia firme del Tribunal Supremo contra Tejero y Milans del Bosch."
         }
       ]
+    },
+    "itv_cataluna": {
+      "count": 1,
+      "history": [
+        {
+          "ts": "2026-09-16T11:30:26.423451+00:00",
+          "topic": "ITV Cataluña: cómo una trama de inspecciones amañadas desvió millones en 2008 con sentencia firme de la Audiencia de Barcelona."
+        }
+      ]
     }
   }
 }
