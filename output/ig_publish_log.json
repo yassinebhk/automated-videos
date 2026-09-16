@@ -228,5 +228,15 @@
     "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
     "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095482289188569'}",
     "ts": "2026-09-16T13:01:15.815250+00:00"
+  },
+  {
+    "slug": "3-senales-falso-autonomo-sancion-20k",
+    "title": "TOP 3 señales de FALSO AUTÓNOMO · multa de €20.000 · #1",
+    "status": "fail_container_ready",
+    "container_id": "18095484650188569",
+    "public_url": "https://yassinebhk.github.io/automated-videos/reels/3-senales-falso-autonomo-sancion-20k.mp4",
+    "attempts": 1,
+    "error_message": "timeout 240s waiting FINISHED",
+    "ts": "2026-09-16T13:23:38.069305+00:00"
   }
 ]
