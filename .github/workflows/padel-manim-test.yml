@@ -1,0 +1,46 @@
+name: Padel Manim render test (solo render, sin subir)
+
+# Render de prueba de la escena Manim del globo → mp4 + frames como artefacto.
+# NO sube a ningún canal. Para validar el look/claridad antes de cablear.
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: system deps (cairo/pango/ffmpeg)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends ffmpeg build-essential \
+            libcairo2-dev libpango1.0-dev pkg-config python3-dev fonts-dejavu-core
+      - name: install manim
+        run: pip install "manim>=0.18"
+      - name: render scene
+        run: |
+          cd src/videogen/padel
+          manim -qm -r 1080,1920 manim_scene.py PadelLob
+          echo "--- output ---"; find . -name "PadelLob.mp4"
+      - name: extract frames
+        run: |
+          OUT=$(find . -name "PadelLob.mp4" | head -1)
+          echo "video: $OUT"
+          ffmpeg -y -i "$OUT" -vf "thumbnail" -frames:v 1 frame_thumb.jpg || true
+          ffmpeg -y -sseof -1.5 -i "$OUT" -frames:v 1 frame_end.jpg || true
+          ls -la frame_*.jpg || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: padel-manim
+          path: |
+            **/PadelLob.mp4
+            frame_*.jpg
+          if-no-files-found: warn
