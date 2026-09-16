@@ -102,14 +102,24 @@ def _reencode_for_ig(local_mp4: Path, dest: Path) -> bool:
     return dest.exists() and dest.stat().st_size > 10000
 
 
+# Guarda el último intento catbox para diagnóstico persistente
+_LAST_CATBOX_STATUS: str = ""
+
+
 def _upload_to_catbox(mp4_path: Path) -> Optional[str]:
     """Sube mp4 a catbox.moe (anónimo, sin API key, propagación instantánea).
 
     Retorna URL directa `https://files.catbox.moe/xxxxxx.mp4` o None si falla.
     Elimina el problema de propagación edge de GH Pages verificado 15-16/09.
     Límite catbox: 200MB/archivo. Nuestros mp4 ≤30MB, dentro de sobra.
+
+    Guarda _LAST_CATBOX_STATUS para diagnóstico (status + body[:200]).
     """
+    global _LAST_CATBOX_STATUS
+    _LAST_CATBOX_STATUS = ""
     try:
+        size_kb = mp4_path.stat().st_size // 1024
+        print(f"  ig: catbox attempting upload {mp4_path.name} ({size_kb}KB)")
         with open(mp4_path, "rb") as f:
             r = requests.post(
                 "https://catbox.moe/user/api.php",
@@ -117,14 +127,20 @@ def _upload_to_catbox(mp4_path: Path) -> Optional[str]:
                 files={"fileToUpload": (mp4_path.name, f, "video/mp4")},
                 timeout=120,
             )
-        if r.status_code == 200 and r.text.startswith("https://"):
-            url = r.text.strip()
-            print(f"  ig: catbox OK → {url} ({mp4_path.stat().st_size//1024}KB)")
-            return url
-        print(f"  ig: catbox fail rc={r.status_code} body={r.text[:200]}")
+        body = r.text.strip() if r.text else ""
+        _LAST_CATBOX_STATUS = f"rc={r.status_code} body={body[:200]}"
+        if r.status_code == 200 and body.startswith("https://"):
+            print(f"  ig: catbox OK → {body} ({size_kb}KB)")
+            return body
+        print(f"  ig: catbox FAIL {_LAST_CATBOX_STATUS}")
+        return None
+    except requests.exceptions.Timeout:
+        _LAST_CATBOX_STATUS = "timeout 120s"
+        print(f"  ig: catbox timeout tras 120s")
         return None
     except Exception as e:
-        print(f"  ig: catbox exception {type(e).__name__}: {e}")
+        _LAST_CATBOX_STATUS = f"exception {type(e).__name__}: {str(e)[:150]}"
+        print(f"  ig: catbox {_LAST_CATBOX_STATUS}")
         return None
 
 
@@ -433,6 +449,7 @@ def post_reel_to_instagram(video_title: str, video_url: str,
                          "container_id": container_id,
                          "public_url": public_url,
                          "attempts": attempt + 1,
+                         "catbox_status": _LAST_CATBOX_STATUS,
                          **_LAST_CONTAINER_ERROR})
         return None
     else:
@@ -441,6 +458,7 @@ def post_reel_to_instagram(video_title: str, video_url: str,
                          "status": "fail_container_retries_exhausted",
                          "public_url": public_url,
                          "attempts": len(backoff),
+                         "catbox_status": _LAST_CATBOX_STATUS,
                          **_LAST_CONTAINER_ERROR})
         return None
 
