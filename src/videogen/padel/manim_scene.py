@@ -16,6 +16,12 @@ config.pixel_width = 1080
 config.pixel_height = 1920
 config.frame_rate = 30
 
+# Narración (voz en-US) — se genera aparte y se muxea. La animación va sincronizada
+# con estos "beats". ~13s.
+NARRATION = ("Pinned at the back while they own the net? Don't force it. "
+             "Lob deep over their heads to the back glass. "
+             "It pushes them back, and the net is yours.")
+
 
 def pt(cx, cy):
     return np.array([-3.5 + cx / 10.0 * 7.0, -7.0 + cy / 20.0 * 13.2, 0.0])
@@ -56,7 +62,7 @@ class PadelLob(Scene):
 
         lab = title("Pinned at the back?")
         self.play(FadeIn(lab, shift=DOWN * 0.3), run_time=0.5)
-        self.wait(0.5)
+        self.wait(1.7)  # beat voz: "Pinned at the back while they own the net? Don't force it."
 
         # ---- TRAYECTORIA COMPLETA (una sola, continua): globo + REBOTE en cristal ----
         start = pt(3.3, 3.6)
@@ -97,4 +103,4 @@ class PadelLob(Scene):
             run_time=1.0)
         self.play(Transform(lab, title("Now YOU take the net", color=GREEN)),
                   Indicate(VGroup(blue1, blue2), color=GREEN, scale_factor=1.3), run_time=0.6)
-        self.wait(1.2)
+        self.wait(3.6)  # beat voz final: "It pushes them back, and the net is yours." + hold
