@@ -1,21 +1,5 @@
 [
   {
-    "slug": "top-5-suv-depreciation-spain",
-    "title": "5 SUV para comprar baratos · 12.000€ · #1",
-    "status": "ok",
-    "media_id": "18213854734353192",
-    "url": "https://instagram.com/reel/18213854734353192",
-    "ts": "2026-09-15T17:57:15.539993+00:00"
-  },
-  {
-    "slug": "joven-dali-residencia-estudiantes-1927",
-    "title": "3 Claves del joven Dalí en Madrid · 1927 · #1",
-    "status": "ok",
-    "media_id": "18110785481327660",
-    "url": "https://instagram.com/reel/18110785481327660",
-    "ts": "2026-09-15T18:27:32.132623+00:00"
-  },
-  {
     "slug": "most_downloaded_apps_20260915_194332",
     "title": "Top 10 Most Downloaded Apps in the World (2015-2026)",
     "status": "ok",
@@ -1037,5 +1021,26 @@
     "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
     "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095622620188569'}",
     "ts": "2026-09-17T14:00:23.020320+00:00"
+  },
+  {
+    "slug": "fractal_julia_a_20260917_134523",
+    "title": "Satisfying Infinite Fractal Zoom 🌀 #JuliaA #shorts",
+    "status": "fail_container_ready",
+    "container_id": "18095624609188569",
+    "public_url": "https://yassinebhk.github.io/automated-videos/reels/fractal_julia_a_20260917_134523.mp4",
+    "attempts": 4,
+    "catbox_status": "rc=412 body=Invalid uploader",
+    "status_ext": "ERROR",
+    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
+    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095624609188569'}",
+    "ts": "2026-09-17T14:17:33.772920+00:00"
+  },
+  {
+    "slug": "fractal_julia_a_20260917_134523",
+    "title": "Satisfying Infinite Fractal Zoom 🌀 #JuliaA #shorts",
+    "status": "ok",
+    "media_id": "18127177432770076",
+    "url": "https://instagram.com/reel/18127177432770076",
+    "ts": "2026-09-17T14:22:28.906593+00:00"
   }
 ]
