@@ -1,21 +1,5 @@
 [
   {
-    "slug": "video_es_vertical",
-    "title": "Ondas Beta 15Hz para Alerta Mental",
-    "status": "fail_container_ready",
-    "container_id": "18095370047188569",
-    "public_url": "https://yassinebhk.github.io/automated-videos/reels/video_es_vertical.mp4",
-    "ts": "2026-09-15T13:55:54.859186+00:00"
-  },
-  {
-    "slug": "irpf-tax-brackets-hack-spain",
-    "title": "Evita el hachazo del IRPF · €5.000 ahorro · #1",
-    "status": "fail_container_ready",
-    "container_id": "18095371172188569",
-    "public_url": "https://yassinebhk.github.io/automated-videos/reels/irpf-tax-brackets-hack-spain.mp4",
-    "ts": "2026-09-15T14:06:19.174197+00:00"
-  },
-  {
     "slug": "5-diferencias-contrato-indefinido-temporal",
     "title": "5 diferencias contrato indefinido vs temporal · 33 días · #1",
     "status": "fail_container_ready",
@@ -1018,5 +1002,31 @@
     "media_id": "18005341601977166",
     "url": "https://instagram.com/reel/18005341601977166",
     "ts": "2026-09-17T12:33:03.493163+00:00"
+  },
+  {
+    "slug": "best_selling_cars_20260917_123534",
+    "title": "Top 10 Best-Selling Cars of All Time (1980 - 2024)",
+    "status": "fail_container_ready",
+    "container_id": "18095616059188569",
+    "public_url": "https://yassinebhk.github.io/automated-videos/reels/best_selling_cars_20260917_123534.mp4",
+    "attempts": 4,
+    "catbox_status": "rc=412 body=Invalid uploader",
+    "status_ext": "ERROR",
+    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
+    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095616059188569'}",
+    "ts": "2026-09-17T12:52:21.499905+00:00"
+  },
+  {
+    "slug": "best_selling_cars_20260917_123534",
+    "title": "Top 10 Best-Selling Cars of All Time (1980 - 2024)",
+    "status": "fail_container_ready",
+    "container_id": "18095617373188569",
+    "public_url": "https://yassinebhk.github.io/automated-videos/reels/best_selling_cars_20260917_123534.mp4",
+    "attempts": 4,
+    "catbox_status": "rc=412 body=Invalid uploader",
+    "status_ext": "ERROR",
+    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
+    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095617373188569'}",
+    "ts": "2026-09-17T13:00:39.548433+00:00"
   }
 ]
