@@ -778,5 +778,18 @@
     "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
     "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095569754188569'}",
     "ts": "2026-09-17T03:46:09.827497+00:00"
+  },
+  {
+    "slug": "audi-a3-20-tdi-fallos-comunes-1500-euros",
+    "title": "3 fallos Audi A3 2.0 TDI · €3.000 reparación · #1",
+    "status": "fail_container_ready",
+    "container_id": "18095571887188569",
+    "public_url": "https://yassinebhk.github.io/automated-videos/reels/audi-a3-20-tdi-fallos-comunes-1500-euros.mp4",
+    "attempts": 4,
+    "catbox_status": "rc=412 body=Invalid uploader",
+    "status_ext": "ERROR",
+    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
+    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095571887188569'}",
+    "ts": "2026-09-17T04:08:22.697907+00:00"
   }
 ]
