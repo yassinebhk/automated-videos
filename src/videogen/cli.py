@@ -1229,7 +1229,7 @@ def padel_once_cmd():
     from .padel import pipeline
     result = pipeline.run_once()
     print(json.dumps(result, indent=2, ensure_ascii=False))
-    if result.get("status") not in ("ok",):
+    if result.get("status") not in ("ok", "disabled"):
         raise SystemExit(1)
 
 
