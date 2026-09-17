@@ -1,15 +1,5 @@
 [
   {
-    "slug": "3-senales-falso-autonomo-sancion-20k",
-    "title": "TOP 3 señales de FALSO AUTÓNOMO · multa de €20.000 · #1",
-    "status": "fail_container_ready",
-    "container_id": "18095484650188569",
-    "public_url": "https://yassinebhk.github.io/automated-videos/reels/3-senales-falso-autonomo-sancion-20k.mp4",
-    "attempts": 1,
-    "error_message": "timeout 240s waiting FINISHED",
-    "ts": "2026-09-16T13:23:38.069305+00:00"
-  },
-  {
     "slug": "modelo-130-excepcion-autonomos",
     "title": "Evita el Modelo 130 · hasta 20% ahorro · #1",
     "status": "fail_container_ready",
@@ -1088,5 +1078,18 @@
     "media_id": "17970172803139189",
     "url": "https://instagram.com/reel/17970172803139189",
     "ts": "2026-09-17T20:08:20.008032+00:00"
+  },
+  {
+    "slug": "padel-drop-shot-tip",
+    "title": "The drop shot",
+    "status": "fail_container_ready",
+    "container_id": "18095661701188569",
+    "public_url": "https://yassinebhk.github.io/automated-videos/reels/padel-drop-shot-tip.mp4",
+    "attempts": 4,
+    "catbox_status": "rc=412 body=Invalid uploader",
+    "status_ext": "ERROR",
+    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
+    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095661701188569'}",
+    "ts": "2026-09-17T20:30:35.158376+00:00"
   }
 ]
