@@ -1,7 +1,7 @@
-name: Padel Manim render test (solo render, sin subir)
+name: Padel Manim render test (animación + voz + música, sin subir)
 
-# Render de prueba de la escena Manim del globo → mp4 + frames como artefacto.
-# NO sube a ningún canal. Para validar el look/claridad antes de cablear.
+# Render de prueba: escena Manim del globo → + voz Edge (en-US) + música Pixabay
+# muxeadas → mp4 con audio. NO sube a ningún canal. Para validar antes de cablear.
 
 on:
   workflow_dispatch: {}
@@ -23,27 +23,61 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends ffmpeg build-essential \
             libcairo2-dev libpango1.0-dev pkg-config python3-dev fonts-dejavu-core
-      - name: install manim
-        run: pip install "manim>=0.18"
-      - name: render scene
+      - name: install manim + edge-tts
+        run: pip install "manim>=0.18" edge-tts requests
+      - name: render scene (silenciosa)
         run: |
           cd src/videogen/padel
-          manim -qm -r 1080,1920 manim_scene.py PadelLob
+          manim -qm manim_scene.py PadelLob
           echo "--- output ---"; find . -name "PadelLob.mp4"
-      - name: extract frames + filmstrip del vuelo
+      - name: voz + música + mux
+        env:
+          PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
         run: |
           OUT=$(find . -name "PadelLob.mp4" | head -1)
-          echo "video: $OUT · duración:"; ffprobe -v quiet -show_entries format=duration -of csv=p=0 "$OUT" || true
-          ffmpeg -y -ss 3.3 -i "$OUT" -frames:v 1 frame_arc.jpg || true
-          # filmstrip cubriendo aproximación→cristal→rebote (t≈3.6-5.8) → verifico el rebote
-          ffmpeg -y -ss 3.6 -i "$OUT" -t 2.2 -vf "fps=4,scale=230:409,tile=8x1" flight_strip.jpg || true
-          ffmpeg -y -sseof -1.3 -i "$OUT" -frames:v 1 frame_end.jpg || true
-          ls -la *.jpg || true
+          echo "video mudo: $OUT · dur:"; ffprobe -v quiet -show_entries format=duration -of csv=p=0 "$OUT" || true
+          # 1) voz en-US
+          python - <<'PY'
+          import asyncio, edge_tts
+          NARR=("Pinned at the back while they own the net? Don't force it. "
+                "Lob deep over their heads to the back glass. "
+                "It pushes them back, and the net is yours.")
+          async def go():
+              await edge_tts.Communicate(NARR, "en-US-GuyNeural").save("voice.mp3")
+          asyncio.run(go())
+          print("voz OK")
+          PY
+          # 2) música de fondo (Pixabay, best-effort)
+          python - <<'PY'
+          import os, random, requests
+          key=os.environ.get("PIXABAY_API_KEY","").strip()
+          done=False
+          if key:
+              try:
+                  q=random.choice(["upbeat energetic sport","motivational upbeat","electronic upbeat"])
+                  r=requests.get("https://pixabay.com/api/audio/",params={"key":key,"q":q,"per_page":20,"safesearch":"true"},timeout=30).json()
+                  for h in r.get("hits",[]):
+                      u=h.get("audio") or h.get("url") or ""
+                      if u:
+                          open("music.mp3","wb").write(requests.get(u,timeout=60).content); done=True; break
+              except Exception as e: print("music fail:",e)
+          print("music:", done)
+          PY
+          # 3) mux: vídeo + voz (completa) + música ducked (loop). Si no hay música, solo voz.
+          if [ -f music.mp3 ]; then
+            ffmpeg -y -stream_loop -1 -i music.mp3 -i "$OUT" -i voice.mp3 \
+              -filter_complex "[0:a]volume=0.10[bg];[2:a][bg]amix=inputs=2:duration=shortest:dropout_transition=0[a]" \
+              -map 1:v -map "[a]" -c:v copy -c:a aac -b:a 160k -shortest PadelLob_audio.mp4
+          else
+            ffmpeg -y -i "$OUT" -i voice.mp3 -map 0:v -map 1:a -c:v copy -c:a aac -b:a 160k -shortest PadelLob_audio.mp4
+          fi
+          echo "--- con audio ---"; ls -la PadelLob_audio.mp4; ffprobe -v quiet -show_entries format=duration -of csv=p=0 PadelLob_audio.mp4 || true
+          ffmpeg -y -ss 4.5 -i PadelLob_audio.mp4 -frames:v 1 frame_arc.jpg || true
       - uses: actions/upload-artifact@v4
         with:
           name: padel-manim
           path: |
             **/PadelLob.mp4
+            PadelLob_audio.mp4
             frame_*.jpg
-            flight_strip.jpg
           if-no-files-found: warn
