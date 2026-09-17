@@ -914,5 +914,18 @@
     "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
     "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095597051188569'}",
     "ts": "2026-09-17T09:18:14.963546+00:00"
+  },
+  {
+    "slug": "taxhack-irpf-brackets-savings-1",
+    "title": "Factura menos y gana más · hasta €5.000 ahorro · #1",
+    "status": "fail_container_ready",
+    "container_id": "18095599274188569",
+    "public_url": "https://yassinebhk.github.io/automated-videos/reels/taxhack-irpf-brackets-savings-1.mp4",
+    "attempts": 4,
+    "catbox_status": "rc=412 body=Invalid uploader",
+    "status_ext": "ERROR",
+    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
+    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095599274188569'}",
+    "ts": "2026-09-17T09:44:06.710050+00:00"
   }
 ]
