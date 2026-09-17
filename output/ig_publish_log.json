@@ -675,5 +675,26 @@
     "media_id": "18164399650468847",
     "url": "https://instagram.com/reel/18164399650468847",
     "ts": "2026-09-17T00:53:39.974459+00:00"
+  },
+  {
+    "slug": "box_office_actors_20260917_005604",
+    "title": "Top 10 Highest-Grossing Actors (2000-2026)",
+    "status": "fail_container_ready",
+    "container_id": "18095554634188569",
+    "public_url": "https://yassinebhk.github.io/automated-videos/reels/box_office_actors_20260917_005604.mp4",
+    "attempts": 4,
+    "catbox_status": "rc=412 body=Invalid uploader",
+    "status_ext": "ERROR",
+    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
+    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095554634188569'}",
+    "ts": "2026-09-17T01:11:24.685419+00:00"
+  },
+  {
+    "slug": "box_office_actors_20260917_005604",
+    "title": "Top 10 Highest-Grossing Actors (2000-2026)",
+    "status": "ok",
+    "media_id": "18426896635144067",
+    "url": "https://instagram.com/reel/18426896635144067",
+    "ts": "2026-09-17T01:16:05.896356+00:00"
   }
 ]
