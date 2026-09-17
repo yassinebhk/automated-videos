@@ -96,6 +96,10 @@ def _mp4_for(slug: str):
 
 
 def run_once() -> dict[str, Any]:
+    # DESACTIVADO 18/09: metraje real (Pexels) daba "un tio, nada de padel".
+    # Pendiente recablear con animacion Manim. No genera ni envia nada.
+    print("  padel: DESACTIVADO (pendiente motor Manim)")
+    return {"status": "disabled"}
     from .. import service
     topic = _pick_topic()
     prompt = _build_prompt(topic)
