@@ -1,15 +1,5 @@
 [
   {
-    "slug": "top-3-fallos-renault-megane-2026",
-    "title": "TOP 3 fallos Renault Megane · 800 a 2.500€ taller · #1",
-    "status": "fail_container_ready",
-    "container_id": "18095492621188569",
-    "public_url": "https://yassinebhk.github.io/automated-videos/reels/top-3-fallos-renault-megane-2026.mp4",
-    "attempts": 1,
-    "error_message": "timeout 240s waiting FINISHED",
-    "ts": "2026-09-16T14:26:52.742485+00:00"
-  },
-  {
     "slug": "museos_mas_visitados_20260916_142805",
     "title": "TOP 10 MUSEOS más VISITADOS del mundo · 2023",
     "status": "fail_container_ready",
@@ -1087,5 +1077,18 @@
     "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
     "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095667146188569'}",
     "ts": "2026-09-17T21:51:33.095891+00:00"
+  },
+  {
+    "slug": "3-razones-comprar-diesel-2026-motor60s",
+    "title": "TOP 3 razones comprar diésel · 12.000€ · #1",
+    "status": "fail_container_ready",
+    "container_id": "18095668553188569",
+    "public_url": "https://yassinebhk.github.io/automated-videos/reels/3-razones-comprar-diesel-2026-motor60s.mp4",
+    "attempts": 4,
+    "catbox_status": "rc=412 body=Invalid uploader",
+    "status_ext": "ERROR",
+    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
+    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095668553188569'}",
+    "ts": "2026-09-17T22:11:54.148683+00:00"
   }
 ]
