@@ -1,17 +1,5 @@
 [
   {
-    "slug": "erasmus-2026-ayudas-650-euros-1",
-    "title": "TOP 3 ayudas Erasmus 2026 · hasta €650/mes · #1",
-    "status": "fail_container_ready",
-    "container_id": "18095488055188569",
-    "public_url": "https://yassinebhk.github.io/automated-videos/reels/erasmus-2026-ayudas-650-euros-1.mp4",
-    "attempts": 3,
-    "status_ext": "ERROR",
-    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
-    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095488055188569'}",
-    "ts": "2026-09-16T13:47:20.129269+00:00"
-  },
-  {
     "slug": "top-3-coches-etiqueta-b-zbe-2026",
     "title": "TOP 3 coches afectados por ZBE 2026 · Pérdida 4.000€ · #1",
     "status": "fail_container_ready",
@@ -1089,5 +1077,18 @@
     "media_id": "18141918859514431",
     "url": "https://instagram.com/reel/18141918859514431",
     "ts": "2026-09-17T20:53:35.620109+00:00"
+  },
+  {
+    "slug": "modelo-130-excepcion-irpf-autonomos",
+    "title": "Evita el Modelo 130 · hasta 20% trimestral · #1",
+    "status": "fail_container_ready",
+    "container_id": "18095665022188569",
+    "public_url": "https://yassinebhk.github.io/automated-videos/reels/modelo-130-excepcion-irpf-autonomos.mp4",
+    "attempts": 4,
+    "catbox_status": "rc=412 body=Invalid uploader",
+    "status_ext": "ERROR",
+    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
+    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095665022188569'}",
+    "ts": "2026-09-17T21:18:09.019528+00:00"
   }
 ]
