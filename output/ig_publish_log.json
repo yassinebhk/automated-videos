@@ -940,5 +940,18 @@
     "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
     "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095601482188569'}",
     "ts": "2026-09-17T10:12:55.484903+00:00"
+  },
+  {
+    "slug": "16-weeks-paid-parental-leave-spain",
+    "title": "3 claves baja nacimiento · 16 semanas al 100% · #1",
+    "status": "fail_container_ready",
+    "container_id": "18095603090188569",
+    "public_url": "https://yassinebhk.github.io/automated-videos/reels/16-weeks-paid-parental-leave-spain.mp4",
+    "attempts": 4,
+    "catbox_status": "rc=412 body=Invalid uploader",
+    "status_ext": "ERROR",
+    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
+    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095603090188569'}",
+    "ts": "2026-09-17T10:33:58.746564+00:00"
   }
 ]
