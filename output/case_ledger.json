@@ -337,6 +337,15 @@
           "topic": "ITV Cataluña: cómo una trama de inspecciones amañadas desvió millones en 2008 con sentencia firme de la Audiencia de Barcelona."
         }
       ]
+    },
+    "emperador": {
+      "count": 1,
+      "history": [
+        {
+          "ts": "2026-09-17T09:03:26.349447+00:00",
+          "topic": "Cómo la Operación Emperador destapó una red de blanqueo de capitales de 300 millones de euros en polígonos industriales de Madrid y Barcelona en 2016"
+        }
+      ]
     }
   }
 }
