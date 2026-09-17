@@ -1,29 +1,5 @@
 [
   {
-    "slug": "smartphone_brands_20260916_152210",
-    "title": "Top 10 Smartphone Brands Market Share 2010-2026",
-    "status": "fail_container_ready",
-    "container_id": "18095500748188569",
-    "public_url": "https://yassinebhk.github.io/automated-videos/reels/smartphone_brands_20260916_152210.mp4",
-    "attempts": 3,
-    "status_ext": "ERROR",
-    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
-    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095500748188569'}",
-    "ts": "2026-09-16T15:34:44.316997+00:00"
-  },
-  {
-    "slug": "smartphone_brands_20260916_152210",
-    "title": "Top 10 Smartphone Brands Market Share 2010-2026",
-    "status": "fail_container_ready",
-    "container_id": "18095501459188569",
-    "public_url": "https://yassinebhk.github.io/automated-videos/reels/smartphone_brands_20260916_152210.mp4",
-    "attempts": 3,
-    "status_ext": "ERROR",
-    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
-    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095501459188569'}",
-    "ts": "2026-09-16T15:38:58.226704+00:00"
-  },
-  {
     "slug": "shorts-ia-gratis-autonomos",
     "title": "Crea 10 Shorts diarios con IA gratis · 0€ · #1",
     "status": "fail_container_ready",
@@ -1093,5 +1069,31 @@
     "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
     "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095671712188569'}",
     "ts": "2026-09-17T23:13:41.295866+00:00"
+  },
+  {
+    "slug": "top-5-ai-tools-tiny-llm-deployment",
+    "title": "Top 5 AI tools for tiny LLM deployment · #1",
+    "status": "fail_container_ready",
+    "container_id": "18095672897188569",
+    "public_url": "https://yassinebhk.github.io/automated-videos/reels/top-5-ai-tools-tiny-llm-deployment.mp4",
+    "attempts": 4,
+    "catbox_status": "rc=412 body=Invalid uploader",
+    "status_ext": "ERROR",
+    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
+    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095672897188569'}",
+    "ts": "2026-09-17T23:46:18.936581+00:00"
+  },
+  {
+    "slug": "top-5-ai-tools-tiny-llm-deployment",
+    "title": "Top 5 AI tools for tiny LLM deployment · #1",
+    "status": "fail_container_ready",
+    "container_id": "18095673293188569",
+    "public_url": "https://yassinebhk.github.io/automated-videos/reels/top-5-ai-tools-tiny-llm-deployment.mp4",
+    "attempts": 4,
+    "catbox_status": "rc=412 body=Invalid uploader",
+    "status_ext": "ERROR",
+    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
+    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095673293188569'}",
+    "ts": "2026-09-17T23:54:19.545541+00:00"
   }
 ]
