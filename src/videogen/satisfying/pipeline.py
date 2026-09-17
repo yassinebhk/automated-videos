@@ -51,7 +51,7 @@ def _notify(text: str, urgent: bool = False) -> None:
 def run_once() -> dict[str, Any]:
     """Genera + sube 1 fractal zoom al canal Infinite Fractals."""
     variant = _pick_variant()
-    print(f"  satisfying: variant={variant['key']} ({variant['kind']})")
+    print(f"  satisfying: variant={variant['key']} ({variant.get('gen', 'fractal')})")
     meta = generator.generate_satisfying_video(generator.SATISFYING_ROOT, variant, seconds=30)
     if not meta:
         _notify(f"❌ Satisfying falló generación · {variant['key']}", urgent=True)
@@ -90,7 +90,7 @@ def run_once() -> dict[str, Any]:
         from .. import crosspost_full
         cross = crosspost_full.crosspost_short_from_mp4(
             Path(meta["video_path"]), meta["title"], url,
-            teaser=f"🌀 {variant['key']} fractal zoom",
+            teaser=f"🌀 {variant.get('gen', 'fractal')} — oddly satisfying",
             channel_label="satisfying", slug=meta["slug"],
         )
         _notify(f"🌀 <b>Satisfying · RRSS</b> {crosspost_full.summary_line(cross)}")
