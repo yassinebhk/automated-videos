@@ -36,14 +36,20 @@ jobs:
         run: |
           OUT=$(find . -name "PadelLob.mp4" | head -1)
           echo "video mudo: $OUT · dur:"; ffprobe -v quiet -show_entries format=duration -of csv=p=0 "$OUT" || true
-          # 1) voz en-US
+          # 1) voz en-US (misma narración que NARRATION en manim_scene.py)
           python - <<'PY'
           import asyncio, edge_tts
-          NARR=("Pinned at the back while they own the net? Don't force it. "
-                "Lob deep over their heads to the back glass. "
-                "It pushes them back, and the net is yours.")
+          NARR=("Stuck at the back while they control the net? "
+                "Forcing your way through just gives them easy volleys. "
+                "So don't. Play the lob. "
+                "Take the ball early, and lift it high and deep, over their heads to the back glass. "
+                "Now they're forced to turn and chase it down. "
+                "And as they retreat, you and your partner step up and take the net. "
+                "Control the net, and you control the point. "
+                "Follow for more padel tactics.")
           async def go():
-              await edge_tts.Communicate(NARR, "en-US-GuyNeural").save("voice.mp3")
+              # rate un pelín más lento = más claro/didáctico
+              await edge_tts.Communicate(NARR, "en-US-GuyNeural", rate="-6%").save("voice.mp3")
           asyncio.run(go())
           print("voz OK")
           PY
@@ -63,16 +69,25 @@ jobs:
               except Exception as e: print("music fail:",e)
           print("music:", done)
           PY
-          # 3) mux: vídeo + voz (completa) + música ducked (loop). Si no hay música, solo voz.
+          # 3) mux SIN cortes: el vídeo se extiende (congela la tarjeta de cierre) hasta
+          #    cubrir la voz completa + 1.2s de cola → final limpio, nunca se corta a media frase.
+          VDUR=$(ffprobe -v quiet -show_entries format=duration -of csv=p=0 "$OUT")
+          ADUR=$(ffprobe -v quiet -show_entries format=duration -of csv=p=0 voice.mp3)
+          FINAL=$(python3 -c "print(round(max($VDUR,$ADUR)+1.2,2))")
+          PAD=$(python3 -c "print(round(max(0.0,$FINAL-$VDUR),2))")
+          echo "vídeo=$VDUR voz=$ADUR -> final=$FINAL (congela ${PAD}s la tarjeta de cierre)"
           if [ -f music.mp3 ]; then
             ffmpeg -y -stream_loop -1 -i music.mp3 -i "$OUT" -i voice.mp3 \
-              -filter_complex "[0:a]volume=0.10[bg];[2:a][bg]amix=inputs=2:duration=shortest:dropout_transition=0[a]" \
-              -map 1:v -map "[a]" -c:v copy -c:a aac -b:a 160k -shortest PadelLob_audio.mp4
+              -filter_complex "[1:v]tpad=stop_mode=clone:stop_duration=${PAD}[v];[2:a]apad[vo];[0:a]volume=0.09[bg];[vo][bg]amix=inputs=2:duration=first:dropout_transition=0[a]" \
+              -map "[v]" -map "[a]" -c:v libx264 -pix_fmt yuv420p -preset veryfast -c:a aac -b:a 160k -t "$FINAL" PadelLob_audio.mp4
           else
-            ffmpeg -y -i "$OUT" -i voice.mp3 -map 0:v -map 1:a -c:v copy -c:a aac -b:a 160k -shortest PadelLob_audio.mp4
+            ffmpeg -y -i "$OUT" -i voice.mp3 \
+              -filter_complex "[0:v]tpad=stop_mode=clone:stop_duration=${PAD}[v];[1:a]apad[a]" \
+              -map "[v]" -map "[a]" -c:v libx264 -pix_fmt yuv420p -preset veryfast -c:a aac -b:a 160k -t "$FINAL" PadelLob_audio.mp4
           fi
           echo "--- con audio ---"; ls -la PadelLob_audio.mp4; ffprobe -v quiet -show_entries format=duration -of csv=p=0 PadelLob_audio.mp4 || true
-          ffmpeg -y -ss 4.5 -i PadelLob_audio.mp4 -frames:v 1 frame_arc.jpg || true
+          ffmpeg -y -ss 8 -i PadelLob_audio.mp4 -frames:v 1 frame_arc.jpg || true
+          ffmpeg -y -sseof -1.5 -i PadelLob_audio.mp4 -frames:v 1 frame_end.jpg || true
       - uses: actions/upload-artifact@v4
         with:
           name: padel-manim
