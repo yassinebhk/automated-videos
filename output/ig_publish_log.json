@@ -1,16 +1,5 @@
 [
   {
-    "slug": "5-diferencias-contrato-indefinido-temporal",
-    "title": "5 diferencias contrato indefinido vs temporal · 33 días · #1",
-    "status": "fail_container_ready",
-    "container_id": "18095374556188569",
-    "public_url": "https://yassinebhk.github.io/automated-videos/reels/5-diferencias-contrato-indefinido-temporal.mp4",
-    "status_ext": "ERROR",
-    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
-    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095374556188569'}",
-    "ts": "2026-09-15T14:38:27.189286+00:00"
-  },
-  {
     "slug": "top-3-invalid-acoustic-forensics",
     "title": "3 claves para anular grabaciones · Sentencia 2023 · #1",
     "status": "ok",
@@ -1028,5 +1017,18 @@
     "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
     "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095617373188569'}",
     "ts": "2026-09-17T13:00:39.548433+00:00"
+  },
+  {
+    "slug": "top-5-sueldos-junior-tech",
+    "title": "TOP 5 sueldos junior tech · +27k€ · #1",
+    "status": "fail_container_ready",
+    "container_id": "18095619122188569",
+    "public_url": "https://yassinebhk.github.io/automated-videos/reels/top-5-sueldos-junior-tech.mp4",
+    "attempts": 4,
+    "catbox_status": "rc=412 body=Invalid uploader",
+    "status_ext": "ERROR",
+    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
+    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095619122188569'}",
+    "ts": "2026-09-17T13:21:45.527546+00:00"
   }
 ]
