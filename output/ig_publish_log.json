@@ -1,13 +1,5 @@
 [
   {
-    "slug": "short_ruido_marron_dormir_20260915_203038",
-    "title": "Ruido Marron para Dormir Profundo 8 Horas",
-    "status": "ok",
-    "media_id": "17945445471325654",
-    "url": "https://instagram.com/reel/17945445471325654",
-    "ts": "2026-09-15T20:37:59.833776+00:00"
-  },
-  {
     "slug": "caso-roldan-guardia-civil-laos",
     "title": "Caso Roldán — 1.500 MILLONES robados y fuga a Laos · #1",
     "status": "fail_container_ready",
@@ -1047,5 +1039,18 @@
     "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
     "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095627432188569'}",
     "ts": "2026-09-17T14:45:24.935220+00:00"
+  },
+  {
+    "slug": "defend-the-smash-padel-tip",
+    "title": "Defend the smash",
+    "status": "fail_container_ready",
+    "container_id": "18095629319188569",
+    "public_url": "https://yassinebhk.github.io/automated-videos/reels/defend-the-smash-padel-tip.mp4",
+    "attempts": 4,
+    "catbox_status": "rc=412 body=Invalid uploader",
+    "status_ext": "ERROR",
+    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
+    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095629319188569'}",
+    "ts": "2026-09-17T14:59:32.896800+00:00"
   }
 ]
