@@ -966,5 +966,18 @@
     "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
     "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095604743188569'}",
     "ts": "2026-09-17T10:54:45.830310+00:00"
+  },
+  {
+    "slug": "3-armas-letales-paleolitico-atapuerca",
+    "title": "3 Armas letales del Paleolítico · Atapuerca · #1",
+    "status": "fail_container_ready",
+    "container_id": "18095606354188569",
+    "public_url": "https://yassinebhk.github.io/automated-videos/reels/3-armas-letales-paleolitico-atapuerca.mp4",
+    "attempts": 4,
+    "catbox_status": "rc=412 body=Invalid uploader",
+    "status_ext": "ERROR",
+    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
+    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095606354188569'}",
+    "ts": "2026-09-17T11:15:52.313252+00:00"
   }
 ]
