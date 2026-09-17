@@ -804,5 +804,13 @@
     "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
     "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095574341188569'}",
     "ts": "2026-09-17T04:30:27.132406+00:00"
+  },
+  {
+    "slug": "clausulas-abusivas-claude-ia",
+    "title": "Detecta cláusulas abusivas en contratos con IA gratis · 30s · #1",
+    "status": "ok",
+    "media_id": "18492910990098013",
+    "url": "https://instagram.com/reel/18492910990098013",
+    "ts": "2026-09-17T04:48:33.506209+00:00"
   }
 ]
