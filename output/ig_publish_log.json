@@ -1,29 +1,5 @@
 [
   {
-    "slug": "estafa-cooperativa-psv-1993",
-    "title": "Caso PSV — 20.000 familias sin casa ni ahorros · #1",
-    "status": "fail_container_ready",
-    "container_id": "18095480000188569",
-    "public_url": "https://yassinebhk.github.io/automated-videos/reels/estafa-cooperativa-psv-1993.mp4",
-    "attempts": 3,
-    "status_ext": "ERROR",
-    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
-    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095480000188569'}",
-    "ts": "2026-09-16T12:42:53.481026+00:00"
-  },
-  {
-    "slug": "nueva-cuota-autonomos-2026",
-    "title": "Nuevos tramos cuota autónomos 2026 · €230 a €590 · #1",
-    "status": "fail_container_ready",
-    "container_id": "18095482289188569",
-    "public_url": "https://yassinebhk.github.io/automated-videos/reels/nueva-cuota-autonomos-2026.mp4",
-    "attempts": 3,
-    "status_ext": "ERROR",
-    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
-    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095482289188569'}",
-    "ts": "2026-09-16T13:01:15.815250+00:00"
-  },
-  {
     "slug": "3-senales-falso-autonomo-sancion-20k",
     "title": "TOP 3 señales de FALSO AUTÓNOMO · multa de €20.000 · #1",
     "status": "fail_container_ready",
@@ -1091,5 +1067,26 @@
     "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
     "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095656982188569'}",
     "ts": "2026-09-17T19:31:34.196145+00:00"
+  },
+  {
+    "slug": "box_office_actors_20260917_194630",
+    "title": "Top 10 Highest-Grossing Actors (2000-2026)",
+    "status": "fail_container_ready",
+    "container_id": "18095659427188569",
+    "public_url": "https://yassinebhk.github.io/automated-videos/reels/box_office_actors_20260917_194630.mp4",
+    "attempts": 4,
+    "catbox_status": "rc=412 body=Invalid uploader",
+    "status_ext": "ERROR",
+    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
+    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095659427188569'}",
+    "ts": "2026-09-17T20:04:17.846887+00:00"
+  },
+  {
+    "slug": "box_office_actors_20260917_194630",
+    "title": "Top 10 Highest-Grossing Actors (2000-2026)",
+    "status": "ok",
+    "media_id": "17970172803139189",
+    "url": "https://instagram.com/reel/17970172803139189",
+    "ts": "2026-09-17T20:08:20.008032+00:00"
   }
 ]
