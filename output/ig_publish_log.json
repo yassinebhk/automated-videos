@@ -1,13 +1,5 @@
 [
   {
-    "slug": "top-3-sanciones-permiso-parental",
-    "title": "TOP 3 multas por negar el permiso parental · 8 semanas · #1",
-    "status": "ok",
-    "media_id": "18070634813751531",
-    "url": "https://instagram.com/reel/18070634813751531",
-    "ts": "2026-09-15T23:54:21.476857+00:00"
-  },
-  {
     "slug": "erasmus-2026-ayudas-estudiantes",
     "title": "TOP 3 ayudas Erasmus 2026 · hasta 650€ al mes · #1",
     "status": "ok",
@@ -1054,5 +1046,18 @@
     "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
     "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095634959188569'}",
     "ts": "2026-09-17T15:46:19.671049+00:00"
+  },
+  {
+    "slug": "36-dias-libres-2026-vacaciones-festivos",
+    "title": "TOP 3 días libres en 2026 · 22 vacas y 14 festivos · #1",
+    "status": "fail_container_ready",
+    "container_id": "18095637467188569",
+    "public_url": "https://yassinebhk.github.io/automated-videos/reels/36-dias-libres-2026-vacaciones-festivos.mp4",
+    "attempts": 4,
+    "catbox_status": "rc=412 body=Invalid uploader",
+    "status_ext": "ERROR",
+    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
+    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095637467188569'}",
+    "ts": "2026-09-17T16:07:34.203610+00:00"
   }
 ]
