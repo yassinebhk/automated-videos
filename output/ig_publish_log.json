@@ -1,21 +1,5 @@
 [
   {
-    "slug": "top-5-ai-transcription-tools-1",
-    "title": "Top 5 AI tools for transcription · #1",
-    "status": "ok",
-    "media_id": "18029877572854975",
-    "url": "https://instagram.com/reel/18029877572854975",
-    "ts": "2026-09-16T19:38:45.694170+00:00"
-  },
-  {
-    "slug": "top-5-ai-transcription-tools-1",
-    "title": "Top 5 AI tools for transcription · #1",
-    "status": "ok",
-    "media_id": "18173366482452937",
-    "url": "https://instagram.com/reel/18173366482452937",
-    "ts": "2026-09-16T19:39:54.492945+00:00"
-  },
-  {
     "slug": "top-5-profesiones-mas-horas-trabajo",
     "title": "TOP 5 profesiones que más horas trabajan · 80h/sem · #1",
     "status": "ok",
@@ -1121,5 +1105,26 @@
     "media_id": "17977430112122106",
     "url": "https://instagram.com/reel/17977430112122106",
     "ts": "2026-09-18T04:52:10.318588+00:00"
+  },
+  {
+    "slug": "car_manufacturers_sales_20260918_045445",
+    "title": "Top 10 Car Manufacturers by Sales (2000-2026)",
+    "status": "fail_container_ready",
+    "container_id": "18095696933188569",
+    "public_url": "https://yassinebhk.github.io/automated-videos/reels/car_manufacturers_sales_20260918_045445.mp4",
+    "attempts": 4,
+    "catbox_status": "rc=412 body=Invalid uploader",
+    "status_ext": "ERROR",
+    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
+    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095696933188569'}",
+    "ts": "2026-09-18T05:11:30.744533+00:00"
+  },
+  {
+    "slug": "car_manufacturers_sales_20260918_045445",
+    "title": "Top 10 Car Manufacturers by Sales (2000-2026)",
+    "status": "ok",
+    "media_id": "18101996519364854",
+    "url": "https://instagram.com/reel/18101996519364854",
+    "ts": "2026-09-18T05:15:44.781625+00:00"
   }
 ]
