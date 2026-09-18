@@ -27,15 +27,19 @@ jobs:
         run: pip install "manim>=0.18" edge-tts requests
       - name: render scene (silenciosa)
         run: |
+          # limpia cualquier render/preview viejo para no muxear el equivocado
+          rm -f docs/padel_preview/PadelLob.mp4 || true
+          rm -rf src/videogen/padel/media || true
           cd src/videogen/padel
-          manim -qm manim_scene.py PadelLob
+          manim -qm --disable_caching manim_scene.py PadelLob
           echo "--- output ---"; find . -name "PadelLob.mp4"
       - name: voz + música + mux
         env:
           PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
         run: |
-          OUT=$(find . -name "PadelLob.mp4" | head -1)
-          echo "video mudo: $OUT · dur:"; ffprobe -v quiet -show_entries format=duration -of csv=p=0 "$OUT" || true
+          # OJO: usar SÍ o SÍ el render fresco de manim (media/videos), no un preview viejo en docs/
+          OUT=$(find . -path "*media/videos*" -name "PadelLob.mp4" | head -1)
+          echo "video mudo (render fresco): $OUT · dur:"; ffprobe -v quiet -show_entries format=duration -of csv=p=0 "$OUT" || true
           # 1) voz en-US (misma narración que NARRATION en manim_scene.py)
           python - <<'PY'
           import asyncio, edge_tts
