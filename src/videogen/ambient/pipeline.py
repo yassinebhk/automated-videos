@@ -14,6 +14,9 @@ from . import generator, uploader
 
 def run_once() -> dict[str, Any] | None:
     """Genera 1 video ambient (MenteEnCalma) + sube a YT + notifica Telegram."""
+    # ⏸ PAUSADO 18/09 (consolidación media — 5 subs, mediana 2 views tras 30 vídeos).
+    # Reactivar = borrar estas 2 líneas + `gh workflow enable ambient-daily/ambient-short-daily`.
+    print("  ambient: ⏸ PAUSADO (consolidación media) — no genera"); return {"status": "paused", "channel": "ambient"}
     print("=== MenteEnCalma · start ===")
     meta = generator.generate_ambient_video()
     if not meta:
@@ -54,6 +57,8 @@ def _notify(text: str, urgent: bool = False) -> None:
 
 def run_short() -> dict[str, Any] | None:
     """Genera + sube 1 Short ambient al canal MenteEnCalma (cebo → long-form)."""
+    # ⏸ PAUSADO 18/09 (consolidación media). Reactivar = borrar estas 2 líneas.
+    print("  ambient-short: ⏸ PAUSADO (consolidación media) — no genera"); return {"status": "paused", "channel": "ambient"}
     from . import shorts as ambient_shorts
     from ..upload_youtube import upload_video
     from pathlib import Path
