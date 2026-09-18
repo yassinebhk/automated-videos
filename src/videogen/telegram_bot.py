@@ -2463,22 +2463,20 @@ async def _build_daily_report(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> i
                 followers = int(data.get("follower_count") or 0)
                 videos = int(data.get("video_count") or 0)
                 total_likes = int(data.get("likes_count") or 0)
-                # video.list para engagement por video
-                vl = _req.post(
-                    "https://open.tiktokapis.com/v2/video/list/",
-                    headers={**hdr, "Content-Type": "application/json"},
-                    params={"fields": "like_count,comment_count,view_count,share_count"},
-                    json={"max_count": 5},
-                    timeout=15,
-                ).json()
-                vids = (vl.get("data") or {}).get("videos") or []
+                # video.list PAGINADO → todos los vídeos (para total de views real,
+                # TikTok no da total de perfil). Newest-first → [:5] = últimos 5.
+                from . import analytics as _an
+                all_vids = _an.tiktok_all_videos(hdr)
+                total_views_tt = sum(int(v.get("view_count") or 0) for v in all_vids)
+                vids = all_vids[:5]
                 v_likes = sum(int(v.get("like_count") or 0) for v in vids)
                 v_views = sum(int(v.get("view_count") or 0) for v in vids)
                 v_comments = sum(int(v.get("comment_count") or 0) for v in vids)
                 v_shares = sum(int(v.get("share_count") or 0) for v in vids)
                 tt_line = (
                     f"🎵 <b>TikTok</b> @interest_stuff (Sandbox)\n"
-                    f"   👥 {followers} followers · {videos} videos · {total_likes} likes totales\n"
+                    f"   👥 {followers} followers · {videos} videos · "
+                    f"{total_views_tt:,}👁 totales · {total_likes} likes\n"
                     f"   Últimos {len(vids)} videos: {v_views}👁 {v_likes}❤ "
                     f"{v_comments}💬 {v_shares}🔁"
                 )
