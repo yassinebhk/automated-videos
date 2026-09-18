@@ -49,7 +49,18 @@ def _notify(text: str, urgent: bool = False) -> None:
 
 
 def run_once() -> dict[str, Any]:
-    """Genera + sube 1 fractal zoom al canal Infinite Fractals."""
+    """Genera + sube 1 vídeo satisfying al canal Infinite Fractals (tope 1/día)."""
+    # Tope 1/día (petición user 18/09): si ya se generó hoy, no repetir. Cubre el
+    # doble trigger (satisfying-daily 18:07 + catchup-all 20:37) sin romper la cadena.
+    led = _load_ledger()
+    if led:
+        try:
+            last = max(led.values())
+            if datetime.fromisoformat(last).astimezone(timezone.utc).date() == datetime.now(timezone.utc).date():
+                print("  satisfying: ya generado hoy — skip (tope 1/día)")
+                return {"status": "skip_daily_cap"}
+        except Exception:
+            pass
     variant = _pick_variant()
     print(f"  satisfying: variant={variant['key']} ({variant.get('gen', 'fractal')})")
     meta = generator.generate_satisfying_video(generator.SATISFYING_ROOT, variant, seconds=30)
