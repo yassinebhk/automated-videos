@@ -11,7 +11,7 @@ name: Social boost (re-promo top YT)
 
 on:
   schedule:
-    - cron: "3 9,13,17,21 * * *"
+    - cron: "3 14 * * *"   # 1x/día (antes 4x — consolidación 18/09: menos spam, +engagement)
   workflow_dispatch: {}
 
 permissions:
