@@ -1,26 +1,5 @@
 [
   {
-    "slug": "cortes-tenochtitlan-noviembre-1519",
-    "title": "3 Momentos clave de la caída de Tenochtitlan · 8 nov 1519 · #1",
-    "status": "fail_container_ready",
-    "container_id": "18095574341188569",
-    "public_url": "https://yassinebhk.github.io/automated-videos/reels/cortes-tenochtitlan-noviembre-1519.mp4",
-    "attempts": 4,
-    "catbox_status": "rc=412 body=Invalid uploader",
-    "status_ext": "ERROR",
-    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
-    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095574341188569'}",
-    "ts": "2026-09-17T04:30:27.132406+00:00"
-  },
-  {
-    "slug": "clausulas-abusivas-claude-ia",
-    "title": "Detecta cláusulas abusivas en contratos con IA gratis · 30s · #1",
-    "status": "ok",
-    "media_id": "18492910990098013",
-    "url": "https://instagram.com/reel/18492910990098013",
-    "ts": "2026-09-17T04:48:33.506209+00:00"
-  },
-  {
     "slug": "top-5-ai-tools-startup-workflows",
     "title": "Top 5 AI tools for startup team workflows · #1",
     "status": "fail_container_ready",
@@ -1163,5 +1142,26 @@
     "media_id": "18121614524483160",
     "url": "https://instagram.com/reel/18121614524483160",
     "ts": "2026-09-18T16:46:30.493373+00:00"
+  },
+  {
+    "slug": "padel_checklist_choose_racket_20260918_164921",
+    "title": "How to pick your first racket — Padel Tips #padel #shorts",
+    "status": "fail_container_ready",
+    "container_id": "18095767892188569",
+    "public_url": "https://yassinebhk.github.io/automated-videos/reels/padel_checklist_choose_racket_20260918_164921.mp4",
+    "attempts": 4,
+    "catbox_status": "rc=412 body=Invalid uploader",
+    "status_ext": "ERROR",
+    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
+    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095767892188569'}",
+    "ts": "2026-09-18T17:04:22.627766+00:00"
+  },
+  {
+    "slug": "padel_checklist_choose_racket_20260918_164921",
+    "title": "How to pick your first racket — Padel Tips #padel #shorts",
+    "status": "ok",
+    "media_id": "18109059026127590",
+    "url": "https://instagram.com/reel/18109059026127590",
+    "ts": "2026-09-18T17:06:38.883758+00:00"
   }
 ]
