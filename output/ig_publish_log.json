@@ -3,14 +3,6 @@
     "slug": "padel_back_wall_20260916_162727",
     "title": "The back wall — Padel tip 🎾 #padel #shorts",
     "status": "ok",
-    "media_id": "18119631367949432",
-    "url": "https://instagram.com/reel/18119631367949432",
-    "ts": "2026-09-16T16:35:04.218627+00:00"
-  },
-  {
-    "slug": "padel_back_wall_20260916_162727",
-    "title": "The back wall — Padel tip 🎾 #padel #shorts",
-    "status": "ok",
     "media_id": "17898632046665989",
     "url": "https://instagram.com/reel/17898632046665989",
     "ts": "2026-09-16T16:35:27.662166+00:00"
@@ -1096,5 +1088,18 @@
     "media_id": "18115382527778369",
     "url": "https://instagram.com/reel/18115382527778369",
     "ts": "2026-09-18T00:17:41.933480+00:00"
+  },
+  {
+    "slug": "trabajos-hiperpagados-mar",
+    "title": "TOP 3 Trabajos Hiperpagados Mar · 85000€ · #1",
+    "status": "fail_container_ready",
+    "container_id": "18095676680188569",
+    "public_url": "https://yassinebhk.github.io/automated-videos/reels/trabajos-hiperpagados-mar.mp4",
+    "attempts": 4,
+    "catbox_status": "rc=412 body=Invalid uploader",
+    "status_ext": "ERROR",
+    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
+    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095676680188569'}",
+    "ts": "2026-09-18T00:38:30.837839+00:00"
   }
 ]
