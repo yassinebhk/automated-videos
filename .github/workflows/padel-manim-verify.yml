@@ -1,0 +1,57 @@
+name: Padel Manim VERIFY (frames de las 8 tácticas, sin subir)
+
+# Renderiza las 8 escenas Manim en calidad baja (rápido) y extrae frames de cada
+# una para revisar la calidad visual antes de activar el canal. NO sube nada.
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: system deps (cairo/pango/ffmpeg)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends ffmpeg build-essential \
+            libcairo2-dev libpango1.0-dev pkg-config python3-dev fonts-dejavu-core
+      - name: install manim
+        run: pip install "manim>=0.18"
+      - name: render las 8 escenas + extrae frames
+        run: |
+          cd src/videogen/padel
+          rm -rf media || true
+          SCENES="PadelLob PadelBackWall PadelBandeja PadelSmash PadelDrop PadelServe PadelPositioning PadelDefense"
+          mkdir -p /tmp/frames
+          for S in $SCENES; do
+            echo "=== render $S ==="
+            manim -ql --disable_caching manim_scene.py "$S" || { echo "FALLO $S"; continue; }
+            MP4=$(find media -path "*480p15*" -name "$S.mp4" | head -1)
+            [ -z "$MP4" ] && MP4=$(find media -name "$S.mp4" | head -1)
+            echo "mp4: $MP4"
+            DUR=$(ffprobe -v quiet -show_entries format=duration -of csv=p=0 "$MP4")
+            echo "$S dur=$DUR"
+            # frames a 25%, 55%, 88% de la duración
+            python3 - "$MP4" "$DUR" "$S" <<'PY'
+import subprocess, sys
+mp4, dur, name = sys.argv[1], float(sys.argv[2]), sys.argv[3]
+for i, frac in enumerate([0.25, 0.55, 0.88]):
+    t = round(dur*frac, 2)
+    subprocess.run(["ffmpeg","-y","-ss",str(t),"-i",mp4,"-frames:v","1",
+                    f"/tmp/frames/{name}_{i}_{int(frac*100)}pct.jpg"], check=False)
+PY
+          done
+          echo "=== frames generados ==="; ls -la /tmp/frames/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: padel-verify-frames
+          path: /tmp/frames/*.jpg
+          if-no-files-found: warn
