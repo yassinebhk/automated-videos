@@ -30,7 +30,7 @@ jobs:
           cd src/videogen/padel
           rm -rf media || true
           mkdir -p /tmp/frames
-          for S in PadelLob PadelBackWall PadelBandeja PadelSmash PadelDrop PadelServe PadelPositioning PadelDefense; do
+          for S in PadelLob PadelBackWall PadelBandeja PadelSmash PadelDrop PadelServe PadelPositioning PadelDefense PadelFact PadelCompare PadelChecklist; do
             echo "=== render $S ==="
             manim -ql --disable_caching manim_scene.py "$S" || { echo "FALLO $S"; continue; }
             MP4=$(find media -name "$S.mp4" | head -1)
