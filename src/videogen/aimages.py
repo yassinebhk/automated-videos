@@ -156,6 +156,16 @@ def generate_image(
     if out.exists() and out.stat().st_size > 5000:
         return out
 
+    # ── IMÁGENES REALES PRIMERO (petición del user 18/09: la IA se nota y queda mal) ──
+    # Stock real relevante (Pexels → Pixabay) por keywords. Solo si IMAGE_ENGINE=ai
+    # se salta y va directo a Pollinations (por si algún canal quiere IA a propósito).
+    engine = os.environ.get("IMAGE_ENGINE", "stock").strip().lower()
+    if engine != "ai":
+        stock = _fetch_stock(prompt, out, width, height, seed)
+        if stock:
+            return stock
+        print("  aimages: stock real no encontrado → fallback Pollinations")
+
     # Prompt final rico: sujeto + estilo canal + calidad + negatives
     parts = [prompt.strip(), style_str, STYLE_COMMON]
     if avoid:
@@ -206,37 +216,85 @@ def generate_image(
     return None
 
 
-def _fallback_pexels(prompt: str, out: Path, width: int, height: int) -> Path | None:
-    """Descarga imagen stock de Pexels como fallback cuando Pollinations se cae."""
+def _stock_query(prompt: str) -> str:
+    """Query limpio para stock: solo las keywords (sin el 'scene depicting: ...'
+    ni el estilo de canal), 3-4 palabras significativas → mejores matches."""
+    head = prompt.split(", scene depicting")[0].strip()
+    words = [w for w in head.replace(",", " ").split() if len(w) > 2][:4]
+    return " ".join(words) if words else (head[:40].strip() or "cinematic background")
+
+
+def _pick(seq, seed: int):
+    return seq[seed % len(seq)] if seq else None
+
+
+def _pexels_photo(query: str, orientation: str, seed: int) -> bytes | None:
     key = os.environ.get("PEXELS_API_KEY", "").strip()
     if not key:
         return None
     try:
         import requests
-        # Usa primeras 2-3 palabras del prompt como query
-        query = " ".join(prompt.split()[:3])
-        orientation = "portrait" if height > width else "landscape"
-        r = requests.get(
-            "https://api.pexels.com/v1/search",
-            headers={"Authorization": key},
-            params={"query": query, "per_page": 10, "orientation": orientation},
-            timeout=30,
-        )
+        r = requests.get("https://api.pexels.com/v1/search",
+                         headers={"Authorization": key},
+                         params={"query": query, "per_page": 15, "orientation": orientation},
+                         timeout=30)
         if r.status_code != 200:
             return None
         photos = r.json().get("photos", [])
-        if not photos:
+        photo = _pick(photos, seed)
+        if not photo:
             return None
-        import random as _r
-        photo = _r.choice(photos)
-        img_url = (photo.get("src") or {}).get("original") or photo["src"]["large2x"]
-        img = requests.get(img_url, timeout=30).content
-        out.write_bytes(img)
-        print(f"  pexels fallback OK ({len(img)}b)")
-        return out
+        src = photo.get("src") or {}
+        img_url = src.get("portrait") or src.get("large2x") or src.get("original") or src.get("large")
+        if not img_url:
+            return None
+        return requests.get(img_url, timeout=30).content
     except Exception as e:
-        print(f"  pexels fallback fail: {e}")
+        print(f"  pexels fail: {str(e)[:60]}")
         return None
+
+
+def _pixabay_photo(query: str, vertical: bool, seed: int) -> bytes | None:
+    key = os.environ.get("PIXABAY_API_KEY", "").strip()
+    if not key:
+        return None
+    try:
+        import requests
+        r = requests.get("https://pixabay.com/api/",
+                         params={"key": key, "q": query, "image_type": "photo",
+                                 "orientation": "vertical" if vertical else "horizontal",
+                                 "per_page": 20, "safesearch": "true"},
+                         timeout=30)
+        if r.status_code != 200:
+            return None
+        hits = r.json().get("hits", [])
+        hit = _pick(hits, seed)
+        if not hit:
+            return None
+        img_url = hit.get("largeImageURL") or hit.get("webformatURL")
+        if not img_url:
+            return None
+        return requests.get(img_url, timeout=30).content
+    except Exception as e:
+        print(f"  pixabay fail: {str(e)[:60]}")
+        return None
+
+
+def _fetch_stock(prompt: str, out: Path, width: int, height: int, seed: int = 0) -> Path | None:
+    """Imagen REAL relevante (Pexels → Pixabay). Devuelve out o None."""
+    query = _stock_query(prompt)
+    orientation = "portrait" if height >= width else "landscape"
+    img = _pexels_photo(query, orientation, seed) or _pixabay_photo(query, height >= width, seed)
+    if img and len(img) > 5000:
+        out.write_bytes(img)
+        print(f"  aimages: stock real OK '{query}' ({len(img)}b)")
+        return out
+    return None
+
+
+# Compat: nombre viejo usado como último recurso más abajo
+def _fallback_pexels(prompt: str, out: Path, width: int, height: int) -> Path | None:
+    return _fetch_stock(prompt, out, width, height, seed=0)
 
 
 def build_image_prompt(segment_text: str, visual_keywords: list[str]) -> str:
