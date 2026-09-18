@@ -1,13 +1,5 @@
 [
   {
-    "slug": "padel_back_wall_20260916_205414",
-    "title": "The back wall — Padel tip 🎾 #padel #shorts",
-    "status": "ok",
-    "media_id": "18074309759449994",
-    "url": "https://instagram.com/reel/18074309759449994",
-    "ts": "2026-09-16T21:17:20.225768+00:00"
-  },
-  {
     "slug": "fractal_julia_a_20260916_211446",
     "title": "Satisfying Infinite Fractal Zoom 🌀 #JuliaA #shorts",
     "status": "fail_container_ready",
@@ -1128,5 +1120,18 @@
     "media_id": "18166195585468069",
     "url": "https://instagram.com/reel/18166195585468069",
     "ts": "2026-09-18T06:34:28.679888+00:00"
+  },
+  {
+    "slug": "torres-kio-fraude-300m-espana",
+    "title": "Caso Torres KIO — 300M€ robados y cero cárcel · #1",
+    "status": "fail_container_ready",
+    "container_id": "18095716061188569",
+    "public_url": "https://yassinebhk.github.io/automated-videos/reels/torres-kio-fraude-300m-espana.mp4",
+    "attempts": 4,
+    "catbox_status": "rc=412 body=Invalid uploader",
+    "status_ext": "ERROR",
+    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
+    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095716061188569'}",
+    "ts": "2026-09-18T09:16:29.556840+00:00"
   }
 ]

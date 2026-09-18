@@ -1,12 +1,8 @@
 {
   "cases": {
     "kio": {
-      "count": 14,
+      "count": 15,
       "history": [
-        {
-          "ts": "2026-08-30T11:36:32.924976+00:00",
-          "topic": "[CRIMEN] El caso KIO: El fraude bursátil de 300 millones que sacudió la bolsa española en los 90"
-        },
         {
           "ts": "2026-08-31T19:54:40.699205+00:00",
           "topic": "[CRIMEN] Los KIO y el escándalo bursátil: 300 millones de euros evaporados en la bolsa española"
@@ -42,6 +38,10 @@
         {
           "ts": "2026-09-13T16:36:38.130769+00:00",
           "topic": "[CRIMEN] KIO y el fraude bursátil de 300 millones de euros: el pelotazo de De la Rosa"
+        },
+        {
+          "ts": "2026-09-18T09:04:15.637716+00:00",
+          "topic": "Torres KIO: el fraude bursátil de 300 millones de euros que sacudió la economía española"
         }
       ]
     },
