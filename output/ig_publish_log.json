@@ -2,18 +2,6 @@
   {
     "slug": "padel_bandeja_20260916_165333",
     "title": "The bandeja — Padel tip 🎾 #padel #shorts",
-    "status": "fail_container_ready",
-    "container_id": "18095514362188569",
-    "public_url": "https://yassinebhk.github.io/automated-videos/reels/padel_bandeja_20260916_165333.mp4",
-    "attempts": 3,
-    "status_ext": "ERROR",
-    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
-    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095514362188569'}",
-    "ts": "2026-09-16T17:05:07.453993+00:00"
-  },
-  {
-    "slug": "padel_bandeja_20260916_165333",
-    "title": "The bandeja — Padel tip 🎾 #padel #shorts",
     "status": "ok",
     "media_id": "17961422127078926",
     "url": "https://instagram.com/reel/17961422127078926",
@@ -1103,5 +1091,18 @@
     "media_id": "18088610384218079",
     "url": "https://instagram.com/reel/18088610384218079",
     "ts": "2026-09-18T01:47:39.875311+00:00"
+  },
+  {
+    "slug": "padel-pro-drop-shot-coaching-tip",
+    "title": "The drop shot",
+    "status": "fail_container_ready",
+    "container_id": "18095683133188569",
+    "public_url": "https://yassinebhk.github.io/automated-videos/reels/padel-pro-drop-shot-coaching-tip.mp4",
+    "attempts": 4,
+    "catbox_status": "rc=412 body=Invalid uploader",
+    "status_ext": "ERROR",
+    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
+    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095683133188569'}",
+    "ts": "2026-09-18T02:08:11.236562+00:00"
   }
 ]
