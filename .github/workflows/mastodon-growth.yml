@@ -9,7 +9,7 @@ name: Mastodon growth loop
 
 on:
   schedule:
-    - cron: "18 10,15,20 * * *"
+    - cron: "18 13 * * *"   # 1x/día (antes 3x — consolidación 18/09)
   workflow_dispatch: {}
 
 concurrency:
