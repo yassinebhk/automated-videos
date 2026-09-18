@@ -8,7 +8,7 @@ name: Bluesky growth loop
 
 on:
   schedule:
-    - cron: "30 7,10,14,18,21 * * *"
+    - cron: "30 9,19 * * *"   # 2x/día (antes 5x — consolidación 18/09)
   workflow_dispatch: {}
 
 concurrency:
