@@ -424,24 +424,21 @@ def snapshot_tiktok() -> list[dict]:
         data = (u.get("data") or {}).get("user") or {}
         subs_ct = int(data.get("follower_count") or 0)
         likes_ct = int(data.get("likes_count") or 0)
+        # video/list PAGINADO (cursor) → TODOS los vídeos, no solo 20.
+        videos_all = tiktok_all_videos(hdr)
+        total_views = sum(int(v.get("view_count") or 0) for v in videos_all)
         # Log diagnóstico si TT devuelve 0 (token roto o cambio de API)
-        if subs_ct == 0 and likes_ct == 0:
+        if subs_ct == 0 and likes_ct == 0 and not videos_all:
             err = u.get("error") or {}
             print(f"  tiktok snapshot: 0/0 sospechoso — error={err} raw={str(u)[:300]}")
         rows.append({
             "platform": "tiktok", "kind": "channel",
             "subs": subs_ct,
-            "views": 0,
+            "views": total_views,   # TikTok no da total de perfil → suma por vídeo
             "likes": likes_ct,
             "source": "api",
         })
-        vl = requests.post(
-            "https://open.tiktokapis.com/v2/video/list/",
-            headers={**hdr, "Content-Type": "application/json"},
-            params={"fields": "id,title,view_count,like_count,comment_count,share_count"},
-            json={"max_count": 20}, timeout=15,
-        ).json()
-        for v in (vl.get("data") or {}).get("videos") or []:
+        for v in videos_all:
             rows.append({
                 "platform": "tiktok", "kind": "video",
                 "video_id": v.get("id"), "slug": None,
@@ -454,6 +451,36 @@ def snapshot_tiktok() -> list[dict]:
     except Exception:
         pass
     return rows
+
+
+def tiktok_all_videos(hdr: dict,
+                      fields: str = "id,title,view_count,like_count,comment_count,share_count",
+                      cap_pages: int = 15) -> list[dict]:
+    """Pagina /v2/video/list/ con cursor hasta agotar (has_more) o el cap.
+    Devuelve todos los vídeos (newest-first)."""
+    import requests
+    out: list[dict] = []
+    cursor = None
+    for _ in range(cap_pages):
+        body: dict = {"max_count": 20}
+        if cursor is not None:
+            body["cursor"] = cursor
+        try:
+            vl = requests.post(
+                "https://open.tiktokapis.com/v2/video/list/",
+                headers={**hdr, "Content-Type": "application/json"},
+                params={"fields": fields}, json=body, timeout=20,
+            ).json()
+        except Exception:
+            break
+        d = vl.get("data") or {}
+        out.extend(d.get("videos") or [])
+        if not d.get("has_more"):
+            break
+        cursor = d.get("cursor")
+        if cursor is None:
+            break
+    return out
 
 
 def snapshot_bluesky() -> list[dict]:
