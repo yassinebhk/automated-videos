@@ -94,12 +94,20 @@ def run_once() -> dict[str, Any]:
     tags = ["padel", "padel tips", "padel tactics", "padel tennis",
             "padel gear", "how to play padel", "shorts"]
 
-    # YT upload (YT_PADEL) — si no hay creds, sigue a IG/TT igual
+    # YT upload — canal propio de pádel (YT_PADEL) si ya existe; si no, canal HOST
+    # temporal existente mientras se crea el de pádel (user 18/09: "subir a waitwhy
+    # o alguno de estos canales"). Configurable con la variable PADEL_HOST_YT_PREFIX
+    # (default TopRanking ES = YT_RANKING, el más genérico → menos choque de nicho).
+    # Como Shorts se distribuyen por el feed de Shorts, el alcance no depende del nicho
+    # del canal; el título/tags son de pádel para que YouTube lo muestre al público correcto.
     from ..upload_youtube import upload_video
+    host_prefix = YT_PREFIX
+    if not os.environ.get(YT_PREFIX + "_REFRESH_TOKEN"):
+        host_prefix = os.environ.get("PADEL_HOST_YT_PREFIX", "YT_RANKING").strip()
     prev = os.environ.get("YT_CHANNEL_PREFIX", "")
-    os.environ["YT_CHANNEL_PREFIX"] = YT_PREFIX
-    has_creds = bool(os.environ.get(YT_PREFIX + "_REFRESH_TOKEN"))
-    print(f"  padel: prefix={YT_PREFIX} · has_refresh={has_creds}")
+    os.environ["YT_CHANNEL_PREFIX"] = host_prefix
+    has_creds = bool(os.environ.get(host_prefix + "_REFRESH_TOKEN"))
+    print(f"  padel: YT host={host_prefix} · has_refresh={has_creds}")
     url, yt_status = "", "skip_no_creds"
     if has_creds:
         try:
@@ -118,7 +126,8 @@ def run_once() -> dict[str, Any]:
         os.environ.pop("YT_CHANNEL_PREFIX", None)
 
     _mark_used(key)
-    _notify(f"✅ <b>{DISPLAY_NAME}</b> · YT: {url or yt_status}\n<i>{label}: {headline}</i>")
+    host_note = "" if host_prefix == YT_PREFIX else f" (canal host: {host_prefix})"
+    _notify(f"✅ <b>{DISPLAY_NAME}</b> · YT: {url or yt_status}{host_note}\n<i>{label}: {headline}</i>")
 
     # Crosspost RRSS (no requiere URL YT)
     try:
@@ -146,4 +155,4 @@ def run_once() -> dict[str, Any]:
         print(f"  padel: ig fail — {e}")
 
     return {"status": "ok", "slug": slug, "url": url, "topic": key,
-            "format": fmt, "yt_status": yt_status}
+            "format": fmt, "yt_status": yt_status, "yt_host": host_prefix}
