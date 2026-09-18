@@ -36,10 +36,21 @@ def _get_credentials() -> Credentials:
     import os
     prefix = _channel_prefix()
     if prefix:
-        # Modo multi-canal: creds desde env con prefijo (ej. YT_TAX_REFRESH_TOKEN)
-        refresh = os.environ.get(f"{prefix}_REFRESH_TOKEN") or os.environ.get("YT_REFRESH_TOKEN")
+        # Modo multi-canal: el REFRESH_TOKEN DEBE ser el del canal (define la cuenta YT).
+        # ⚠️ 18/09: NO caer a YT_REFRESH_TOKEN si falta. Ese fallback estaba subiendo
+        # contenido de canales sin creds (rankings-en en inglés, pádel…) al canal
+        # PRINCIPAL WaitWhy (true crime ES) → identidad rota + 0-30 views en lo reciente.
+        # client_id/secret SÍ pueden compartir el OAuth app (es el refresh_token quien
+        # determina el canal). Sin refresh propio → OMITIR upload (no contaminar).
+        refresh = os.environ.get(f"{prefix}_REFRESH_TOKEN")
         client_id = os.environ.get(f"{prefix}_CLIENT_ID") or os.environ.get("YT_CLIENT_ID")
         client_secret = os.environ.get(f"{prefix}_CLIENT_SECRET") or os.environ.get("YT_CLIENT_SECRET")
+        if not refresh:
+            raise RuntimeError(
+                f"YT upload OMITIDO: canal '{prefix}' sin {prefix}_REFRESH_TOKEN. "
+                f"No subo al canal principal WaitWhy para no contaminarlo. "
+                f"Crea el canal + secrets, o enruta a un canal host con credenciales."
+            )
         if refresh and client_id and client_secret:
             creds = Credentials(
                 token=None,
