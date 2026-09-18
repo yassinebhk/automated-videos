@@ -42,13 +42,21 @@ def _mark_used(key: str) -> None:
     LEDGER_PATH.write_text(json.dumps(d, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
-def _pick_tactic(keys: list[str]) -> str:
-    """Rota: la táctica usada hace más tiempo (o nunca)."""
+def _pick_key(keys: list[str]) -> str:
+    """Rota: el topic usado hace más tiempo (o nunca)."""
     used = _load_ledger()
     never = [k for k in keys if k not in used]
     if never:
         return random.choice(never)
     return min(keys, key=lambda k: used.get(k, ""))
+
+
+def _flat(s: str) -> str:
+    return " ".join((s or "").split())
+
+
+_FMT_LABEL = {"tactic": "Padel Tactics", "fact": "Padel Facts",
+              "compare": "Padel Gear", "checklist": "Padel Tips"}
 
 
 def _notify(text: str, urgent: bool = False) -> None:
@@ -57,29 +65,34 @@ def _notify(text: str, urgent: bool = False) -> None:
 
 
 def run_once() -> dict[str, Any]:
-    """Genera + sube 1 táctica animada de pádel."""
-    from . import manim_scene, render
-    keys = list(manim_scene.TACTICS.keys())
-    tactic = _pick_tactic(keys)
-    info = manim_scene.TACTICS[tactic]
-    print(f"  padel: táctica={tactic} · escena={info['scene']}")
+    """Genera + sube 1 vídeo de pádel (rota entre tácticas, curiosidades,
+    comparativas de material y checklists de recomendaciones)."""
+    from . import render, topics
+    pool = topics.all_topics()
+    by_key = {t["key"]: t for t in pool}
+    key = _pick_key(list(by_key.keys()))
+    topic = by_key[key]
+    fmt = topic.get("format", "tactic")
+    print(f"  padel: topic={key} · format={fmt} ({len(pool)} en pool)")
 
     ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
-    slug = f"padel_{tactic}_{ts}"
+    slug = f"padel_{key}_{ts}"
     work = PADEL_ROOT / slug
-    final = render.render_tactic(tactic, work)
+    final = render.render_topic(topic, work)
     if not final or not Path(final).exists():
-        _notify(f"❌ Padel falló render · {tactic}", urgent=True)
-        return {"status": "gen_fail", "tactic": tactic}
+        _notify(f"❌ Padel falló render · {key}", urgent=True)
+        return {"status": "gen_fail", "topic": key}
 
-    title = f"{info['title']} — Padel Tactics #padel #shorts"[:100]
+    headline = _flat(topic.get("title", "Padel"))
+    label = _FMT_LABEL.get(fmt, "Padel")
+    title = f"{headline} — {label} #padel #shorts"[:100]
     description = (
-        f"{info['title']}: a clear, step-by-step padel tactic — animated so it actually "
-        f"makes sense.\n\nFollow for more padel tactics every week.\n\n"
-        f"#padel #padeltips #padeltactics #padeltennis #shorts"
+        f"{headline} · {label}, animated so it actually makes sense.\n\n"
+        f"Follow for more padel every week.\n\n"
+        f"#padel #padeltips #padeltennis #padelpro #shorts"
     )
     tags = ["padel", "padel tips", "padel tactics", "padel tennis",
-            "padel strategy", "how to play padel", "shorts"]
+            "padel gear", "how to play padel", "shorts"]
 
     # YT upload (YT_PADEL) — si no hay creds, sigue a IG/TT igual
     from ..upload_youtube import upload_video
@@ -104,15 +117,15 @@ def run_once() -> dict[str, Any]:
     else:
         os.environ.pop("YT_CHANNEL_PREFIX", None)
 
-    _mark_used(tactic)
-    _notify(f"✅ <b>{DISPLAY_NAME}</b> · YT: {url or yt_status}\n<i>{info['title']} ({info['es']})</i>")
+    _mark_used(key)
+    _notify(f"✅ <b>{DISPLAY_NAME}</b> · YT: {url or yt_status}\n<i>{label}: {headline}</i>")
 
     # Crosspost RRSS (no requiere URL YT)
     try:
         from .. import crosspost_full
         cross = crosspost_full.crosspost_short_from_mp4(
             Path(final), title, url,
-            teaser=f"🎾 Padel tactic: {info['title']}",
+            teaser=f"🎾 {label}: {headline}",
             channel_label="padel", slug=slug,
         )
         _notify(f"🎾 <b>Padel · RRSS</b> {crosspost_full.summary_line(cross)}")
@@ -132,4 +145,5 @@ def run_once() -> dict[str, Any]:
     except Exception as e:
         print(f"  padel: ig fail — {e}")
 
-    return {"status": "ok", "slug": slug, "url": url, "tactic": tactic, "yt_status": yt_status}
+    return {"status": "ok", "slug": slug, "url": url, "topic": key,
+            "format": fmt, "yt_status": yt_status}
