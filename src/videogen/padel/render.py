@@ -20,12 +20,15 @@ EDGE_VOICE = "en-US-GuyNeural"
 EDGE_RATE = "-6%"
 
 
-def _render_manim(scene_class: str) -> Path | None:
+def _render_manim(scene_class: str, topic_env: str | None = None) -> Path | None:
     base = SCENE_FILE.parent
     media = base / "media"
     subprocess.run(["rm", "-rf", str(media)], check=False)
+    env = dict(os.environ)
+    if topic_env:
+        env["PADEL_TOPIC"] = topic_env  # plantillas data-driven leen esto
     cmd = ["manim", "-qm", "--disable_caching", str(SCENE_FILE.name), scene_class]
-    r = subprocess.run(cmd, cwd=str(base), capture_output=True, text=True, timeout=900)
+    r = subprocess.run(cmd, cwd=str(base), capture_output=True, text=True, timeout=900, env=env)
     if r.returncode != 0:
         print(f"  padel: manim FAIL ({scene_class})\n{r.stderr[-1500:]}")
         return None
@@ -98,17 +101,25 @@ def _mux(video: Path, voice: Path, music: Path | None, work: Path) -> Path:
     return out
 
 
-def render_tactic(tactic_key: str, work: Path) -> Path | None:
-    """Renderiza una táctica completa (vídeo+voz+música). Devuelve mp4 final o None."""
+def render_topic(topic: dict, work: Path) -> Path | None:
+    """Renderiza cualquier topic (tactic/fact/compare/checklist) completo
+    (vídeo+voz+música). Devuelve mp4 final o None."""
+    import json as _json
     from . import manim_scene
-    info = manim_scene.TACTICS[tactic_key]
-    scene = info["scene"]
+    fmt = topic.get("format", "tactic")
+    topic_env = None
+    if fmt == "tactic":
+        scene = manim_scene.TACTICS[topic["tactic"]]["scene"]
+        narration = manim_scene.narration_for(scene)
+    else:
+        scene = manim_scene.FORMAT_SCENES[fmt]
+        narration = topic.get("narration") or manim_scene.narration_for(scene)
+        topic_env = _json.dumps(topic, ensure_ascii=False)
     work.mkdir(parents=True, exist_ok=True)
-    print(f"  padel: render Manim {scene} ({tactic_key})")
-    silent = _render_manim(scene)
+    print(f"  padel: render Manim {scene} (format={fmt})")
+    silent = _render_manim(scene, topic_env=topic_env)
     if not silent:
         return None
-    narration = manim_scene.narration_for(scene)
     voice = work / "voice.mp3"
     try:
         asyncio.run(_edge_voice(narration, voice))
