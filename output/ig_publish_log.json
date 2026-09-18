@@ -1,30 +1,5 @@
 [
   {
-    "slug": "short_ambient_espacial_dormir_20260916_203010",
-    "title": "Musica Ambient Espacial para Dormir Profundo",
-    "status": "fail_container_ready",
-    "container_id": "18095535503188569",
-    "public_url": "https://yassinebhk.github.io/automated-videos/reels/short_ambient_espacial_dormir_20260916_203010.mp4",
-    "attempts": 4,
-    "catbox_status": "rc=412 body=Invalid uploader",
-    "status_ext": "ERROR",
-    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
-    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095535503188569'}",
-    "ts": "2026-09-16T20:45:49.871116+00:00"
-  },
-  {
-    "slug": "padel_back_wall_20260916_205414",
-    "title": "The back wall — Padel tip 🎾 #padel #shorts",
-    "status": "fail_container_ready",
-    "container_id": "18095537378188569",
-    "public_url": "https://yassinebhk.github.io/automated-videos/reels/padel_back_wall_20260916_205414.mp4",
-    "attempts": 4,
-    "status_ext": "ERROR",
-    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
-    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095537378188569'}",
-    "ts": "2026-09-16T21:08:57.162830+00:00"
-  },
-  {
     "slug": "padel_back_wall_20260916_205414",
     "title": "The back wall — Padel tip 🎾 #padel #shorts",
     "status": "ok",
@@ -1132,5 +1107,26 @@
     "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
     "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095701601188569'}",
     "ts": "2026-09-18T06:04:24.555468+00:00"
+  },
+  {
+    "slug": "fractal_julia_b_20260918_060654",
+    "title": "Satisfying Infinite Fractal Zoom 🌀 #JuliaB #shorts",
+    "status": "fail_container_ready",
+    "container_id": "18095703200188569",
+    "public_url": "https://yassinebhk.github.io/automated-videos/reels/fractal_julia_b_20260918_060654.mp4",
+    "attempts": 4,
+    "catbox_status": "rc=412 body=Invalid uploader",
+    "status_ext": "ERROR",
+    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
+    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095703200188569'}",
+    "ts": "2026-09-18T06:30:01.405960+00:00"
+  },
+  {
+    "slug": "fractal_julia_b_20260918_060654",
+    "title": "Satisfying Infinite Fractal Zoom 🌀 #JuliaB #shorts",
+    "status": "ok",
+    "media_id": "18166195585468069",
+    "url": "https://instagram.com/reel/18166195585468069",
+    "ts": "2026-09-18T06:34:28.679888+00:00"
   }
 ]
