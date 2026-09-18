@@ -1047,7 +1047,7 @@ def tax_once_cmd():
     from .tax import pipeline
     result = pipeline.run_once()
     print(json.dumps(result, indent=2, ensure_ascii=False))
-    if result.get("status") not in ("ok",):
+    if result.get("status") not in ("ok", "paused"):
         raise SystemExit(1)
 
 
@@ -1057,7 +1057,7 @@ def legal_once_cmd():
     from .legal import pipeline
     result = pipeline.run_once()
     print(json.dumps(result, indent=2, ensure_ascii=False))
-    if result.get("status") not in ("ok",):
+    if result.get("status") not in ("ok", "paused"):
         raise SystemExit(1)
 
 
