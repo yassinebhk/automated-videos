@@ -1,29 +1,5 @@
 [
   {
-    "slug": "fractal_minibrot_20260916_161822",
-    "title": "Satisfying Infinite Fractal Zoom 🌀 #Minibrot #shorts",
-    "status": "fail_container_ready",
-    "container_id": "18095511272188569",
-    "public_url": "https://yassinebhk.github.io/automated-videos/reels/fractal_minibrot_20260916_161822.mp4",
-    "attempts": 3,
-    "status_ext": "ERROR",
-    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
-    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095511272188569'}",
-    "ts": "2026-09-16T16:44:34.072797+00:00"
-  },
-  {
-    "slug": "fractal_minibrot_20260916_161822",
-    "title": "Satisfying Infinite Fractal Zoom 🌀 #Minibrot #shorts",
-    "status": "fail_container_ready",
-    "container_id": "18095512205188569",
-    "public_url": "https://yassinebhk.github.io/automated-videos/reels/fractal_minibrot_20260916_161822.mp4",
-    "attempts": 3,
-    "status_ext": "ERROR",
-    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
-    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095512205188569'}",
-    "ts": "2026-09-16T16:51:23.261928+00:00"
-  },
-  {
     "slug": "padel_bandeja_20260916_165333",
     "title": "The bandeja — Padel tip 🎾 #padel #shorts",
     "status": "fail_container_ready",
@@ -1106,5 +1082,26 @@
     "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
     "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095678093188569'}",
     "ts": "2026-09-18T01:04:59.815642+00:00"
+  },
+  {
+    "slug": "fractal_seahorse_20260918_010734",
+    "title": "Satisfying Infinite Fractal Zoom 🌀 #Seahorse #shorts",
+    "status": "fail_container_ready",
+    "container_id": "18095680550188569",
+    "public_url": "https://yassinebhk.github.io/automated-videos/reels/fractal_seahorse_20260918_010734.mp4",
+    "attempts": 4,
+    "catbox_status": "rc=412 body=Invalid uploader",
+    "status_ext": "ERROR",
+    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
+    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095680550188569'}",
+    "ts": "2026-09-18T01:39:33.584966+00:00"
+  },
+  {
+    "slug": "fractal_seahorse_20260918_010734",
+    "title": "Satisfying Infinite Fractal Zoom 🌀 #Seahorse #shorts",
+    "status": "ok",
+    "media_id": "18088610384218079",
+    "url": "https://instagram.com/reel/18088610384218079",
+    "ts": "2026-09-18T01:47:39.875311+00:00"
   }
 ]
