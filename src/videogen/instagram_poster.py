@@ -370,6 +370,31 @@ def post_reel_to_instagram(video_title: str, video_url: str,
     """Publica un Reel en IG. Requiere que el video esté disponible en URL
     pública — lo copiamos a docs/reels/<slug>.mp4 que sirve GH Pages.
     """
+    # DEDUP CRÍTICO 18/09/26: bug detectado — mi retry lógica creaba
+    # 2 containers Meta cuando el primer timeout parecía fail pero Meta
+    # ya había publicado. Resultado: mismo slug subido 2× (verificado
+    # padel_back_wall en 23s, top-5-ai-transcription-tools en 69s).
+    # Fix: si slug ya está en log como 'ok' en últimas 48h → skip.
+    try:
+        if IG_LOG_PATH.exists():
+            from datetime import datetime as _dt, timezone as _tz, timedelta as _td
+            log_data = json.loads(IG_LOG_PATH.read_text(encoding="utf-8"))
+            cutoff = _dt.now(_tz.utc) - _td(hours=48)
+            for _entry in reversed(log_data[-200:]):  # solo últimos 200
+                if _entry.get("slug") != slug or _entry.get("status") != "ok":
+                    continue
+                try:
+                    _ts = _dt.fromisoformat(_entry.get("ts", ""))
+                    if _ts > cutoff:
+                        print(f"  ig: DEDUP skip — {slug} ya publicado {_ts.isoformat()[:16]} → {_entry.get('url')}")
+                        return {"media_id": _entry.get("media_id"),
+                                "url": _entry.get("url"),
+                                "dedup_skip": True}
+                except Exception:
+                    pass
+    except Exception as _e:
+        print(f"  ig: dedup check falló ({_e}), sigue publicación normal")
+
     # IG_TOKEN + IG_USER_ID vienen del setup con Instagram Business Login
     # (developers.facebook.com → app → Instagram → API setup). Los nombres
     # legacy IG_ACCESS_TOKEN + IG_BUSINESS_ACCOUNT_ID se mantienen como
@@ -436,7 +461,16 @@ def post_reel_to_instagram(video_title: str, video_url: str,
         err_msg = _LAST_CONTAINER_ERROR.get("error_message", "").lower()
         is_404 = "404" in err_msg or "not found" in err_msg or "media could not be fetched" in err_msg
         is_timeout = "timeout" in err_msg
-        # Timeout también reintentar (Meta puede reintentar internamente y fallar)
+        # ANTI-DUPLICADO 18/09: si es timeout (no 404 real), Meta puede haber
+        # terminado tras nuestro timeout local. Intentar publicar el container
+        # actual ANTES de crear otro (evita bug: mismo slug subido 2× en 23s).
+        if is_timeout:
+            print(f"  ig: timeout local — intento publish del container actual antes de retry")
+            _media_id_try = _publish_container(access_token, ig_account_id, container_id)
+            if _media_id_try:
+                # ✅ Se publicó — evita duplicado saltando al bloque publish
+                container_id = container_id  # keep for sig below
+                break  # sale del loop, va al bloque publish que reusa container_id
         if (is_404 or is_timeout) and attempt < len(backoff) - 1:
             wait_s = backoff[attempt]
             print(f"  ig: retry {attempt+1}/{len(backoff)} tras {'404' if is_404 else 'timeout'} — espera {wait_s}s (backoff)")
