@@ -1,13 +1,5 @@
 [
   {
-    "slug": "periodo-prueba-contratos-derechos-es",
-    "title": "TOP 3 claves del periodo de prueba · 2 a 6 meses · #1",
-    "status": "ok",
-    "media_id": "17908448133513410",
-    "url": "https://instagram.com/reel/17908448133513410",
-    "ts": "2026-09-16T23:02:10.253163+00:00"
-  },
-  {
     "slug": "top-3-ccaa-bono-alquiler-joven",
     "title": "TOP 3 CCAA con Bono Joven · 250€/mes · #1",
     "status": "ok",
@@ -1143,5 +1135,18 @@
     "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
     "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095725082188569'}",
     "ts": "2026-09-18T10:47:08.137665+00:00"
+  },
+  {
+    "slug": "anastacia-7-secretos-carrera",
+    "title": "TOP 7 Secretos de Anastacia · 58 años de carrera · #1",
+    "status": "fail_container_ready",
+    "container_id": "18095727638188569",
+    "public_url": "https://yassinebhk.github.io/automated-videos/reels/anastacia-7-secretos-carrera.mp4",
+    "attempts": 4,
+    "catbox_status": "rc=412 body=Invalid uploader",
+    "status_ext": "ERROR",
+    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
+    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095727638188569'}",
+    "ts": "2026-09-18T11:10:23.574591+00:00"
   }
 ]
