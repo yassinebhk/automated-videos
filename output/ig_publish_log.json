@@ -1,21 +1,5 @@
 [
   {
-    "slug": "box_office_actors_20260917_005604",
-    "title": "Top 10 Highest-Grossing Actors (2000-2026)",
-    "status": "ok",
-    "media_id": "18426896635144067",
-    "url": "https://instagram.com/reel/18426896635144067",
-    "ts": "2026-09-17T01:16:05.896356+00:00"
-  },
-  {
-    "slug": "trabajos-con-mayor-satisfaccion",
-    "title": "TOP 5 trabajos más felices · 92% satisfacción · #1",
-    "status": "ok",
-    "media_id": "17907619083492146",
-    "url": "https://instagram.com/reel/17907619083492146",
-    "ts": "2026-09-17T01:23:28.399969+00:00"
-  },
-  {
     "slug": "crimenes-resueltos-por-adn-decadas-despues",
     "title": "5 crímenes resueltos décadas después por ADN · #1",
     "status": "ok",
@@ -1158,5 +1142,26 @@
     "media_id": "18195692818389564",
     "url": "https://instagram.com/reel/18195692818389564",
     "ts": "2026-09-18T13:19:00.146143+00:00"
+  },
+  {
+    "slug": "fractal_spiral_20260918_132119",
+    "title": "Satisfying Infinite Fractal Zoom #satisfying #shorts",
+    "status": "fail_container_ready",
+    "container_id": "18095743646188569",
+    "public_url": "https://yassinebhk.github.io/automated-videos/reels/fractal_spiral_20260918_132119.mp4",
+    "attempts": 4,
+    "catbox_status": "rc=412 body=Invalid uploader",
+    "status_ext": "ERROR",
+    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
+    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095743646188569'}",
+    "ts": "2026-09-18T13:48:24.839688+00:00"
+  },
+  {
+    "slug": "fractal_spiral_20260918_132119",
+    "title": "Satisfying Infinite Fractal Zoom #satisfying #shorts",
+    "status": "ok",
+    "media_id": "18062366468786899",
+    "url": "https://instagram.com/reel/18062366468786899",
+    "ts": "2026-09-18T13:53:20.659115+00:00"
   }
 ]
