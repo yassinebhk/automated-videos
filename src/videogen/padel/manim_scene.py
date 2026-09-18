@@ -131,16 +131,25 @@ class PadelLob(Scene):
         self.play(Indicate(VGroup(blue1, blue2), color=GREEN, scale_factor=1.25), run_time=0.6)
         self.wait(2.0)  # "And as they retreat, you and your partner step up and take the net."
 
-        # ── 6) CIERRE: tarjeta recap + CTA (final limpio, no se corta) ─
-        panel = Rectangle(width=9.0, height=16.0, fill_color="#0c1420",
-                          fill_opacity=0.9, stroke_width=0).set_z_index(20)
-        recap = Text("Control the net =\ncontrol the point", font_size=56, color=GREEN,
-                     weight=BOLD, line_spacing=1.15, should_center=True).set_z_index(21)
-        recap.move_to(UP * 1.6)
-        cta = Text("▶  FOLLOW FOR MORE\nPADEL TACTICS", font_size=46, color=YELLOW,
+        # ── 6) CIERRE: tarjeta recap + CTA (final limpio, opaco, no se corta) ─
+        panel = Rectangle(width=9.4, height=16.4, fill_color="#0c1420",
+                          fill_opacity=1.0, stroke_width=0).set_z_index(20)
+        ball_icon = VGroup(
+            Dot(radius=0.5, color="#e8ff2a"),
+            Arc(radius=0.5, start_angle=PI * 0.15, angle=PI * 0.7, color="#0c1420", stroke_width=5),
+            Arc(radius=0.5, start_angle=PI * 1.15, angle=PI * 0.7, color="#0c1420", stroke_width=5),
+        ).move_to(UP * 5.4).set_z_index(21)
+        recap = Text("Control the net\n=\ncontrol the point", font_size=58, color=GREEN,
+                     weight=BOLD, line_spacing=1.1, should_center=True).set_z_index(21)
+        if recap.width > 8.0:
+            recap.scale_to_fit_width(8.0)
+        recap.move_to(UP * 1.2)
+        cta = Text("▶  FOLLOW FOR MORE\nPADEL TACTICS", font_size=48, color=YELLOW,
                    weight=BOLD, line_spacing=1.15, should_center=True).set_z_index(21)
-        cta.next_to(recap, DOWN, buff=1.0)
-        self.play(FadeIn(panel), run_time=0.4)
-        self.play(Write(recap), run_time=0.9)
+        if cta.width > 7.6:
+            cta.scale_to_fit_width(7.6)
+        cta.next_to(recap, DOWN, buff=1.3)
+        self.play(FadeIn(panel), FadeOut(lab), run_time=0.4)
+        self.play(FadeIn(ball_icon, scale=0.6), Write(recap), run_time=0.9)
         self.play(FadeIn(cta, shift=UP * 0.3), run_time=0.6)
         self.wait(3.0)  # "Control the net... Follow for more padel tactics." (hold final)
