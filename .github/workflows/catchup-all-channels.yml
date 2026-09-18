@@ -51,7 +51,9 @@ jobs:
     if: ${{ always() && (inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts') }}
     uses: ./.github/workflows/_videogen-job.yml
     with:
-      command: autogen-once
+      # hourly-catchup (idempotente: solo si falta el de hoy) en vez de autogen-once
+      # → evita el 2º short diario de WaitWhy (consolidación media 18/09, -volumen)
+      command: hourly-catchup
     secrets: inherit
 
   tax_short:
