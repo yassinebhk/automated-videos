@@ -1,27 +1,29 @@
-"""Pipeline Padel Pro (EN) — consejo de pádel sobre METRAJE REAL.
+"""Pipeline Padel Pro (EN) — táctica ANIMADA con Manim (motor ganador 18/09).
 
-Reusa el pipeline narrado probado (service.generate/publish): B-roll real de Pexels
-por visual_keywords de pádel + subtítulos sincronizados + voz Edge en-US + compose.
-ai_hero=False (todo metraje real, sin imagen IA). Upload YT_PADEL + IG + TikTok.
+Cada run: rota 1 de las 8 tácticas (globo, pared, bandeja, remate, dejada, saque,
+posición, defensa) → anima con Manim + voz Edge didáctica + música → sube a
+YT_PADEL (Short) + crosspost IG/TikTok/RRSS. 100% gratis, sin metraje real ni IA.
+
+Ver memoria [[padel-formato-ganador-manim]]. NO volver a diagramas ni Pexels.
 """
 from __future__ import annotations
 
 import json
 import os
 import random
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any
 
 from ..config import ROOT
-from . import topic_pool
 
 
 LEDGER_PATH = ROOT / "output" / "padel_ledger.json"
-COOLDOWN_DAYS = 90
 YT_PREFIX = "YT_PADEL"
 DISPLAY_NAME = "Padel Pro"
-EDGE_VOICE_EN = "en-US-GuyNeural"
-IG_HASHTAGS = ["padel", "padeltips", "padeltactics", "sport", "padellife", "tennis"]
+PADEL_ROOT = ROOT / "output" / "padel_uploaded"
+# Cap 5 hashtags (anti-baneo IG) + caption limpio por canal. Ver [[ig-antiban-multicanal]].
+IG_HASHTAGS = ["padel", "padeltips", "padeltactics", "padeltennis", "shorts"]
 
 
 def _load_ledger() -> dict[str, str]:
@@ -40,45 +42,13 @@ def _mark_used(key: str) -> None:
     LEDGER_PATH.write_text(json.dumps(d, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
-def _recently_used(key: str) -> bool:
-    e = _load_ledger().get(key)
-    if not e:
-        return False
-    try:
-        return (datetime.now(timezone.utc) - datetime.fromisoformat(e)) < timedelta(days=COOLDOWN_DAYS)
-    except Exception:
-        return False
-
-
-def _pick_topic() -> dict:
-    pool = topic_pool.all_topics()
-    fresh = [t for t in pool if not _recently_used(t["key"])]
-    return random.choice(fresh or pool)
-
-
-def _build_prompt(t: dict) -> str:
-    return (
-        f"[Padel Pro · English · ONE coaching tip over REAL padel footage] "
-        f"Teach this padel tip: {t['titulo']}. "
-        f"Mandatory hook (0-3s): {t['hook']}. "
-        f"What to teach: {t['subject']} "
-        f"Explain clearly in ~45s for a beginner-to-intermediate player, 3-4 short beats. "
-        f"CRITICAL: every visual_keywords entry must be REAL PADEL GAMEPLAY in English "
-        f"(padel match, padel rally, padel smash, padel net volley, padel players court, "
-        f"padel serve, padel doubles) — always the word 'padel', never 'tennis'. "
-        f"Title: '{t['titulo']} — Padel tip'. Closing CTA: 'Follow for more padel tips.'"
-    )
-
-
-def _set_env() -> None:
-    os.environ["SCRIPT_SYSTEM_PROMPT_FILE"] = "padel_system.md"
-    os.environ["YT_CHANNEL_PREFIX"] = YT_PREFIX
-    os.environ.setdefault("EDGE_VOICE_EN_PADEL", EDGE_VOICE_EN)
-
-
-def _clear_env() -> None:
-    os.environ.pop("SCRIPT_SYSTEM_PROMPT_FILE", None)
-    os.environ.pop("YT_CHANNEL_PREFIX", None)
+def _pick_tactic(keys: list[str]) -> str:
+    """Rota: la táctica usada hace más tiempo (o nunca)."""
+    used = _load_ledger()
+    never = [k for k in keys if k not in used]
+    if never:
+        return random.choice(never)
+    return min(keys, key=lambda k: used.get(k, ""))
 
 
 def _notify(text: str, urgent: bool = False) -> None:
@@ -86,53 +56,80 @@ def _notify(text: str, urgent: bool = False) -> None:
     add(text, urgent=urgent)
 
 
-def _mp4_for(slug: str):
-    from ..config import UPLOADED_DIR, PENDING_DIR
-    for b in (UPLOADED_DIR, PENDING_DIR):
-        p = b / slug / "video_en_vertical.mp4"
-        if p.exists():
-            return p
-    return None
-
-
 def run_once() -> dict[str, Any]:
-    # DESACTIVADO 18/09: metraje real (Pexels) daba "un tio, nada de padel".
-    # Pendiente recablear con animacion Manim. No genera ni envia nada.
-    print("  padel: DESACTIVADO (pendiente motor Manim)")
-    return {"status": "disabled"}
-    from .. import service
-    topic = _pick_topic()
-    prompt = _build_prompt(topic)
-    print(f"  padel: topic={topic['key']}")
-    _set_env()
-    print(f"  padel: prefix={YT_PREFIX} · has_refresh={bool(os.environ.get(YT_PREFIX + '_REFRESH_TOKEN'))}")
+    """Genera + sube 1 táctica animada de pádel."""
+    from . import manim_scene, render
+    keys = list(manim_scene.TACTICS.keys())
+    tactic = _pick_tactic(keys)
+    info = manim_scene.TACTICS[tactic]
+    print(f"  padel: táctica={tactic} · escena={info['scene']}")
+
+    ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    slug = f"padel_{tactic}_{ts}"
+    work = PADEL_ROOT / slug
+    final = render.render_tactic(tactic, work)
+    if not final or not Path(final).exists():
+        _notify(f"❌ Padel falló render · {tactic}", urgent=True)
+        return {"status": "gen_fail", "tactic": tactic}
+
+    title = f"{info['title']} — Padel Tactics #padel #shorts"[:100]
+    description = (
+        f"{info['title']}: a clear, step-by-step padel tactic — animated so it actually "
+        f"makes sense.\n\nFollow for more padel tactics every week.\n\n"
+        f"#padel #padeltips #padeltactics #padeltennis #shorts"
+    )
+    tags = ["padel", "padel tips", "padel tactics", "padel tennis",
+            "padel strategy", "how to play padel", "shorts"]
+
+    # YT upload (YT_PADEL) — si no hay creds, sigue a IG/TT igual
+    from ..upload_youtube import upload_video
+    prev = os.environ.get("YT_CHANNEL_PREFIX", "")
+    os.environ["YT_CHANNEL_PREFIX"] = YT_PREFIX
+    has_creds = bool(os.environ.get(YT_PREFIX + "_REFRESH_TOKEN"))
+    print(f"  padel: prefix={YT_PREFIX} · has_refresh={has_creds}")
+    url, yt_status = "", "skip_no_creds"
+    if has_creds:
+        try:
+            vid = upload_video(
+                Path(final), title=title, description=description[:4900], tags=tags,
+                category_id="17", is_short=True, privacy="public",  # 17 = Sports
+            )
+            url = f"https://youtube.com/shorts/{vid}"
+            yt_status = "ok"
+        except Exception as e:
+            print(f"  padel upload fail: {type(e).__name__}: {e}")
+            yt_status = f"fail: {type(e).__name__}"
+    if prev:
+        os.environ["YT_CHANNEL_PREFIX"] = prev
+    else:
+        os.environ.pop("YT_CHANNEL_PREFIX", None)
+
+    _mark_used(tactic)
+    _notify(f"✅ <b>{DISPLAY_NAME}</b> · YT: {url or yt_status}\n<i>{info['title']} ({info['es']})</i>")
+
+    # Crosspost RRSS (no requiere URL YT)
     try:
-        slug = service.generate(prompt, ("en",), lambda m: print(f"  {m}"), ai_hero=False)
-        print(f"  padel: vídeo EN (metraje real) generado, subiendo a {DISPLAY_NAME}…")
-        links = service.publish(slug, ("en",), privacy="public",
-                                progress=lambda m: print(f"  {m}"), notify=False)
-        _mark_used(topic["key"])
-        url = links.get("en", "?")
-        _notify(f"✅ <b>{DISPLAY_NAME}</b> · {url}\n<i>{topic['titulo']}</i>")
-        mp4 = _mp4_for(slug)
-        if mp4:
-            try:
-                from ..notify_batch import send_video_for_tiktok
-                send_video_for_tiktok(mp4, DISPLAY_NAME, topic["titulo"], url)
-            except Exception as e:
-                print(f"  padel: TT tg fail — {e}")
-            try:
-                from .. import social_reels
-                social_reels.post_ig_reel(mp4, topic["titulo"], url, slug,
-                                          hashtags=IG_HASHTAGS, teaser=topic.get("hook", ""),
-                                          prefix=YT_PREFIX)
-            except Exception as e:
-                print(f"  padel: ig fail — {e}")
-        return {"status": "ok", "slug": slug, "url": url, "topic_key": topic["key"]}
+        from .. import crosspost_full
+        cross = crosspost_full.crosspost_short_from_mp4(
+            Path(final), title, url,
+            teaser=f"🎾 Padel tactic: {info['title']}",
+            channel_label="padel", slug=slug,
+        )
+        _notify(f"🎾 <b>Padel · RRSS</b> {crosspost_full.summary_line(cross)}")
     except Exception as e:
-        import traceback
-        traceback.print_exc()
-        _notify(f"❌ {DISPLAY_NAME} falló: {type(e).__name__}: {str(e)[:200]}", urgent=True)
-        return {"status": "gen_fail", "error": str(e), "topic_key": topic["key"]}
-    finally:
-        _clear_env()
+        print(f"  padel crosspost fail: {e}")
+    # TikTok (Telegram para publicación manual / draft)
+    try:
+        from ..notify_batch import send_video_for_tiktok
+        send_video_for_tiktok(str(final), DISPLAY_NAME, title, url)
+    except Exception as e:
+        print(f"  padel: TT tg fail — {e}")
+    # Instagram Reel (token por canal IG_PADEL_TOKEN vía prefix)
+    try:
+        from .. import social_reels
+        social_reels.post_ig_reel(str(final), title, url, slug,
+                                  hashtags=IG_HASHTAGS, prefix=YT_PREFIX)
+    except Exception as e:
+        print(f"  padel: ig fail — {e}")
+
+    return {"status": "ok", "slug": slug, "url": url, "tactic": tactic, "yt_status": yt_status}
