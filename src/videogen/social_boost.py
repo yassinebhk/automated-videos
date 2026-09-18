@@ -1,14 +1,12 @@
-"""Re-promoción de top-YT videos en Bluesky + Mastodon + Threads con hooks
-frescos generados por Gemini. Corre 2× al día en horas distintas del autogen
-para saturar el feed sin quemar contenido nuevo.
+"""Posts de ENGAGEMENT en Bluesky + Mastodon + Threads a partir de top-YT videos.
 
-Estrategia:
-- Coge los top-N videos de YT de los últimos 14 días (>100 views + <30 días).
-- Rota entre ellos para que no salga siempre el mismo.
-- Genera hook nuevo (no reutiliza el título) para variedad.
-- Postea a las 3 redes con el mismo hook + link YT.
-- Ledger `output/social_boost_log.json` evita repostear el mismo video en la
-  misma red en <5 días.
+Estrategia (revisada 18/09 — los datos mostraron 0 engagement con link-drops):
+- 1×/día (antes 4×/día → era saturación con ~0 interacción).
+- Hook fresco tipo caso español + PREGUNTA final que invita a responder.
+- SIN link YT (los enlaces externos matan el alcance en estas redes). El objetivo
+  es conversación/alcance, no click-through (que era ~0). Se construye audiencia
+  primero; los links vuelven cuando haya comunidad.
+- Rota top-N de YT (>100 views, <30 días); ledger evita repetir <5 días.
 """
 from __future__ import annotations
 
@@ -126,11 +124,13 @@ def _hook_for(video: dict) -> str:
     title = video.get("title") or ""
     yt_url = f"https://youtu.be/{video.get('video_id')}"
     angle = random.choice(HOOK_ANGLES)
+    # Engagement-first (18/09): SIN link (los links matan el alcance en estas redes),
+    # terminan con pregunta que invita a responder → genera comentarios.
     fallback_hooks = [
-        f"Caso real, sentencia firme, cifras que no cuadran.\n\n{title}\n\n{yt_url}",
-        f"Robaron millones y ni siquiera es lo más brutal del caso.\n\n{title}\n\n{yt_url}",
-        f"Esto no lo contaron en las noticias así.\n\n{title}\n\n{yt_url}",
-        f"Corrupción española que sigue marcando la ley.\n\n{title}\n\n{yt_url}",
+        f"{title}\n\nSentencia firme y cifras que no cuadran. ¿Justicia real o paripé?",
+        f"{title}\n\nRobaron millones y apenas pisaron la cárcel. ¿Cómo es posible?",
+        f"{title}\n\nEsto no se contó así en las noticias. ¿Lo recordabas?",
+        f"{title}\n\nCorrupción que todavía marca la ley española. ¿Cuál te indigna más?",
     ]
     try:
         from .llm_fallback import generate_text
@@ -150,21 +150,20 @@ def _hook_for(video: dict) -> str:
             f"- PROHIBIDO usar 'brutal', 'increíble', 'te va a impactar', 'no te lo vas a creer'\n"
             f"- Tono directo, seco, español periodístico\n"
             f"- Sin emojis salvo 1 al final máximo (opcional)\n"
-            f"- Termina con el link\n\n"
-            f"Título del video: {title}\n"
-            f"Link: {yt_url}\n\n"
+            f"- Termina SIEMPRE con una PREGUNTA directa que invite a responder (genera comentarios)\n"
+            f"- PROHIBIDO incluir enlaces/URLs (los links matan el alcance en estas redes)\n\n"
+            f"Título del video: {title}\n\n"
             f"Devuelve SOLO el post, sin comillas ni encabezado."
         )
         text = generate_text(prompt, max_tokens=250, temperature=1.2).strip().strip('"')
-        # Rechaza si empieza con clichés
+        # Rechaza si empieza con clichés o si coló un link
         lower = text.lower()
         if any(lower.startswith(bad) for bad in ("¿sabías", "sabías", "¿recuerdas", "todos hemos", "increíble")):
             print(f"  boost: hook rechazado por cliché — fallback")
             return random.choice(fallback_hooks)
-        if 30 < len(text) < 400 and yt_url in text:
+        text = text.replace(yt_url, "").replace("https://youtu.be/", "").strip()
+        if 30 < len(text) < 400:
             return text
-        if 30 < len(text) < 350:
-            return f"{text}\n\n{yt_url}"
     except Exception as e:
         print(f"  boost: Gemini fail ({type(e).__name__}: {e}) — fallback estático")
     return random.choice(fallback_hooks)
