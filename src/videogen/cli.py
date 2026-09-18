@@ -1219,7 +1219,7 @@ def satisfying_once_cmd():
     from .satisfying import pipeline
     result = pipeline.run_once()
     print(json.dumps(result, indent=2, ensure_ascii=False))
-    if result.get("status") not in ("ok",):
+    if result.get("status") not in ("ok", "skip_daily_cap"):
         raise SystemExit(1)
 
 
