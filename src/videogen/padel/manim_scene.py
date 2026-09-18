@@ -491,6 +491,205 @@ class PadelDefense(PadelBase):
         self.outro("Survive, then\nturn the point")
 
 
+# ══════════════════════════ PLANTILLAS DATA-DRIVEN ══════════════════════════
+# Leen el contenido de la env var PADEL_TOPIC (JSON) → variedad infinita sin
+# hand-code. Formatos: fact (curiosidad), compare (material), checklist (tips).
+
+def _load_topic() -> dict:
+    import json
+    import os as _os
+    raw = _os.environ.get("PADEL_TOPIC", "").strip()
+    if not raw:
+        return {}
+    try:
+        return json.loads(raw)
+    except Exception:
+        return {}
+
+
+def _fit(t, w):
+    if t.width > w:
+        t.scale_to_fit_width(w)
+    return t
+
+
+class _CardBase(PadelBase):
+    """Fondo con pista tenue + pelota motif arriba. Base de las plantillas."""
+
+    def card_bg(self, kicker: str, kicker_color=YELLOW):
+        self.camera.background_color = COURT_BG
+        # pista muy tenue de fondo (marca de agua)
+        court = Polygon(pt(0, 0), pt(10, 0), pt(10, 20), pt(0, 20),
+                        stroke_color=GLASS, stroke_width=3, fill_opacity=0.0).set_opacity(0.18)
+        net = Line(pt(0, 10), pt(10, 10), color=GLASS, stroke_width=3).set_opacity(0.18)
+        self.add(court, net)
+        ball = VGroup(
+            Dot(radius=0.5, color=BALL_C),
+            Arc(radius=0.5, start_angle=PI * 0.15, angle=PI * 0.7, color=COURT_BG, stroke_width=5),
+            Arc(radius=0.5, start_angle=PI * 1.15, angle=PI * 0.7, color=COURT_BG, stroke_width=5),
+        ).to_edge(UP, buff=0.7)
+        k = _fit(Text(kicker, font_size=40, color=kicker_color, weight=BOLD), 7.8)
+        k.next_to(ball, DOWN, buff=0.35)
+        self.play(FadeIn(ball, scale=0.6), FadeIn(k, shift=DOWN * 0.2), run_time=0.6)
+        self.lab = None
+        return VGroup(ball, k)
+
+
+class PadelFact(_CardBase):
+    """Curiosidad / '¿Sabías que?'. Topic: {kicker,title,lines[],punch}."""
+    DEFAULT = {
+        "kicker": "DID YOU KNOW?",
+        "title": "Padel was born\nin a backyard",
+        "lines": ["Invented in 1969 in Acapulco, Mexico",
+                  "By Enrique Corcuera — no room for a tennis court",
+                  "So he walled in a smaller one"],
+        "punch": "Now played in 90+ countries",
+    }
+    NARRATION = ("Here's something most players don't know. "
+                 "Padel was invented back in 1969, in Acapulco, Mexico. "
+                 "A man named Enrique Corcuera didn't have room for a full tennis court, "
+                 "so he built a smaller one and walled it in. "
+                 "That backyard experiment is now played in over ninety countries. "
+                 "Follow for more padel.")
+
+    def construct(self):
+        d = _load_topic() or self.DEFAULT
+        self.card_bg(d.get("kicker", "DID YOU KNOW?"))
+        title = Text(d.get("title", ""), font_size=58, color=WHITE, weight=BOLD,
+                     line_spacing=1.05, should_center=True)
+        _fit(title, 8.0).move_to(UP * 3.2)
+        self.play(Write(title), run_time=0.8)
+        rows = VGroup()
+        for i, ln in enumerate(d.get("lines", [])[:3]):
+            dot = Dot(radius=0.13, color=BALL_C)
+            txt = _fit(Text(ln, font_size=34, color="#d7e3ee"), 6.9)
+            row = VGroup(dot, txt).arrange(RIGHT, buff=0.3)
+            rows.add(row)
+        rows.arrange(DOWN, buff=0.7, aligned_edge=LEFT).move_to(DOWN * 0.5)
+        for row in rows:
+            self.play(FadeIn(row, shift=RIGHT * 0.3), run_time=0.6)
+            self.wait(1.7)
+        self.outro(d.get("punch", ""), cta_text="▶  FOLLOW FOR MORE\nPADEL", hold=2.6)
+
+
+class PadelCompare(_CardBase):
+    """Comparativa de material. Topic: {kicker,title,items:[{name,shape}],
+    attrs:[{label,values:[..]}]} (values 0-100, uno por item)."""
+    DEFAULT = {
+        "kicker": "WHICH RACKET?",
+        "title": "Round vs Teardrop vs Diamond",
+        "items": [{"name": "ROUND", "shape": "round"},
+                  {"name": "TEARDROP", "shape": "teardrop"},
+                  {"name": "DIAMOND", "shape": "diamond"}],
+        "attrs": [{"label": "Control", "values": [95, 70, 45]},
+                  {"label": "Power", "values": [45, 70, 95]},
+                  {"label": "Forgiveness", "values": [95, 65, 40]}],
+        "punch": "Round = control\nDiamond = power",
+    }
+    NARRATION = ("Round, teardrop, or diamond — which padel racket should you use? "
+                 "It comes down to where the weight sits. "
+                 "A round racket keeps the sweet spot low and central. "
+                 "Maximum control and very forgiving — perfect while you're learning. "
+                 "A diamond pushes the weight up high. "
+                 "Big power, but far less forgiving — that's a racket for advanced players. "
+                 "And the teardrop sits right in between, balanced for improving players. "
+                 "Follow for more padel.")
+    COLORS = ["#4fc3f7", "#ffd54f", "#ff7043"]
+
+    def _shape(self, kind, color):
+        if kind == "diamond":
+            head = Square(side_length=1.5, color=color, fill_opacity=0.85,
+                          stroke_color=WHITE, stroke_width=3).rotate(PI / 4)
+        elif kind == "teardrop":
+            head = Ellipse(width=1.35, height=1.95, color=color, fill_opacity=0.85,
+                           stroke_color=WHITE, stroke_width=3)
+        else:
+            head = Circle(radius=0.95, color=color, fill_opacity=0.85,
+                          stroke_color=WHITE, stroke_width=3)
+        handle = Rectangle(width=0.32, height=0.8, color=color, fill_opacity=0.85,
+                           stroke_color=WHITE, stroke_width=2)
+        handle.next_to(head, DOWN, buff=0.0)
+        return VGroup(head, handle)
+
+    def construct(self):
+        d = _load_topic() or self.DEFAULT
+        self.card_bg(d.get("kicker", "WHICH RACKET?"))
+        title = _fit(Text(d.get("title", ""), font_size=46, color=WHITE, weight=BOLD), 8.0)
+        title.move_to(UP * 3.6)
+        self.play(Write(title), run_time=0.7)
+        items = d.get("items", [])[:3]
+        attrs = d.get("attrs", [])[:3]
+        for idx, it in enumerate(items):
+            color = self.COLORS[idx % 3]
+            shape = self._shape(it.get("shape", "round"), color).move_to(UP * 1.4)
+            name = _fit(Text(it.get("name", ""), font_size=40, color=color, weight=BOLD), 6.0)
+            name.next_to(shape, DOWN, buff=0.35)
+            self.play(FadeIn(shape, scale=0.7), FadeIn(name), run_time=0.5)
+            bars = VGroup()
+            for a in attrs:
+                val = (a.get("values", [50, 50, 50])[idx]) / 100.0
+                lab = Text(a.get("label", ""), font_size=28, color="#d7e3ee")
+                track = RoundedRectangle(width=4.2, height=0.42, corner_radius=0.2,
+                                         stroke_color="#33465a", stroke_width=2, fill_opacity=0.0)
+                fill = RoundedRectangle(width=max(0.42, 4.2 * val), height=0.42, corner_radius=0.2,
+                                        stroke_width=0, fill_color=color, fill_opacity=0.95)
+                fill.align_to(track, LEFT)
+                bargrp = VGroup(lab, VGroup(track, fill))
+                lab.next_to(track, LEFT, buff=0.3)
+                bars.add(VGroup(lab, track, fill))
+            bars.arrange(DOWN, buff=0.45).move_to(DOWN * 2.2)
+            # anima relleno de barras creciendo desde la izquierda
+            self.play(*[GrowFromEdge(g[2], LEFT) for g in bars],
+                      *[FadeIn(g[0]) for g in bars], *[Create(g[1]) for g in bars],
+                      run_time=0.7)
+            self.wait(1.8)
+            if idx < len(items) - 1:
+                self.play(FadeOut(shape), FadeOut(name), FadeOut(bars), run_time=0.35)
+        self.outro(d.get("punch", ""), cta_text="▶  FOLLOW FOR MORE\nPADEL", hold=2.4)
+
+
+class PadelChecklist(_CardBase):
+    """Recomendaciones / errores. Topic: {kicker,title,tips:[..],punch}."""
+    DEFAULT = {
+        "kicker": "BEGINNER FIXES",
+        "title": "3 mistakes killing\nyour game",
+        "tips": ["Stop smashing everything — control beats power",
+                 "Get out of no man's land — net or back, never the middle",
+                 "Use the walls — let the ball rebound, don't fear it"],
+        "punch": "Fix these and you'll\njump a level fast",
+    }
+    NARRATION = ("Three mistakes that are quietly killing your padel game. "
+                 "Number one: you smash everything. In padel, control beats power almost every time. "
+                 "Number two: you're stuck in no man's land. Be at the net, or at the back — never frozen in the middle. "
+                 "And number three: you're scared of the walls. Let the ball rebound and play it off the glass. "
+                 "Fix these three, and you'll jump a level fast. "
+                 "Follow for more padel.")
+
+    def construct(self):
+        d = _load_topic() or self.DEFAULT
+        self.card_bg(d.get("kicker", "TIPS"))
+        title = Text(d.get("title", ""), font_size=52, color=WHITE, weight=BOLD,
+                     line_spacing=1.05, should_center=True)
+        _fit(title, 8.0).move_to(UP * 3.3)
+        self.play(Write(title), run_time=0.8)
+        rows = VGroup()
+        for i, tip in enumerate(d.get("tips", [])[:4], start=1):
+            num = Text(str(i), font_size=40, color=COURT_BG, weight=BOLD).set_z_index(2)
+            badge = Circle(radius=0.42, color=BALL_C, fill_opacity=1.0, stroke_width=0)
+            num.move_to(badge)
+            txt = _fit(Text(tip, font_size=30, color="#d7e3ee"), 6.3)
+            row = VGroup(VGroup(badge, num), txt).arrange(RIGHT, buff=0.35)
+            rows.add(row)
+        rows.arrange(DOWN, buff=0.6, aligned_edge=LEFT).move_to(DOWN * 0.7)
+        for row in rows:
+            self.play(FadeIn(row, shift=RIGHT * 0.3), run_time=0.55)
+            self.wait(1.9)
+        self.outro(d.get("punch", ""), cta_text="▶  FOLLOW FOR MORE\nPADEL", hold=2.4)
+
+
+FORMAT_SCENES = {"fact": "PadelFact", "compare": "PadelCompare", "checklist": "PadelChecklist"}
+
+
 # ══════════════════════════ REGISTRO ══════════════════════════
 # key -> escena Manim + narración + hashtags específicos. Rota en pipeline.
 TACTICS = {
