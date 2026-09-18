@@ -1,18 +1,5 @@
 [
   {
-    "slug": "3-averias-ocultas-filtro-particulas",
-    "title": "3 fallos ocultos filtro partículas · 1.800€ reparación · #1",
-    "status": "fail_container_ready",
-    "container_id": "18095547584188569",
-    "public_url": "https://yassinebhk.github.io/automated-videos/reels/3-averias-ocultas-filtro-particulas.mp4",
-    "attempts": 4,
-    "catbox_status": "rc=412 body=Invalid uploader",
-    "status_ext": "ERROR",
-    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
-    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095547584188569'}",
-    "ts": "2026-09-16T23:41:08.735520+00:00"
-  },
-  {
     "slug": "top-5-hallazgos-romanos-espana-2026",
     "title": "TOP 5 hallazgos romanos en España · 2026 boletín · #1",
     "status": "ok",
@@ -1153,5 +1140,18 @@
     "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
     "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095728829188569'}",
     "ts": "2026-09-18T11:29:43.410243+00:00"
+  },
+  {
+    "slug": "articulos-seo-ia-gratis-agencia",
+    "title": "Escribe 4 artículos SEO con IA gratis · 500€/mes · #1",
+    "status": "fail_container_ready",
+    "container_id": "18095731079188569",
+    "public_url": "https://yassinebhk.github.io/automated-videos/reels/articulos-seo-ia-gratis-agencia.mp4",
+    "attempts": 4,
+    "catbox_status": "rc=412 body=Invalid uploader",
+    "status_ext": "ERROR",
+    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
+    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095731079188569'}",
+    "ts": "2026-09-18T11:50:34.145443+00:00"
   }
 ]
