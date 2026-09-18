@@ -1,13 +1,5 @@
 [
   {
-    "slug": "top-3-averias-correa-banada-puretech-1",
-    "title": "TOP 3 coches PureTech · 1800 euros avería · #1",
-    "status": "ok",
-    "media_id": "18026219984856734",
-    "url": "https://instagram.com/reel/18026219984856734",
-    "ts": "2026-09-16T18:03:13.472310+00:00"
-  },
-  {
     "slug": "thyssen-museo-madrid-arte-contemporaneo",
     "title": "TOP 3 datos del Thyssen · 350 obras contemporáneas · #1",
     "status": "fail_container_ready",
@@ -1124,5 +1116,18 @@
     "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
     "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095690018188569'}",
     "ts": "2026-09-18T03:55:55.774086+00:00"
+  },
+  {
+    "slug": "pov-dali-madrid-1927",
+    "title": "3 Claves del surrealismo · 1927 · #1",
+    "status": "fail_container_ready",
+    "container_id": "18095693183188569",
+    "public_url": "https://yassinebhk.github.io/automated-videos/reels/pov-dali-madrid-1927.mp4",
+    "attempts": 4,
+    "catbox_status": "rc=412 body=Invalid uploader",
+    "status_ext": "ERROR",
+    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
+    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095693183188569'}",
+    "ts": "2026-09-18T04:17:05.526554+00:00"
   }
 ]
