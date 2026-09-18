@@ -55,6 +55,13 @@ jobs:
       - name: Install videogen (editable)
         run: pip install -e .
 
+      - name: Install Manim (solo padel-once — motor de animación)
+        if: inputs.command == 'padel-once'
+        run: |
+          sudo apt-get install -y --no-install-recommends \
+            build-essential libcairo2-dev libpango1.0-dev pkg-config python3-dev fonts-dejavu-core
+          pip install "manim>=0.18"
+
       - name: Reconstruir secrets/.env desde GitHub Secrets
         env:
           TELEGRAM_BOT_TOKEN:    ${{ secrets.TELEGRAM_BOT_TOKEN }}
