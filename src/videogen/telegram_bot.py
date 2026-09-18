@@ -2086,13 +2086,17 @@ def _fetch_youtube_totals() -> dict:
     }
 
 
-def _prev_snapshot_from_history() -> dict:
-    """Snapshot 'channel' más cercana a hace 20-30h para calcular Δ 24h.
+def _prev_snapshot_from_history(platform: str = "youtube") -> dict:
+    """Snapshot 'channel' del MISMO platform más cercana a hace 20-30h para Δ 24h.
 
     Antes usaba la última fila cualquiera → si el histórico tenía saltos
     largos, el delta se comparaba contra hace semanas y salían números
     inflados. Ahora prioriza filas con ts entre 20-30h atrás; si no hay,
     coge la más reciente que NO sea de hoy; fallback último.
+
+    ⚠️ 18/09: FALTABA filtrar por platform → cogía la fila 'channel' de OTRA red
+    (ej. Mastodon: 16 followers, 0 views) como 'ayer' del canal YouTube → deltas
+    absurdos (Subs +94, Views = total). Ahora filtra platform=='youtube'.
     """
     import json as _json, time
     from pathlib import Path
@@ -2108,7 +2112,7 @@ def _prev_snapshot_from_history() -> dict:
             row = _json.loads(line)
         except Exception:
             continue
-        if row.get("kind") != "channel":
+        if row.get("kind") != "channel" or row.get("platform") != platform:
             continue
         ts = row.get("ts", 0)
         channels.append((ts, row))
