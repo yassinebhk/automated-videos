@@ -2,19 +2,6 @@
   {
     "slug": "most_downloaded_apps_20260917_235636",
     "title": "Top 10 Most Downloaded Apps in the World (2015-2026)",
-    "status": "fail_container_ready",
-    "container_id": "18095674361188569",
-    "public_url": "https://yassinebhk.github.io/automated-videos/reels/most_downloaded_apps_20260917_235636.mp4",
-    "attempts": 4,
-    "catbox_status": "rc=412 body=Invalid uploader",
-    "status_ext": "ERROR",
-    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
-    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095674361188569'}",
-    "ts": "2026-09-18T00:12:45.428622+00:00"
-  },
-  {
-    "slug": "most_downloaded_apps_20260917_235636",
-    "title": "Top 10 Most Downloaded Apps in the World (2015-2026)",
     "status": "ok",
     "media_id": "18115382527778369",
     "url": "https://instagram.com/reel/18115382527778369",
@@ -1103,5 +1090,18 @@
     "media_id": "18112508027116845",
     "url": "https://instagram.com/reel/18112508027116845",
     "ts": "2026-09-19T14:54:40.570667+00:00"
+  },
+  {
+    "slug": "top-10-trabajos-mejor-pagados-2026",
+    "title": "TOP 10 trabajos mejor pagados · +$500k · #1",
+    "status": "fail_container_ready",
+    "container_id": "18095887460188569",
+    "public_url": "https://yassinebhk.github.io/automated-videos/reels/top-10-trabajos-mejor-pagados-2026.mp4",
+    "attempts": 4,
+    "catbox_status": "rc=412 body=Invalid uploader",
+    "status_ext": "ERROR",
+    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
+    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095887460188569'}",
+    "ts": "2026-09-19T15:27:54.022023+00:00"
   }
 ]
