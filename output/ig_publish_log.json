@@ -1,18 +1,5 @@
 [
   {
-    "slug": "capitan-armada-invencible-1588",
-    "title": "TOP 1 Barcos hundidos en la historia · Agosto 1588 · #1",
-    "status": "fail_container_ready",
-    "container_id": "18095650796188569",
-    "public_url": "https://yassinebhk.github.io/automated-videos/reels/capitan-armada-invencible-1588.mp4",
-    "attempts": 4,
-    "catbox_status": "rc=412 body=Invalid uploader",
-    "status_ext": "ERROR",
-    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
-    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095650796188569'}",
-    "ts": "2026-09-17T18:33:39.504331+00:00"
-  },
-  {
     "slug": "top-4-fp-alta-demanda-95-por-ciento",
     "title": "TOP 4 FP Alta Demanda · 95% inserción · #1",
     "status": "fail_container_ready",
@@ -1123,5 +1110,18 @@
     "media_id": "17981630643089090",
     "url": "https://instagram.com/reel/17981630643089090",
     "ts": "2026-09-19T09:54:47.837808+00:00"
+  },
+  {
+    "slug": "pov-goya-painting-1808-executions",
+    "title": "3 Secretos para pintar la historia · 1814 · #1",
+    "status": "fail_container_ready",
+    "container_id": "18095851871188569",
+    "public_url": "https://yassinebhk.github.io/automated-videos/reels/pov-goya-painting-1808-executions.mp4",
+    "attempts": 4,
+    "catbox_status": "rc=412 body=Invalid uploader",
+    "status_ext": "ERROR",
+    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
+    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095851871188569'}",
+    "ts": "2026-09-19T10:15:35.209090+00:00"
   }
 ]
