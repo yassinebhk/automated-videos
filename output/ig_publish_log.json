@@ -1,31 +1,5 @@
 [
   {
-    "slug": "5-casos-cambiaron-investigacion-criminal",
-    "title": "5 avances forenses que cambiaron los juicios · 5 hitos · #1",
-    "status": "fail_container_ready",
-    "container_id": "18095621141188569",
-    "public_url": "https://yassinebhk.github.io/automated-videos/reels/5-casos-cambiaron-investigacion-criminal.mp4",
-    "attempts": 4,
-    "catbox_status": "rc=412 body=Invalid uploader",
-    "status_ext": "ERROR",
-    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
-    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095621141188569'}",
-    "ts": "2026-09-17T13:40:36.344136+00:00"
-  },
-  {
-    "slug": "short_delta_2hz_sueno_reparador_20260917_134532",
-    "title": "Ondas Delta 2Hz Sueño Reparador 8 Horas",
-    "status": "fail_container_ready",
-    "container_id": "18095622620188569",
-    "public_url": "https://yassinebhk.github.io/automated-videos/reels/short_delta_2hz_sueno_reparador_20260917_134532.mp4",
-    "attempts": 4,
-    "catbox_status": "rc=412 body=Invalid uploader",
-    "status_ext": "ERROR",
-    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
-    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095622620188569'}",
-    "ts": "2026-09-17T14:00:23.020320+00:00"
-  },
-  {
     "slug": "fractal_julia_a_20260917_134523",
     "title": "Satisfying Infinite Fractal Zoom 🌀 #JuliaA #shorts",
     "status": "fail_container_ready",
@@ -1138,5 +1112,26 @@
     "media_id": "18085045838302264",
     "url": "https://instagram.com/reel/18085045838302264",
     "ts": "2026-09-19T00:57:38.238157+00:00"
+  },
+  {
+    "slug": "padel_checklist_mental_focus_20260919_010016",
+    "title": "3 Ways To Reset After Losing Points — Padel Tips #padel #shorts",
+    "status": "fail_container_ready",
+    "container_id": "18095806064188569",
+    "public_url": "https://yassinebhk.github.io/automated-videos/reels/padel_checklist_mental_focus_20260919_010016.mp4",
+    "attempts": 4,
+    "catbox_status": "rc=412 body=Invalid uploader",
+    "status_ext": "ERROR",
+    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
+    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095806064188569'}",
+    "ts": "2026-09-19T01:15:03.307364+00:00"
+  },
+  {
+    "slug": "padel_checklist_mental_focus_20260919_010016",
+    "title": "3 Ways To Reset After Losing Points — Padel Tips #padel #shorts",
+    "status": "ok",
+    "media_id": "18140987779575344",
+    "url": "https://instagram.com/reel/18140987779575344",
+    "ts": "2026-09-19T01:15:48.117520+00:00"
   }
 ]
