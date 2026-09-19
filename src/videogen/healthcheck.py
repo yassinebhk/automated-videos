@@ -226,6 +226,41 @@ def _check_youtube_channel(prefix: str, name: str) -> tuple[bool, str]:
 
 # ─── Runner principal ───
 
+def _send_reauth_buttons(yt_results: dict) -> int:
+    """Por CADA canal YT con token caído, manda a Telegram un BOTÓN de reauth
+    específico de ese canal (abre el OAuth del canal y actualiza SU secret).
+
+    Requiere WEBHOOK_URL (flujo web OAuth por-canal) + TELEGRAM_BOT_TOKEN/CHAT_ID.
+    """
+    import requests
+    token = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
+    chat = os.environ.get("TELEGRAM_CHAT_ID", "").strip()
+    webhook = os.environ.get("WEBHOOK_URL", "").rstrip("/")
+    if not (token and chat and webhook):
+        print("  reauth: falta WEBHOOK_URL/TELEGRAM_* — no puedo mandar botones")
+        return 0
+    name_to_prefix = {name: prefix for prefix, name in YT_CHANNELS}
+    sent = 0
+    for name, r in yt_results.items():
+        if r.get("ok"):
+            continue
+        prefix = name_to_prefix.get(name, "")
+        url = f"{webhook}/api/yt-auth?t={chat}"
+        if prefix:
+            url += f"&channel={prefix}"
+        kb = {"inline_keyboard": [[{"text": f"🔐 Renovar token · {name}", "url": url}]]}
+        text = (f"🚨 <b>Token YT caducado: {name}</b>\n"
+                f"Toca el botón → elige <b>{name}</b> en Google → se actualiza solo.")
+        try:
+            requests.post(f"https://api.telegram.org/bot{token}/sendMessage",
+                          json={"chat_id": chat, "text": text, "parse_mode": "HTML",
+                                "reply_markup": kb}, timeout=15)
+            sent += 1
+        except Exception as e:
+            print(f"  reauth button fail {name}: {e}")
+    return sent
+
+
 def check_all() -> dict[str, Any]:
     """Ejecuta todos los checks y notifica Telegram con resumen."""
     from .notify_batch import add
@@ -281,6 +316,13 @@ def check_all() -> dict[str, Any]:
     msg = "\n".join(lines)
     add(msg)
     print(msg)
+
+    # 🔐 Botón de reauth POR CANAL para cada YT con token caducado → llega solo
+    # a Telegram, uno por canal (petición user 19/09).
+    yt_down = [n for n, r in yt.items() if not r["ok"]]
+    if yt_down:
+        n_btn = _send_reauth_buttons(yt)
+        print(f"  reauth: {n_btn} botones enviados para {yt_down}")
 
     return {
         "llms": llms, "media": media, "social": social, "youtube": yt,
