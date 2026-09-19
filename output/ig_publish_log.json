@@ -1,13 +1,5 @@
 [
   {
-    "slug": "top-5-ai-tools-b2b-cold-emails",
-    "title": "Top 5 AI tools for B2B cold emails · #1",
-    "status": "ok",
-    "media_id": "18005341601977166",
-    "url": "https://instagram.com/reel/18005341601977166",
-    "ts": "2026-09-17T12:33:03.493163+00:00"
-  },
-  {
     "slug": "best_selling_cars_20260917_123534",
     "title": "Top 10 Best-Selling Cars of All Time (1980 - 2024)",
     "status": "fail_container_ready",
@@ -1143,5 +1135,18 @@
     "media_id": "18116667622951887",
     "url": "https://instagram.com/reel/18116667622951887",
     "ts": "2026-09-18T23:46:55.331604+00:00"
+  },
+  {
+    "slug": "top-5-wage-gap-sectors-spain",
+    "title": "TOP 5 sectores con más brecha · 18.7% · #1",
+    "status": "fail_container_ready",
+    "container_id": "18095800742188569",
+    "public_url": "https://yassinebhk.github.io/automated-videos/reels/top-5-wage-gap-sectors-spain.mp4",
+    "attempts": 4,
+    "catbox_status": "rc=412 body=Invalid uploader",
+    "status_ext": "ERROR",
+    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
+    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095800742188569'}",
+    "ts": "2026-09-19T00:14:55.190141+00:00"
   }
 ]
