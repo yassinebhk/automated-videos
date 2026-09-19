@@ -42,6 +42,13 @@ export default function handler(req, res) {
     });
   }
 
+  // Canal opcional (reauth por-canal). Vacío = canal principal (YT_REFRESH_TOKEN).
+  // Whitelist estricta: solo prefijos YT_* → solo puede escribir secrets YT_*_REFRESH_TOKEN.
+  const channel = String(req.query.channel || "");
+  if (channel && !/^YT_[A-Z0-9_]{1,30}$/.test(channel)) {
+    return res.status(400).json({ error: "invalid channel param" });
+  }
+
   // Redirect URI: absoluto al mismo dominio
   const host = req.headers["x-forwarded-host"] || req.headers.host;
   const proto = req.headers["x-forwarded-proto"] || "https";
@@ -49,7 +56,7 @@ export default function handler(req, res) {
 
   // State para prevenir CSRF + carry del chat_id (info)
   const state = signState(
-    { chat_id: authorizedChat, ts: Date.now() },
+    { chat_id: authorizedChat, channel, ts: Date.now() },
     stateSecret,
   );
 
