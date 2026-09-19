@@ -1,18 +1,5 @@
 [
   {
-    "slug": "spotify_top_canciones_20260917_223549",
-    "title": "TOP 10 CANCIONES más escuchadas SPOTIFY · Histórico 2024",
-    "status": "fail_container_ready",
-    "container_id": "18095670767188569",
-    "public_url": "https://yassinebhk.github.io/automated-videos/reels/spotify_top_canciones_20260917_223549.mp4",
-    "attempts": 4,
-    "catbox_status": "rc=412 body=Invalid uploader",
-    "status_ext": "ERROR",
-    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
-    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095670767188569'}",
-    "ts": "2026-09-17T22:53:07.706422+00:00"
-  },
-  {
     "slug": "generar-ideas-redes-sociales-ia-gratis",
     "title": "Crea 5 ideas de contenido con IA gratis · 10 min · #1",
     "status": "fail_container_ready",
@@ -1118,5 +1105,13 @@
     "media_id": "18129123979687599",
     "url": "https://instagram.com/reel/18129123979687599",
     "ts": "2026-09-19T14:00:32.472710+00:00"
+  },
+  {
+    "slug": "top-10-trabajos-mas-peligrosos",
+    "title": "TOP 10 trabajos más peligrosos · 145 muertes · #01",
+    "status": "ok",
+    "media_id": "18078472061378596",
+    "url": "https://instagram.com/reel/18078472061378596",
+    "ts": "2026-09-19T14:03:05.331107+00:00"
   }
 ]
