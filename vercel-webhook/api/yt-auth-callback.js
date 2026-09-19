@@ -101,6 +101,14 @@ export default async function handler(req, res) {
     ));
   }
 
+  // Canal desde el state (reauth por-canal). Vacío = principal (YT_REFRESH_TOKEN).
+  const channel = String(stateData.channel || "");
+  if (channel && !/^YT_[A-Z0-9_]{1,30}$/.test(channel)) {
+    return res.status(400).send(renderResult(
+      "Canal inválido", "El parámetro de canal del link no es válido.", false));
+  }
+  const secretName = channel ? `${channel}_REFRESH_TOKEN` : "YT_REFRESH_TOKEN";
+
   // Reconstruir redirect_uri exactamente igual (Google es estricto)
   const host = req.headers["x-forwarded-host"] || req.headers.host;
   const proto = req.headers["x-forwarded-proto"] || "https";
@@ -134,7 +142,7 @@ export default async function handler(req, res) {
     await updateRepoSecret({
       owner: ghOwner,
       repo: ghRepo,
-      secretName: "YT_REFRESH_TOKEN",
+      secretName: secretName,
       value: tokenBody.refresh_token,
       token: ghToken,
     });
@@ -149,16 +157,17 @@ export default async function handler(req, res) {
   }
 
   // Notificar por Telegram
+  const chLabel = channel || "WaitWhy (principal)";
   await tgSend(stateData.chat_id,
-    "✅ <b>Token YT renovado con éxito</b>\n\n" +
-    "GitHub Secret <code>YT_REFRESH_TOKEN</code> actualizado. " +
+    `✅ <b>Token YT renovado: ${chLabel}</b>\n\n` +
+    `GitHub Secret <code>${secretName}</code> actualizado. ` +
     "El próximo Action leerá el token nuevo automáticamente. Ya no tienes " +
     "que tocar nada — hasta la próxima expiración (~7 días)."
   );
 
   return res.status(200).send(renderResult(
     "Token renovado",
-    "El bot ya tiene el nuevo token. Los próximos videos se subirán con normalidad.",
+    `Canal <b>${chLabel}</b> reautorizado. Los próximos videos se subirán con normalidad.`,
     true,
   ));
 }
