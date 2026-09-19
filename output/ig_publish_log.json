@@ -2,19 +2,6 @@
   {
     "slug": "fractal_julia_b_20260918_060654",
     "title": "Satisfying Infinite Fractal Zoom 🌀 #JuliaB #shorts",
-    "status": "fail_container_ready",
-    "container_id": "18095703200188569",
-    "public_url": "https://yassinebhk.github.io/automated-videos/reels/fractal_julia_b_20260918_060654.mp4",
-    "attempts": 4,
-    "catbox_status": "rc=412 body=Invalid uploader",
-    "status_ext": "ERROR",
-    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
-    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095703200188569'}",
-    "ts": "2026-09-18T06:30:01.405960+00:00"
-  },
-  {
-    "slug": "fractal_julia_b_20260918_060654",
-    "title": "Satisfying Infinite Fractal Zoom 🌀 #JuliaB #shorts",
     "status": "ok",
     "media_id": "18166195585468069",
     "url": "https://instagram.com/reel/18166195585468069",
@@ -1093,5 +1080,18 @@
     "media_id": "18149248120529485",
     "url": "https://instagram.com/reel/18149248120529485",
     "ts": "2026-09-19T20:50:59.672675+00:00"
+  },
+  {
+    "slug": "top-3-abonos-transporte-reducidos-2026",
+    "title": "TOP 3 abonos transporte reducidos · 50% descuento · #1",
+    "status": "fail_container_ready",
+    "container_id": "18095925227188569",
+    "public_url": "https://yassinebhk.github.io/automated-videos/reels/top-3-abonos-transporte-reducidos-2026.mp4",
+    "attempts": 4,
+    "catbox_status": "rc=412 body=Invalid uploader",
+    "status_ext": "ERROR",
+    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
+    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095925227188569'}",
+    "ts": "2026-09-19T22:38:10.728924+00:00"
   }
 ]
