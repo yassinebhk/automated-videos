@@ -1,26 +1,5 @@
 [
   {
-    "slug": "fractal_seahorse_20260918_010734",
-    "title": "Satisfying Infinite Fractal Zoom 🌀 #Seahorse #shorts",
-    "status": "fail_container_ready",
-    "container_id": "18095680550188569",
-    "public_url": "https://yassinebhk.github.io/automated-videos/reels/fractal_seahorse_20260918_010734.mp4",
-    "attempts": 4,
-    "catbox_status": "rc=412 body=Invalid uploader",
-    "status_ext": "ERROR",
-    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
-    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095680550188569'}",
-    "ts": "2026-09-18T01:39:33.584966+00:00"
-  },
-  {
-    "slug": "fractal_seahorse_20260918_010734",
-    "title": "Satisfying Infinite Fractal Zoom 🌀 #Seahorse #shorts",
-    "status": "ok",
-    "media_id": "18088610384218079",
-    "url": "https://instagram.com/reel/18088610384218079",
-    "ts": "2026-09-18T01:47:39.875311+00:00"
-  },
-  {
     "slug": "padel-pro-drop-shot-coaching-tip",
     "title": "The drop shot",
     "status": "fail_container_ready",
@@ -1103,5 +1082,26 @@
     "media_id": "17899773018375343",
     "url": "https://instagram.com/reel/17899773018375343",
     "ts": "2026-09-19T16:09:30.916157+00:00"
+  },
+  {
+    "slug": "padel_checklist_return_serve_20260919_161313",
+    "title": "Better Returns Every Single Time — Padel Tips #padel #shorts",
+    "status": "fail_container_ready",
+    "container_id": "18095895839188569",
+    "public_url": "https://yassinebhk.github.io/automated-videos/reels/padel_checklist_return_serve_20260919_161313.mp4",
+    "attempts": 4,
+    "catbox_status": "rc=412 body=Invalid uploader",
+    "status_ext": "ERROR",
+    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
+    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095895839188569'}",
+    "ts": "2026-09-19T16:29:14.063446+00:00"
+  },
+  {
+    "slug": "padel_checklist_return_serve_20260919_161313",
+    "title": "Better Returns Every Single Time — Padel Tips #padel #shorts",
+    "status": "ok",
+    "media_id": "18411238780087661",
+    "url": "https://instagram.com/reel/18411238780087661",
+    "ts": "2026-09-19T16:31:17.786905+00:00"
   }
 ]
