@@ -1,13 +1,5 @@
 [
   {
-    "slug": "top-5-coches-segunda-mano-10000",
-    "title": "TOP 5 coches 2ª mano · Menos de 10.000€ · #1",
-    "status": "ok",
-    "media_id": "17981630643089090",
-    "url": "https://instagram.com/reel/17981630643089090",
-    "ts": "2026-09-19T09:54:47.837808+00:00"
-  },
-  {
     "slug": "pov-goya-painting-1808-executions",
     "title": "3 Secretos para pintar la historia · 1814 · #1",
     "status": "fail_container_ready",
@@ -1113,5 +1105,18 @@
     "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
     "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18096050225188569'}",
     "ts": "2026-09-20T23:35:19.910368+00:00"
+  },
+  {
+    "slug": "montanas_mas_altas_20260920_233823",
+    "title": "TOP 10 MONTAÑAS más ALTAS del mundo",
+    "status": "fail_container_ready",
+    "container_id": "18096050861188569",
+    "public_url": "https://yassinebhk.github.io/automated-videos/reels/montanas_mas_altas_20260920_233823.mp4",
+    "attempts": 4,
+    "catbox_status": "rc=412 body=Invalid uploader",
+    "status_ext": "ERROR",
+    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
+    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18096050861188569'}",
+    "ts": "2026-09-20T23:57:18.824312+00:00"
   }
 ]
