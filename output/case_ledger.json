@@ -346,6 +346,15 @@
           "topic": "Cómo la Operación Emperador destapó una red de blanqueo de capitales de 300 millones de euros en polígonos industriales de Madrid y Barcelona en 2016"
         }
       ]
+    },
+    "cambio_climatico_datos": {
+      "count": 1,
+      "history": [
+        {
+          "ts": "2026-09-20T09:04:09.666242+00:00",
+          "topic": "[ACTUALIDAD] El cambio climático según los informes del IPCC: el registro de aumento de temperatura global de +1.1°C y los compromisos firmados en el Acuerdo de París de 2015."
+        }
+      ]
     }
   }
 }
