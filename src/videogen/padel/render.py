@@ -53,6 +53,9 @@ def _fetch_music(work: Path) -> Path | None:
                            "electronic upbeat", "corporate positive energetic"])
         r = requests.get("https://pixabay.com/api/audio/",
                          params={"key": key, "q": q, "per_page": 20, "safesearch": "true"},
+                         headers={"User-Agent": ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                                                 "AppleWebKit/537.36 (KHTML, like Gecko) "
+                                                 "Chrome/122.0.0.0 Safari/537.36")},
                          timeout=30).json()
         for h in r.get("hits", []):
             u = h.get("audio") or h.get("url") or ""
