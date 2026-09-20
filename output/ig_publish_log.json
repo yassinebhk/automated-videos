@@ -1,18 +1,5 @@
 [
   {
-    "slug": "ayuda-joven-agricultor-2026",
-    "title": "3 requisitos para cobrar hasta 70.000€ · #1",
-    "status": "fail_container_ready",
-    "container_id": "18095849315188569",
-    "public_url": "https://yassinebhk.github.io/automated-videos/reels/ayuda-joven-agricultor-2026.mp4",
-    "attempts": 4,
-    "catbox_status": "rc=412 body=Invalid uploader",
-    "status_ext": "ERROR",
-    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
-    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095849315188569'}",
-    "ts": "2026-09-19T09:45:27.649349+00:00"
-  },
-  {
     "slug": "top-5-coches-segunda-mano-10000",
     "title": "TOP 5 coches 2ª mano · Menos de 10.000€ · #1",
     "status": "ok",
@@ -1113,5 +1100,18 @@
     "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
     "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18096048626188569'}",
     "ts": "2026-09-20T23:14:03.015318+00:00"
+  },
+  {
+    "slug": "medico-peste-negra-barcelona-1348",
+    "title": "POV: Médico de la Peste Negra · 40% muertos Barcelona · #1",
+    "status": "fail_container_ready",
+    "container_id": "18096050225188569",
+    "public_url": "https://yassinebhk.github.io/automated-videos/reels/medico-peste-negra-barcelona-1348.mp4",
+    "attempts": 4,
+    "catbox_status": "rc=412 body=Invalid uploader",
+    "status_ext": "ERROR",
+    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
+    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18096050225188569'}",
+    "ts": "2026-09-20T23:35:19.910368+00:00"
   }
 ]
