@@ -118,6 +118,9 @@ def _send_tt_video(meta: dict, url: str) -> None:
 
 def run_once() -> dict[str, Any]:
     """Genera + sube 1 bar chart race EN al canal Global Rankings."""
+    # ⏸ PAUSADO 20/09 (consolidación: sin canal YT propio + sin tracción).
+    # Reactivar = borrar estas 2 líneas + crear YT_RANKINGS_* + `gh workflow enable rankings-en-daily`.
+    print("  rankings-en: ⏸ PAUSADO (consolidación) — no genera"); return {"status": "paused", "channel": "rankings_en"}
     topic = _pick_topic()
     if not topic:
         return {"status": "no_topic"}
