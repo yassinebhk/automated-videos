@@ -2,19 +2,6 @@
   {
     "slug": "padel_checklist_choose_racket_20260918_164921",
     "title": "How to pick your first racket — Padel Tips #padel #shorts",
-    "status": "fail_container_ready",
-    "container_id": "18095767892188569",
-    "public_url": "https://yassinebhk.github.io/automated-videos/reels/padel_checklist_choose_racket_20260918_164921.mp4",
-    "attempts": 4,
-    "catbox_status": "rc=412 body=Invalid uploader",
-    "status_ext": "ERROR",
-    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
-    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095767892188569'}",
-    "ts": "2026-09-18T17:04:22.627766+00:00"
-  },
-  {
-    "slug": "padel_checklist_choose_racket_20260918_164921",
-    "title": "How to pick your first racket — Padel Tips #padel #shorts",
     "status": "ok",
     "media_id": "18109059026127590",
     "url": "https://instagram.com/reel/18109059026127590",
@@ -1103,5 +1090,13 @@
     "media_id": "18222421804332041",
     "url": "https://instagram.com/reel/18222421804332041",
     "ts": "2026-09-20T10:04:21.318569+00:00"
+  },
+  {
+    "slug": "loom-ia-procesos-autonomos-1",
+    "title": "Documenta procesos con IA gratis · 3× más rápido · #1",
+    "status": "ok",
+    "media_id": "18125825164819902",
+    "url": "https://instagram.com/reel/18125825164819902",
+    "ts": "2026-09-20T10:16:24.345351+00:00"
   }
 ]
