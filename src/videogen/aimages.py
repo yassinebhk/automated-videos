@@ -292,6 +292,9 @@ def _pixabay_candidates(query: str, vertical: bool) -> list[tuple[str, str]]:
                          params={"key": key, "q": query, "image_type": "photo",
                                  "orientation": "vertical" if vertical else "horizontal",
                                  "per_page": 30, "safesearch": "true"},
+                         headers={"User-Agent": ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                                                 "AppleWebKit/537.36 (KHTML, like Gecko) "
+                                                 "Chrome/122.0.0.0 Safari/537.36")},
                          timeout=30)
         if r.status_code != 200:
             return []
