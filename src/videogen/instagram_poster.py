@@ -144,6 +144,50 @@ def _upload_to_catbox(mp4_path: Path) -> Optional[str]:
         return None
 
 
+def _upload_to_litterbox(mp4_path: Path) -> Optional[str]:
+    """2º host: litterbox (host temporal de catbox, dominio distinto litter.catbox.moe,
+    72h). Sirve el archivo directo y responde 206 al fetcher de Meta (verificado 20/09).
+    (0x0.st descartado: desactivó subidas; tmpfiles.org sirve HTML, no el archivo.)"""
+    try:
+        size_kb = mp4_path.stat().st_size // 1024
+        print(f"  ig: litterbox attempting upload {mp4_path.name} ({size_kb}KB)")
+        with open(mp4_path, "rb") as f:
+            r = requests.post(
+                "https://litterbox.catbox.moe/resources/internals/api.php",
+                data={"reqtype": "fileupload", "time": "72h"},
+                files={"fileToUpload": (mp4_path.name, f, "video/mp4")},
+                timeout=120,
+            )
+        body = (r.text or "").strip()
+        if r.status_code == 200 and body.startswith("https://"):
+            print(f"  ig: litterbox OK → {body}")
+            return body
+        print(f"  ig: litterbox FAIL rc={r.status_code} body={body[:120]}")
+        return None
+    except Exception as e:
+        print(f"  ig: litterbox exception {type(e).__name__}: {str(e)[:120]}")
+        return None
+
+
+def _verify_meta_fetchable(url: str, tries: int = 6, wait: int = 5) -> bool:
+    """Comprueba que Meta (facebookexternalhit) puede DESCARGAR la URL antes de crear
+    el contenedor → evita 'fail_container_ready'. GET con Range 0-1023 + UA de Meta,
+    reintentando por si el host tarda en propagar."""
+    headers = {"User-Agent": "facebookexternalhit/1.1", "Range": "bytes=0-1023"}
+    for i in range(tries):
+        try:
+            r = requests.get(url, headers=headers, timeout=15)
+            n = len(r.content or b"")
+            if r.status_code in (200, 206) and n > 100:
+                print(f"  ig: verify Meta OK '{url}' (rc={r.status_code}, {n}b) intento {i+1}")
+                return True
+            print(f"  ig: verify no-OK rc={r.status_code} n={n} intento {i+1}")
+        except Exception as e:
+            print(f"  ig: verify error {str(e)[:60]} intento {i+1}")
+        time.sleep(wait)
+    return False
+
+
 def _prepare_public_reel(local_mp4: Path, slug: str) -> Optional[str]:
     """Re-encode strict IG + sube a catbox.moe. Retorna URL pública o None.
 
@@ -180,17 +224,24 @@ def _prepare_public_reel(local_mp4: Path, slug: str) -> Optional[str]:
             print(f"  ig: stream-copy falló, uso mp4 original")
             mp4_to_upload = local_mp4
 
-    # 1) Intenta catbox.moe (propagación instantánea, sin GH Pages waits)
-    url = _upload_to_catbox(mp4_to_upload)
-    if url:
-        try:
-            shutil.rmtree(tmp_dir, ignore_errors=True)
-        except Exception:
-            pass
-        return url
+    # 1) Hosts instantáneos CON VERIFICACIÓN de que Meta puede descargar (fix
+    # fail_container_ready 20/09): sube → comprueba con facebookexternalhit → úsalo
+    # solo si sirve. Antes se creaba el contenedor sin verificar → 61% fallos.
+    for host_name, host_fn in (("catbox", _upload_to_catbox), ("litterbox", _upload_to_litterbox)):
+        hurl = host_fn(mp4_to_upload)
+        if not hurl:
+            continue
+        if _verify_meta_fetchable(hurl):
+            print(f"  ig: host {host_name} verificado por Meta ✓")
+            try:
+                shutil.rmtree(tmp_dir, ignore_errors=True)
+            except Exception:
+                pass
+            return hurl
+        print(f"  ig: host {host_name} subió pero NO verifica para Meta → siguiente host")
 
-    # 2) Fallback: GH Pages viejo (mantiene compat si catbox down)
-    print(f"  ig: catbox falló, fallback a GH Pages")
+    # 2) Fallback: GH Pages (con su propio poll de verificación)
+    print(f"  ig: hosts instantáneos no verificaron, fallback a GH Pages")
     REELS_HOST_DIR.mkdir(parents=True, exist_ok=True)
     dst = REELS_HOST_DIR / f"{slug}.mp4"
     shutil.copy2(mp4_to_upload, dst)
