@@ -239,25 +239,42 @@ def _send_reauth_buttons(yt_results: dict) -> int:
     if not (token and chat and webhook):
         print("  reauth: falta WEBHOOK_URL/TELEGRAM_* — no puedo mandar botones")
         return 0
-    name_to_prefix = {name: prefix for prefix, name in YT_CHANNELS}
-    sent = 0
-    for name, r in yt_results.items():
-        if r.get("ok"):
-            continue
-        prefix = name_to_prefix.get(name, "")
-        url = f"{webhook}/api/yt-auth?t={chat}"
-        if prefix:
-            url += f"&channel={prefix}"
-        kb = {"inline_keyboard": [[{"text": f"🔐 Renovar token · {name}", "url": url}]]}
-        text = (f"🚨 <b>Token YT caducado: {name}</b>\n"
-                f"Toca el botón → elige <b>{name}</b> en Google → se actualiza solo.")
+    def _post(text, kb):
         try:
             requests.post(f"https://api.telegram.org/bot{token}/sendMessage",
                           json={"chat_id": chat, "text": text, "parse_mode": "HTML",
                                 "reply_markup": kb}, timeout=15)
-            sent += 1
+            return True
         except Exception as e:
-            print(f"  reauth button fail {name}: {e}")
+            print(f"  reauth button post fail: {e}")
+            return False
+
+    name_to_prefix = {name: prefix for prefix, name in YT_CHANNELS}
+    down = [(name, name_to_prefix.get(name, "")) for name, r in yt_results.items() if not r.get("ok")]
+    down_prefixed = [(n, p) for (n, p) in down if p]  # el principal (prefix "") va aparte
+    sent = 0
+
+    # 🔐 Botón "RENOVAR TODOS" (cadena) — un clic renueva todos en secuencia
+    if len(down_prefixed) >= 2:
+        allp = ",".join(p for _, p in down_prefixed)
+        url = f"{webhook}/api/yt-auth?t={chat}&channels={allp}"
+        lst = "\n".join(f"• {n}" for n, _ in down_prefixed)
+        kb = {"inline_keyboard": [[{"text": f"🔐 RENOVAR TODOS ({len(down_prefixed)})", "url": url}]]}
+        text = (f"🚨 <b>{len(down_prefixed)} tokens YT caducados</b>\n"
+                f"Toca para renovarlos TODOS en cadena (Google te pedirá elegir cada canal, "
+                f"uno tras otro):\n{lst}")
+        if _post(text, kb):
+            sent += 1
+
+    # Botones individuales (por si quieres renovar solo uno)
+    for name, prefix in down:
+        url = f"{webhook}/api/yt-auth?t={chat}"
+        if prefix:
+            url += f"&channel={prefix}"
+        kb = {"inline_keyboard": [[{"text": f"🔐 Renovar · {name}", "url": url}]]}
+        text = (f"🔸 <b>{name}</b> — o renueva solo este (elige <b>{name}</b> en Google).")
+        if _post(text, kb):
+            sent += 1
     return sent
 
 
