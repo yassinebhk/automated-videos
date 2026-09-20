@@ -84,22 +84,37 @@ def _check_pixabay() -> tuple[bool, str]:
     import requests
     _UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
            "(KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36")
-    # OJO 20/09: Pixabay devuelve content-type text/html AUNQUE el body sea JSON
-    # válido. El check anterior miraba el content-type → falso negativo permanente.
-    # Correcto: parsear el body directamente (como hacen las llamadas reales con .json()).
+    # OJO 20/09: Pixabay CERRÓ su API de audio (403). Su uso real ahora es sólo
+    # imágenes (fallback de Pexels), así que chequeamos ESE endpoint. La música
+    # se sirve por Freesound (ver _check_freesound). Body es text/html con JSON dentro.
     try:
-        r = requests.get("https://pixabay.com/api/audio/",
-                         params={"key": key, "q": "rain", "per_page": 3},
+        r = requests.get("https://pixabay.com/api/",
+                         params={"key": key, "q": "nature", "per_page": 3, "image_type": "photo"},
                          headers={"User-Agent": _UA}, timeout=_TIMEOUT)
-    except Exception as e:
-        return False, f"error red: {str(e)[:50]}"
-    try:
         data = r.json()
-    except Exception:
-        return False, f"HTTP {r.status_code}, body no-JSON: {r.text[:50]}"
+    except Exception as e:
+        return False, f"error: {str(e)[:50]}"
     if r.status_code == 200 and isinstance(data, dict) and "hits" in data:
-        return True, f"{data.get('totalHits', 0)} hits para 'rain'"
-    return False, f"HTTP {r.status_code}: {str(data)[:60]}"
+        return True, f"imágenes OK ({data.get('totalHits', 0)} hits)"
+    return False, f"HTTP {r.status_code}: {str(data)[:50]}"
+
+
+def _check_freesound() -> tuple[bool, str]:
+    key = os.environ.get("FREESOUND_API_KEY", "").strip()
+    if not key:
+        return False, "no FREESOUND_API_KEY"
+    import requests
+    try:
+        r = requests.get("https://freesound.org/apiv2/search/text/",
+                         headers={"Authorization": f"Token {key}"},
+                         params={"query": "upbeat", "page_size": 3, "fields": "id"},
+                         timeout=_TIMEOUT)
+        data = r.json()
+        if r.status_code == 200 and "results" in data:
+            return True, f"música OK ({data.get('count', 0)} results)"
+        return False, f"HTTP {r.status_code}: {str(data)[:50]}"
+    except Exception as e:
+        return False, f"error: {str(e)[:50]}"
 
 
 def _check_pollinations() -> tuple[bool, str]:
@@ -297,9 +312,10 @@ def check_all() -> dict[str, Any]:
         "Groq":         _safe(_check_groq, "Groq"),
     }
     media = {
-        "Pixabay":      _safe(_check_pixabay, "Pixabay"),
+        "Pixabay(img)": _safe(_check_pixabay, "Pixabay"),
         "Pollinations": _safe(_check_pollinations, "Pollinations"),
         "Pexels":       _safe(_check_pexels, "Pexels"),
+        "Freesound(música)": _safe(_check_freesound, "Freesound"),
     }
     social = {
         "Instagram":    _safe(_check_instagram, "Instagram"),
