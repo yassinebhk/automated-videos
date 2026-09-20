@@ -44,28 +44,11 @@ async def _edge_voice(text: str, out: Path) -> None:
 
 
 def _fetch_music(work: Path) -> Path | None:
-    key = os.environ.get("PIXABAY_API_KEY", "").strip()
-    if not key:
-        return None
-    try:
-        import requests
-        q = random.choice(["upbeat energetic sport", "motivational upbeat",
-                           "electronic upbeat", "corporate positive energetic"])
-        r = requests.get("https://pixabay.com/api/audio/",
-                         params={"key": key, "q": q, "per_page": 20, "safesearch": "true"},
-                         headers={"User-Agent": ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-                                                 "AppleWebKit/537.36 (KHTML, like Gecko) "
-                                                 "Chrome/122.0.0.0 Safari/537.36")},
-                         timeout=30).json()
-        for h in r.get("hits", []):
-            u = h.get("audio") or h.get("url") or ""
-            if u:
-                p = work / "music.mp3"
-                p.write_bytes(requests.get(u, timeout=60).content)
-                return p
-    except Exception as e:
-        print(f"  padel: music fail ({e})")
-    return None
+    # BGM libre: Pixabay (403 hoy) → Freesound. Ver videogen.music.
+    from .. import music
+    queries = ["upbeat energetic sport", "motivational upbeat",
+               "electronic upbeat", "corporate positive energetic"]
+    return music.fetch_bgm(queries, work / "music.mp3", min_dur=15)
 
 
 def _probe_dur(p: Path) -> float:
