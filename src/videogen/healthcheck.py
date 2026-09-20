@@ -84,26 +84,22 @@ def _check_pixabay() -> tuple[bool, str]:
     import requests
     _UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
            "(KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36")
-    r = requests.get(
-        "https://pixabay.com/api/audio/",
-        params={"key": key, "q": "rain", "per_page": 3},
-        headers={"User-Agent": _UA}, timeout=_TIMEOUT,
-    )
-    ct = r.headers.get("content-type", "")
-    if "json" not in ct:
-        # 1 reintento tras breve espera (Cloudflare/rate-limit puntual)
-        import time as _t
-        _t.sleep(3)
+    # OJO 20/09: Pixabay devuelve content-type text/html AUNQUE el body sea JSON
+    # válido. El check anterior miraba el content-type → falso negativo permanente.
+    # Correcto: parsear el body directamente (como hacen las llamadas reales con .json()).
+    try:
         r = requests.get("https://pixabay.com/api/audio/",
                          params={"key": key, "q": "rain", "per_page": 3},
                          headers={"User-Agent": _UA}, timeout=_TIMEOUT)
-        ct = r.headers.get("content-type", "")
-        if "json" not in ct:
-            return False, f"content-type {ct[:40]} (posible rate-limit)"
-    if r.status_code == 200:
-        hits = r.json().get("totalHits", 0)
-        return True, f"{hits} hits para query 'rain'"
-    return False, f"HTTP {r.status_code}"
+    except Exception as e:
+        return False, f"error red: {str(e)[:50]}"
+    try:
+        data = r.json()
+    except Exception:
+        return False, f"HTTP {r.status_code}, body no-JSON: {r.text[:50]}"
+    if r.status_code == 200 and isinstance(data, dict) and "hits" in data:
+        return True, f"{data.get('totalHits', 0)} hits para 'rain'"
+    return False, f"HTTP {r.status_code}: {str(data)[:60]}"
 
 
 def _check_pollinations() -> tuple[bool, str]:
