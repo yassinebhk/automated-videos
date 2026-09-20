@@ -1,18 +1,5 @@
 [
   {
-    "slug": "diesel-segunda-mano-2026-valen-pena",
-    "title": "TOP 5 coches diesel 2ª mano · prohibido 2035 · #1",
-    "status": "fail_container_ready",
-    "container_id": "18095771975188569",
-    "public_url": "https://yassinebhk.github.io/automated-videos/reels/diesel-segunda-mano-2026-valen-pena.mp4",
-    "attempts": 4,
-    "catbox_status": "rc=412 body=Invalid uploader",
-    "status_ext": "ERROR",
-    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
-    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095771975188569'}",
-    "ts": "2026-09-18T17:58:08.159573+00:00"
-  },
-  {
     "slug": "marcas_lujo_top_20260918_180910",
     "title": "TOP 10 MARCAS de LUJO más valiosas · Kantar 2024",
     "status": "fail_container_ready",
@@ -1098,5 +1085,18 @@
     "media_id": "18229391905322157",
     "url": "https://instagram.com/reel/18229391905322157",
     "ts": "2026-09-20T10:46:32.502681+00:00"
+  },
+  {
+    "slug": "top-4-jobs-destroyed-by-ai",
+    "title": "TOP 4 trabajos destruidos · 85M puestos · #1",
+    "status": "fail_container_ready",
+    "container_id": "18095983592188569",
+    "public_url": "https://yassinebhk.github.io/automated-videos/reels/top-4-jobs-destroyed-by-ai.mp4",
+    "attempts": 4,
+    "catbox_status": "rc=412 body=Invalid uploader",
+    "status_ext": "ERROR",
+    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
+    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095983592188569'}",
+    "ts": "2026-09-20T11:12:57.845677+00:00"
   }
 ]
