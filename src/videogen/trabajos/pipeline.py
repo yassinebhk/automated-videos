@@ -21,4 +21,8 @@ CONFIG = ChannelConfig(
 
 
 def run_once():
+    # ⏸ PAUSADO 20/09 (consolidación: sin canal YT propio + sin tracción).
+    # Reactivar = borrar estas 2 líneas + crear YT_TRABAJOS_* + `gh workflow enable trabajos-daily`.
+    print("  trabajos: ⏸ PAUSADO (consolidación) — no genera")
+    return {"status": "paused", "channel": "trabajos"}
     return run_channel_once(CONFIG)
