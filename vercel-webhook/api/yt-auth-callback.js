@@ -172,18 +172,29 @@ export default async function handler(req, res) {
     }
   }
 
-  // Notificar por Telegram
   const chLabel = channel || "WaitWhy (principal)";
+  const queue = Array.isArray(stateData.queue) ? stateData.queue.filter(Boolean) : [];
+
+  // Flujo "Renovar TODOS": si quedan canales, encadena al siguiente sin volver a
+  // Telegram (redirige a la consent de Google del próximo).
+  if (queue.length > 0) {
+    await tgSend(stateData.chat_id,
+      `✅ <b>${chLabel}</b> renovado. Siguiente: <b>${queue[0]}</b> — elige ese canal en Google…`);
+    const nextUrl = `${proto}://${host}/api/yt-auth?t=${encodeURIComponent(stateData.chat_id)}` +
+      `&channels=${encodeURIComponent(queue.join(","))}`;
+    return res.redirect(302, nextUrl);
+  }
+
+  // Último (o único): confirmación final
   await tgSend(stateData.chat_id,
     `✅ <b>Token YT renovado: ${chLabel}</b>\n\n` +
     `GitHub Secret <code>${secretName}</code> actualizado. ` +
-    "El próximo Action leerá el token nuevo automáticamente. Ya no tienes " +
-    "que tocar nada — hasta la próxima expiración (~7 días)."
+    "El próximo Action leerá el token nuevo automáticamente."
   );
-
   return res.status(200).send(renderResult(
-    "Token renovado",
-    `Canal <b>${chLabel}</b> reautorizado. Los próximos videos se subirán con normalidad.`,
+    "Renovación completa",
+    `Canal <b>${chLabel}</b> reautorizado. Si venías de "Renovar TODOS", ya están todos. ` +
+    "Los próximos videos se subirán con normalidad.",
     true,
   ));
 }
