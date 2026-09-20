@@ -1,13 +1,5 @@
 [
   {
-    "slug": "moviles-de-crimen-absurdos",
-    "title": "5 móviles de crimen más increíbles · Sentencias firmes · #1",
-    "status": "ok",
-    "media_id": "18353697943175787",
-    "url": "https://instagram.com/reel/18353697943175787",
-    "ts": "2026-09-18T19:20:23.614806+00:00"
-  },
-  {
     "slug": "fractal_spiral_20260918_192345",
     "title": "Satisfying Infinite Fractal Zoom #satisfying #shorts",
     "status": "fail_container_ready",
@@ -1098,5 +1090,18 @@
     "media_id": "18119031872488473",
     "url": "https://instagram.com/reel/18119031872488473",
     "ts": "2026-09-20T12:03:42.524627+00:00"
+  },
+  {
+    "slug": "tarifa-plana-autonomos-2026",
+    "title": "3 Requisitos Tarifa Plana Autónomos · €80/mes · #1",
+    "status": "fail_container_ready",
+    "container_id": "18095996084188569",
+    "public_url": "https://yassinebhk.github.io/automated-videos/reels/tarifa-plana-autonomos-2026.mp4",
+    "attempts": 4,
+    "catbox_status": "rc=412 body=Invalid uploader",
+    "status_ext": "ERROR",
+    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
+    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095996084188569'}",
+    "ts": "2026-09-20T13:30:04.353255+00:00"
   }
 ]
