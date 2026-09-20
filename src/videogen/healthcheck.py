@@ -82,13 +82,24 @@ def _check_pixabay() -> tuple[bool, str]:
     if not key:
         return False, "no PIXABAY_API_KEY"
     import requests
+    _UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
+           "(KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36")
     r = requests.get(
         "https://pixabay.com/api/audio/",
-        params={"key": key, "q": "rain", "per_page": 3}, timeout=_TIMEOUT,
+        params={"key": key, "q": "rain", "per_page": 3},
+        headers={"User-Agent": _UA}, timeout=_TIMEOUT,
     )
     ct = r.headers.get("content-type", "")
     if "json" not in ct:
-        return False, f"content-type {ct[:40]} (posible rate-limit)"
+        # 1 reintento tras breve espera (Cloudflare/rate-limit puntual)
+        import time as _t
+        _t.sleep(3)
+        r = requests.get("https://pixabay.com/api/audio/",
+                         params={"key": key, "q": "rain", "per_page": 3},
+                         headers={"User-Agent": _UA}, timeout=_TIMEOUT)
+        ct = r.headers.get("content-type", "")
+        if "json" not in ct:
+            return False, f"content-type {ct[:40]} (posible rate-limit)"
     if r.status_code == 200:
         hits = r.json().get("totalHits", 0)
         return True, f"{hits} hits para query 'rain'"
