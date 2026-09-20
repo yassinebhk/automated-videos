@@ -42,10 +42,26 @@ export default function handler(req, res) {
     });
   }
 
-  // Canal opcional (reauth por-canal). Vacío = canal principal (YT_REFRESH_TOKEN).
-  // Whitelist estricta: solo prefijos YT_* → solo puede escribir secrets YT_*_REFRESH_TOKEN.
-  const channel = String(req.query.channel || "");
-  if (channel && !/^YT_[A-Z0-9_]{1,30}$/.test(channel)) {
+  // Canal(es) a reautorizar. Vacío = canal principal (YT_REFRESH_TOKEN).
+  //   ?channel=YT_MOTOR              → uno solo
+  //   ?channels=YT_MOTOR,YT_RANKING  → cadena: renueva TODOS (el 1º ahora, el resto
+  //                                     encadenados vía el callback → "Renovar TODOS")
+  // Whitelist estricta: solo prefijos YT_* → solo puede escribir secrets YT_*_*.
+  const RE_CH = /^YT_[A-Z0-9_]{1,30}$/;
+  let channel = String(req.query.channel || "");
+  let queue = [];
+  const channelsParam = String(req.query.channels || "");
+  if (channelsParam) {
+    const list = channelsParam.split(",").map((s) => s.trim()).filter(Boolean);
+    for (const c of list) {
+      if (!RE_CH.test(c)) {
+        return res.status(400).json({ error: `invalid channel in list: ${c}` });
+      }
+    }
+    channel = list[0] || "";
+    queue = list.slice(1);
+  }
+  if (channel && !RE_CH.test(channel)) {
     return res.status(400).json({ error: "invalid channel param" });
   }
 
@@ -56,7 +72,7 @@ export default function handler(req, res) {
 
   // State para prevenir CSRF + carry del chat_id (info)
   const state = signState(
-    { chat_id: authorizedChat, channel, ts: Date.now() },
+    { chat_id: authorizedChat, channel, queue, ts: Date.now() },
     stateSecret,
   );
 
