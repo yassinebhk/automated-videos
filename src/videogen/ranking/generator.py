@@ -315,6 +315,9 @@ def _add_music_to_video(video: Path, work_dir: Path,
         r = requests.get("https://pixabay.com/api/audio/",
                           params={"key": key, "q": query,
                                    "per_page": 20, "safesearch": "true"},
+                          headers={"User-Agent": ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                                                  "AppleWebKit/537.36 (KHTML, like Gecko) "
+                                                  "Chrome/122.0.0.0 Safari/537.36")},
                           timeout=30).json()
         hits = r.get("hits", [])
         if not hits:
