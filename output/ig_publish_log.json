@@ -1,21 +1,5 @@
 [
   {
-    "slug": "financiar-segunda-mano-2026-tap",
-    "title": "TOP 3 formas de financiar coche · 8-12% TAE · #1",
-    "status": "ok",
-    "media_id": "18625051099019839",
-    "url": "https://instagram.com/reel/18625051099019839",
-    "ts": "2026-09-18T14:38:44.336927+00:00"
-  },
-  {
-    "slug": "capitan-armada-invencible-1588",
-    "title": "TOP 1 Desastre Naval de la Historia · agosto 1588 · #1",
-    "status": "ok",
-    "media_id": "18456781654138638",
-    "url": "https://instagram.com/reel/18456781654138638",
-    "ts": "2026-09-18T14:49:00.920825+00:00"
-  },
-  {
     "slug": "ibex35_top_20260918_145140",
     "title": "TOP 10 EMPRESAS del IBEX 35 · Capitalización 2024",
     "status": "ok",
@@ -1093,5 +1077,26 @@
     "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
     "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095950544188569'}",
     "ts": "2026-09-20T04:22:05.615292+00:00"
+  },
+  {
+    "slug": "fractal_spiral_20260920_042441",
+    "title": "Satisfying Infinite Fractal Zoom #satisfying #shorts",
+    "status": "fail_container_ready",
+    "container_id": "18095953163188569",
+    "public_url": "https://yassinebhk.github.io/automated-videos/reels/fractal_spiral_20260920_042441.mp4",
+    "attempts": 4,
+    "catbox_status": "rc=412 body=Invalid uploader",
+    "status_ext": "ERROR",
+    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
+    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095953163188569'}",
+    "ts": "2026-09-20T04:54:42.144348+00:00"
+  },
+  {
+    "slug": "fractal_spiral_20260920_042441",
+    "title": "Satisfying Infinite Fractal Zoom #satisfying #shorts",
+    "status": "ok",
+    "media_id": "18223727347329475",
+    "url": "https://instagram.com/reel/18223727347329475",
+    "ts": "2026-09-20T04:55:48.784669+00:00"
   }
 ]
