@@ -129,6 +129,9 @@ def _fetch_music(topic: dict, target_duration_seconds: int, out_dir: Path) -> Pa
                 r = requests.get(
                     "https://pixabay.com/api/audio/",
                     params={"key": key, "q": query, "per_page": 50, "safesearch": "true"},
+                    headers={"User-Agent": ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                                            "AppleWebKit/537.36 (KHTML, like Gecko) "
+                                            "Chrome/122.0.0.0 Safari/537.36")},
                     timeout=30,
                 )
                 if r.status_code == 429:
