@@ -294,57 +294,26 @@ def _render_bar_chart_race(dataset: dict, out_video: Path,
 
 def _add_music_to_video(video: Path, work_dir: Path,
                          duration_seconds: int) -> Path | None:
-    """Añade música de fondo Pixabay. Query aleatorio entre estilos épicos
-    (los que retienen mejor en chart race según canales top 2026)."""
-    import os as _os
-    import random as _random
-    key = _os.environ.get("PIXABAY_API_KEY", "").strip()
-    if not key:
+    """Añade música de fondo libre (Pixabay→Freesound vía videogen.music).
+    La pista se hace loop (-stream_loop) para cubrir el vídeo aunque sea corta."""
+    from .. import music
+    queries = [
+        "epic cinematic dramatic", "trending viral upbeat", "trailer intense build",
+        "epic orchestral countdown", "cinematic tension rise",
+    ]
+    audio_path = music.fetch_bgm(queries, work_dir / "bgm.mp3", min_dur=15)
+    if not audio_path:
         return video
-
-    # Music queries que rinden en chart race format (canales 1M+ usan estas)
-    query = _random.choice([
-        "epic cinematic dramatic",
-        "trending viral upbeat",
-        "trailer intense build",
-        "epic orchestral countdown",
-        "cinematic tension rise",
-    ])
     try:
-        import requests
-        r = requests.get("https://pixabay.com/api/audio/",
-                          params={"key": key, "q": query,
-                                   "per_page": 20, "safesearch": "true"},
-                          headers={"User-Agent": ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-                                                  "AppleWebKit/537.36 (KHTML, like Gecko) "
-                                                  "Chrome/122.0.0.0 Safari/537.36")},
-                          timeout=30).json()
-        hits = r.get("hits", [])
-        if not hits:
-            return video
-        for h in hits:
-            dur = int(h.get("duration") or 0)
-            url = h.get("audio") or h.get("url") or ""
-            if url and dur >= duration_seconds:
-                audio_bytes = requests.get(url, timeout=60).content
-                audio_path = work_dir / "bgm.mp3"
-                audio_path.write_bytes(audio_bytes)
-                # Mezcla con ffmpeg
-                out = work_dir / "video_final.mp4"
-                cmd = ["ffmpeg", "-y",
-                        "-i", str(video), "-i", str(audio_path),
-                        "-c:v", "copy",
-                        "-c:a", "aac", "-b:a", "128k",
-                        "-map", "0:v", "-map", "1:a",
-                        "-shortest",
-                        str(out)]
-                r = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
-                if r.returncode == 0:
-                    return out
-                return video
-        return video
+        out = work_dir / "video_final.mp4"
+        # música (input 0, en loop infinito) + vídeo (input 1); -shortest corta al vídeo
+        cmd = ["ffmpeg", "-y", "-stream_loop", "-1", "-i", str(audio_path),
+               "-i", str(video), "-c:v", "copy", "-c:a", "aac", "-b:a", "128k",
+               "-map", "1:v", "-map", "0:a", "-shortest", str(out)]
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+        return out if r.returncode == 0 else video
     except Exception as e:
-        print(f"  ranking: bgm fail {e}")
+        print(f"  ranking: bgm mux fail {e}")
         return video
 
 
