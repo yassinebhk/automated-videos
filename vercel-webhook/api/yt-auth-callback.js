@@ -156,6 +156,22 @@ export default async function handler(req, res) {
     ));
   }
 
+  // 🔑 CRÍTICO (fix 20/09): alinear el CLIENT del canal con el que ACABA de mintar
+  // el token. Cada canal tenía su propio OAuth client, pero el token nuevo está
+  // atado a ESTE client (clientId/clientSecret). Sin esto, el pipeline refresca con
+  // el client viejo del canal → 'unauthorized_client'. Solo para canales con prefijo.
+  if (channel) {
+    try {
+      await updateRepoSecret({ owner: ghOwner, repo: ghRepo,
+        secretName: `${channel}_CLIENT_ID`, value: clientId, token: ghToken });
+      await updateRepoSecret({ owner: ghOwner, repo: ghRepo,
+        secretName: `${channel}_CLIENT_SECRET`, value: clientSecret, token: ghToken });
+    } catch (e) {
+      await tgSend(stateData.chat_id,
+        `⚠️ Token de ${channel} guardado, pero no pude alinear su CLIENT (${String(e.message).slice(0, 120)}). Puede dar 'unauthorized_client'.`);
+    }
+  }
+
   // Notificar por Telegram
   const chLabel = channel || "WaitWhy (principal)";
   await tgSend(stateData.chat_id,
