@@ -1189,7 +1189,7 @@ def rankings_en_once_cmd():
     from .rankings_en import pipeline
     result = pipeline.run_once()
     print(json.dumps(result, indent=2, ensure_ascii=False))
-    if result.get("status") not in ("ok",):
+    if result.get("status") not in ("ok", "paused"):
         raise SystemExit(1)
 
 
@@ -1199,7 +1199,7 @@ def trabajos_once_cmd():
     from .trabajos import pipeline
     result = pipeline.run_once()
     print(json.dumps(result, indent=2, ensure_ascii=False))
-    if result.get("status") not in ("ok",):
+    if result.get("status") not in ("ok", "paused"):
         raise SystemExit(1)
 
 
@@ -1209,7 +1209,7 @@ def criminopatia_once_cmd():
     from .criminopatia import pipeline
     result = pipeline.run_once()
     print(json.dumps(result, indent=2, ensure_ascii=False))
-    if result.get("status") not in ("ok",):
+    if result.get("status") not in ("ok", "paused"):
         raise SystemExit(1)
 
 
