@@ -1,26 +1,5 @@
 [
   {
-    "slug": "harmo_harmo_gold_20260919_042502",
-    "title": "Mesmerizing Harmonograph Art #satisfying #shorts",
-    "status": "fail_container_ready",
-    "container_id": "18095825150188569",
-    "public_url": "https://yassinebhk.github.io/automated-videos/reels/harmo_harmo_gold_20260919_042502.mp4",
-    "attempts": 4,
-    "catbox_status": "rc=412 body=Invalid uploader",
-    "status_ext": "ERROR",
-    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
-    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095825150188569'}",
-    "ts": "2026-09-19T04:40:23.273263+00:00"
-  },
-  {
-    "slug": "harmo_harmo_gold_20260919_042502",
-    "title": "Mesmerizing Harmonograph Art #satisfying #shorts",
-    "status": "ok",
-    "media_id": "17941478646358845",
-    "url": "https://instagram.com/reel/17941478646358845",
-    "ts": "2026-09-19T04:48:42.945627+00:00"
-  },
-  {
     "slug": "padel_checklist_beginner_mistakes_20260919_045159",
     "title": "3 mistakes killing your game — Padel Tips #padel #shorts",
     "status": "ok",
@@ -1108,5 +1087,26 @@
     "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
     "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18096040295188569'}",
     "ts": "2026-09-20T20:35:12.568299+00:00"
+  },
+  {
+    "slug": "fractal_minibrot_20260920_204434",
+    "title": "Satisfying Infinite Fractal Zoom #satisfying #shorts",
+    "status": "fail_container_ready",
+    "container_id": "18096042125188569",
+    "public_url": "https://yassinebhk.github.io/automated-videos/reels/fractal_minibrot_20260920_204434.mp4",
+    "attempts": 4,
+    "catbox_status": "rc=412 body=Invalid uploader",
+    "status_ext": "ERROR",
+    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
+    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18096042125188569'}",
+    "ts": "2026-09-20T21:17:58.657993+00:00"
+  },
+  {
+    "slug": "fractal_minibrot_20260920_204434",
+    "title": "Satisfying Infinite Fractal Zoom #satisfying #shorts",
+    "status": "ok",
+    "media_id": "18110594093146775",
+    "url": "https://instagram.com/reel/18110594093146775",
+    "ts": "2026-09-20T21:21:55.317963+00:00"
   }
 ]
