@@ -1,13 +1,5 @@
 [
   {
-    "slug": "sort_sort_turbo_20260919_003741",
-    "title": "Oddly Satisfying Sorting #satisfying #shorts",
-    "status": "ok",
-    "media_id": "18085045838302264",
-    "url": "https://instagram.com/reel/18085045838302264",
-    "ts": "2026-09-19T00:57:38.238157+00:00"
-  },
-  {
     "slug": "padel_checklist_mental_focus_20260919_010016",
     "title": "3 Ways To Reset After Losing Points — Padel Tips #padel #shorts",
     "status": "fail_container_ready",
@@ -1098,5 +1090,18 @@
     "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
     "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18096024578188569'}",
     "ts": "2026-09-20T17:41:03.633787+00:00"
+  },
+  {
+    "slug": "galeote-en-lepanto-1571",
+    "title": "3 Claves de Lepanto · 7 oct 1571 · #1",
+    "status": "fail_container_ready",
+    "container_id": "18096027275188569",
+    "public_url": "https://yassinebhk.github.io/automated-videos/reels/galeote-en-lepanto-1571.mp4",
+    "attempts": 4,
+    "catbox_status": "rc=412 body=Invalid uploader",
+    "status_ext": "ERROR",
+    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
+    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18096027275188569'}",
+    "ts": "2026-09-20T18:03:00.375699+00:00"
   }
 ]
