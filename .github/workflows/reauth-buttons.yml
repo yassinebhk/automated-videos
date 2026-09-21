@@ -1,0 +1,18 @@
+name: Reauth buttons (manual)
+
+# Manda a Telegram los botones "RENOVAR TODOS" + por canal, aunque los tokens
+# sigan válidos. Para añadir un scope nuevo (p.ej. yt-analytics.readonly del
+# watch-time de YPP) sin esperar a que caduque nada.
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  reauth_buttons:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: reauth-buttons
+    secrets: inherit

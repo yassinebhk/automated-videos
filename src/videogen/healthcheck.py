@@ -245,7 +245,15 @@ YT_CHANNELS = [
     ("YT_RANKING", "TopRanking ES"),
     ("YT_AMBIENT", "MenteEnCalma"),
     ("YT_IA", "IA Autónomos ES"),
+    ("YT_AITOOLS", "AI Tools Weekly"),
 ]
+
+
+def send_reauth_all() -> int:
+    """Fuerza el envío de los botones de reautorización de TODOS los canales
+    (aunque el token esté válido). Útil para añadir un scope nuevo, p.ej.
+    yt-analytics.readonly para el watch-time de YPP."""
+    return _send_reauth_buttons({name: {"ok": False} for _p, name in YT_CHANNELS})
 
 
 def _check_youtube_channel(prefix: str, name: str) -> tuple[bool, str]:

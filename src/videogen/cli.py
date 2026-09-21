@@ -1746,6 +1746,17 @@ def backfill_once_cmd(per_platform: int, platforms: str):
         print(f"{plat}: {len(r.get('posted', []))} posted, {len(r.get('failed', []))} failed")
 
 
+@cli.command(name="reauth-buttons")
+def reauth_buttons_cmd():
+    """Envía a Telegram los botones de reautorización de TODOS los canales YT
+    (aunque el token siga válido) — para añadir el permiso de analítica (watch-time)."""
+    from . import healthcheck
+    n = healthcheck.send_reauth_all()
+    print(f"reauth buttons enviados: {n}")
+    if not n:
+        raise SystemExit(1)
+
+
 @cli.command(name="snapshot")
 def snapshot_cmd():
     """Snapshot de métricas de TODAS las plataformas + regenera el panel (sin Telegram)."""
