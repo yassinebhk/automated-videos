@@ -341,6 +341,15 @@ function fmtBadge(on,label){return `<span class="fmt ${on?'on':'off'}">${on?'✓
 function agoTxt(days){return days==null?'sin datos':days===0?'hoy':days===1?'ayer':`hace ${days} d`}
 const svg=(k,cls='')=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="${cls}">${ICON[k]||''}</svg>`;
 const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+// sparkline como SVG fijo (no Chart.js) → no rompe el layout de las filas
+function sparkSVG(pts,color,w=96,h=30){
+  if(!pts||pts.length<2)return `<span style="width:${w}px;flex:none"></span>`;
+  const mn=Math.min(...pts),mx=Math.max(...pts),rng=(mx-mn)||1,step=w/(pts.length-1);
+  const P=pts.map((v,i)=>`${(i*step).toFixed(1)},${(h-2-((v-mn)/rng)*(h-5)).toFixed(1)}`);
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="flex:none;display:block">`
+    +`<path d="M0,${h} L${P.join(' L')} L${w},${h} Z" fill="${color}22"/>`
+    +`<path d="M${P.join(' L')}" fill="none" stroke="${color}" stroke-width="1.6"/></svg>`;
+}
 
 let DATA=null,CHARTS=[],STATE={sec:'resumen',agView:'cal',filters:{content:1,longform:1,social:1,ops:0},pausedOn:0};
 const clearCharts=()=>{CHARTS.forEach(c=>{try{c.destroy()}catch(e){}});CHARTS=[]};
@@ -412,7 +421,7 @@ function areaOne(el,labels,data,color,label){
 function go(sec){STATE.sec=sec;clearCharts();
   document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.sec===sec));
   document.querySelectorAll('section.view').forEach(s=>s.classList.toggle('on',s.id==='v-'+sec));
-  const TL={vision:'Visión',resumen:'Resumen',canales:'Canales',produccion:'Producción',contenido:'Contenido',redes:'Redes sociales',agenda:'Agenda'};
+  const TL={vision:'Visión',resumen:'Resumen',canales:'Canales',produccion:'Producción',contenido:'Contenido',redes:'Redes sociales',monetizacion:'Monetización',agenda:'Agenda'};
   const tt=document.getElementById('tb-title');if(tt)tt.textContent=TL[sec]||sec;
   try{history.replaceState(null,'','#'+sec)}catch(e){}
   R[sec]();window.scrollTo({top:0,behavior:'instant'});}
@@ -693,7 +702,7 @@ function renderContenido(){
   const trow=(v,i)=>`<a class="row" style="--_c:${v.color}" ${v.url?`href="${v.url}" target="_blank" rel="noopener"`:''}>
     <div class="rk">${i+1}</div><div class="bar"></div>
     <div class="ti"><div class="t">${v.title}</div><div class="m"><span>${v.channel}</span><span>${fmt(v.views)} views totales</span></div></div>
-    <canvas class="tsp" data-vid="${v.video_id}" width="90" height="30" style="flex:none;width:90px;height:30px"></canvas>
+    ${sparkSVG(v.spark,css('--good'))}
     <div class="vv"><b style="color:var(--good)">+${short(v.delta)}</b><span>7 días</span></div></a>`;
   const enracha=tr.length?`<div class="sechead" style="margin-top:0"><h2>🔥 En racha</h2><span class="eyebrow">views ganadas en 7 días · curva de vida del vídeo</span></div>
     <div class="card pad ranklist">${tr.map(trow).join('')}</div>`:'';
@@ -724,7 +733,6 @@ function renderContenido(){
     <div class="sechead"><h2>Más engagement</h2><span class="eyebrow">me gusta ÷ visualizaciones · mín. 50 views</span></div>
     <div class="card pad ranklist">${eng.length?eng.map(engrow).join(''):'<div class="hint">Aún sin suficientes likes registrados.</div>'}</div>
     <p class="hint" style="margin-top:14px">El engagement (no solo las vistas) marca qué conecta de verdad — aquí lideran los casos de corrupción/true crime.</p>`;
-  el.querySelectorAll('canvas.tsp').forEach(cv=>{const v=tr.find(x=>x.video_id===cv.dataset.vid);if(v&&v.spark&&v.spark.length>1)spark(cv,v.spark,css('--good'))});
   vbar(document.getElementById('cday'),(bt.by_weekday||[]).map(w=>({label:w.label,v:w.avg})),css('--accent'));
   vbar(document.getElementById('chour'),(bt.by_hour||[]).map(h=>({label:h.label,v:h.avg})),css('--accent-2'));
   hbar(document.getElementById('topkw'),d.content.top_topics.slice(0,10).map(t=>({label:t.keyword,v:t.avg_views,c:css('--good')})));
@@ -802,6 +810,30 @@ function openSocial(pk){
   if(s.series.length)areaOne(document.getElementById('socchart'),s.series.map(p=>p.date),s.series.map(p=>p.subs),s.color,'Seguidores');
 }
 
+/* ── MONETIZACIÓN ── */
+function renderMonetiz(){
+  const d=DATA,el=document.getElementById('v-monetizacion'),m=d.monetization||{};
+  const pbar=(pct,color)=>`<div style="height:10px;background:var(--raised);border-radius:6px;overflow:hidden"><div style="width:${Math.max(2,pct)}%;height:100%;background:${pct>=100?'var(--good)':color};border-radius:6px"></div></div>`;
+  const line=(label,cur,tgt,missing,pct,color)=>`<div style="margin-bottom:13px">
+    <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px"><span style="font-weight:600">${label}</span>
+      <span class="mono faint">${fmt(cur)} / ${fmt(tgt)}${pct>=100?' ✓':` · faltan ${fmt(missing)}`}</span></div>${pbar(pct,color)}</div>`;
+  const yt=m.youtube||{};
+  const ytRows=(yt.channels||[]).map(c=>line(`${c.name}${c.flagship?' ★':''}`,c.current,c.target,c.missing,c.pct,'var(--accent)')).join('');
+  const socCard=(x,color)=>x?`<div class="card pad"><div style="font-weight:700;font-size:14.5px">${x.label}</div>
+      <div class="faint mono" style="font-size:11px;margin:6px 0 14px">${x.req}</div>
+      ${line('seguidores',x.current,x.target,x.missing,x.pct,color)}
+      <p class="hint" style="margin-top:12px">${x.note}</p></div>`:'';
+  el.innerHTML=`
+    <div class="sechead" style="margin-top:0"><h2>Qué falta para monetizar</h2><span class="eyebrow">umbrales oficiales por plataforma</span></div>
+    <div class="card pad"><div style="font-weight:700;font-size:15px">${yt.label||''}</div>
+      <div class="faint mono" style="font-size:11.5px;margin:6px 0 16px">${yt.req||''}</div>
+      ${ytRows}
+      <p class="hint" style="margin-top:6px">${yt.note||''}</p></div>
+    <div class="grid two" style="margin-top:16px">${socCard(m.tiktok,'#00f2ea')}${socCard(m.instagram,'#e1306c')}</div>
+    <div class="card pad" style="margin-top:16px"><div class="eyebrow" style="margin-bottom:6px">Otras redes</div>
+      <p style="margin:0;font-size:13px;color:var(--muted)">${m.otras||''}</p></div>`;
+}
+
 /* ── AGENDA ── */
 const CATLAB={content:'Contenido',longform:'Long-form',social:'Redes',ops:'Operaciones'};
 const CATCOL={content:'var(--accent)',longform:'var(--accent-2)',social:'#6364ff',ops:'var(--faint)'};
@@ -857,7 +889,7 @@ function histView(d){
         ${h.url?`<span class="linkout">${svg('ext')}</span>`:''}</a>`).join('')}</div></div>`).join('')}`;
 }
 
-const R={vision:renderVision,resumen:renderResumen,canales:renderCanales,produccion:renderProduccion,contenido:renderContenido,redes:renderRedes,agenda:renderAgenda};
+const R={vision:renderVision,resumen:renderResumen,canales:renderCanales,produccion:renderProduccion,contenido:renderContenido,redes:renderRedes,monetizacion:renderMonetiz,agenda:renderAgenda};
 
 /* ── theme ── */
 function applyTheme(t){
@@ -872,7 +904,7 @@ function toggleTheme(){const cur=document.documentElement.getAttribute('data-the
 
 /* ── boot ── */
 function shell(){
-  const nav=[['vision','rocket','Visión'],['resumen','grid','Resumen'],['canales','play','Canales'],['produccion','activity','Producción'],['contenido','film','Contenido'],['redes','share','Redes'],['agenda','cal','Agenda']];
+  const nav=[['vision','rocket','Visión'],['resumen','grid','Resumen'],['canales','play','Canales'],['produccion','activity','Producción'],['contenido','film','Contenido'],['redes','share','Redes'],['monetizacion','cost','Monetización'],['agenda','cal','Agenda']];
   document.getElementById('root').outerHTML=`<div class="app">
     <aside class="rail"><div class="brand"><div class="dot">V</div><div><b>Centro de Mando</b><span>videogen network</span></div></div>
       <nav class="nav">${nav.map(([k,i,l])=>`<button data-sec="${k}">${svg(i)}<span>${l}</span></button>`).join('')}</nav>
@@ -886,8 +918,9 @@ function shell(){
         <section class="view" id="v-resumen"></section><section class="view" id="v-canales"></section>
         <section class="view" id="v-produccion"></section>
         <section class="view" id="v-contenido"></section><section class="view" id="v-redes"></section>
+        <section class="view" id="v-monetizacion"></section>
         <section class="view" id="v-agenda"></section></div></div></div>`;
-  const TL={vision:'Visión',resumen:'Resumen',canales:'Canales',produccion:'Producción',contenido:'Contenido',redes:'Redes sociales',agenda:'Agenda'};
+  const TL={vision:'Visión',resumen:'Resumen',canales:'Canales',produccion:'Producción',contenido:'Contenido',redes:'Redes sociales',monetizacion:'Monetización',agenda:'Agenda'};
   document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>{document.getElementById('tb-title').textContent=TL[b.dataset.sec];go(b.dataset.sec)});
   document.getElementById('themebtn').onclick=toggleTheme;
   document.getElementById('scrim').onclick=closeDrawer;

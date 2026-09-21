@@ -986,6 +986,38 @@ def build() -> dict:
         "Analítica diaria, este panel en tiempo real y reauth por Telegram",
     ]
 
+    # ── Monetización: qué falta para monetizar en cada app (umbrales reales) ──
+    def _prog(cur, tgt):
+        return dict(current=cur, target=tgt,
+                    pct=min(100, round(100 * cur / tgt)) if tgt else 0,
+                    missing=max(0, tgt - cur))
+    yt_chs = [dict(name=c["name"], flagship=c.get("flagship", False), **_prog(c["subs"], 1000))
+              for c in channels_out if c["group"] == "core"]
+    tt = next((s for s in socials_out if s["pk"] == "tiktok"), {})
+    igp = next((s for s in socials_out if s["pk"] == "instagram"), {})
+    monetization = dict(
+        youtube=dict(
+            label="YouTube · Programa de Socios (YPP)",
+            req="1.000 suscriptores + 4.000 h de visionado (12 meses) o 10 M de views de Shorts (90 días)",
+            channels=sorted(yt_chs, key=lambda x: x["pct"], reverse=True),
+            note="Aquí medimos los suscriptores (la puerta de entrada). Las horas de visionado y las "
+                 "views de Shorts en 90 días aún no se capturan en analítica — se añadirán."),
+        tiktok=dict(
+            label="TikTok · Creativity Program",
+            req="10.000 seguidores + 100.000 views (30 días) + 18 años",
+            note="El vídeo rinde bien por vídeo, pero falta base de seguidores; además pide 100k "
+                 "views/30d. Ojo: la cuenta está en Sandbox (publicación manual hasta pasar review).",
+            **_prog(tt.get("followers", 0), 10000)),
+        instagram=dict(
+            label="Instagram · monetización",
+            req="Cuenta profesional + elegibilidad (bonus/insignias, por invitación; ~10k para enlaces)",
+            note="La monetización de IG es por invitación y varía por país; el umbral de seguidores es "
+                 "orientativo. La palanca real es crecer la cuenta @waitwhy_.",
+            **_prog(igp.get("followers", 0), 10000)),
+        otras="Bluesky, Mastodon y Threads no tienen monetización nativa: se rentabilizan llevando "
+              "tráfico a YouTube, con afiliados o con propinas.",
+    )
+
     return dict(
         generated_at=datetime.now(timezone.utc).isoformat(),
         generated_local=datetime.now(_MADRID).strftime("%Y-%m-%d %H:%M"),
@@ -1002,6 +1034,7 @@ def build() -> dict:
         weekday=global_weekday,
         showcase=showcase, velocity=velocity, by_category=by_category, capabilities=capabilities,
         alerts=alerts, recommendations=recommendations, interaction=interaction, funnel=funnel,
+        monetization=monetization,
         schedule=dict(recurring=recurring, upcoming=upcoming, history=history[:400],
                       pub_by_day=pub_by_day),
         pages_base=PAGES_BASE,
