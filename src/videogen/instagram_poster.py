@@ -169,21 +169,35 @@ def _upload_to_litterbox(mp4_path: Path) -> Optional[str]:
         return None
 
 
-def _verify_meta_fetchable(url: str, tries: int = 6, wait: int = 5) -> bool:
+def _verify_meta_fetchable(url: str, tries: int = 6, wait: int = 5,
+                            consecutive: int = 1) -> bool:
     """Comprueba que Meta (facebookexternalhit) puede DESCARGAR la URL antes de crear
     el contenedor → evita 'fail_container_ready'. GET con Range 0-1023 + UA de Meta,
-    reintentando por si el host tarda en propagar."""
+    reintentando por si el host tarda en propagar.
+
+    consecutive: nº de GET-OK SEGUIDOS exigidos (con `wait` entre ellos) antes de
+    dar por buena la URL. >1 espera a que la CDN (r2.dev) propague a todos los
+    edges → el fetch real de Meta ya no pega a un edge frío (404)."""
     headers = {"User-Agent": "facebookexternalhit/1.1", "Range": "bytes=0-1023"}
+    streak = 0
     for i in range(tries):
+        ok = False
         try:
             r = requests.get(url, headers=headers, timeout=15)
             n = len(r.content or b"")
             if r.status_code in (200, 206) and n > 100:
-                print(f"  ig: verify Meta OK '{url}' (rc={r.status_code}, {n}b) intento {i+1}")
-                return True
-            print(f"  ig: verify no-OK rc={r.status_code} n={n} intento {i+1}")
+                ok = True
+                streak += 1
+                print(f"  ig: verify Meta OK '{url}' (rc={r.status_code}, {n}b) "
+                      f"intento {i+1} · racha {streak}/{consecutive}")
+                if streak >= consecutive:
+                    return True
+            else:
+                print(f"  ig: verify no-OK rc={r.status_code} n={n} intento {i+1}")
         except Exception as e:
             print(f"  ig: verify error {str(e)[:60]} intento {i+1}")
+        if not ok:
+            streak = 0
         time.sleep(wait)
     return False
 
@@ -273,8 +287,15 @@ def _prepare_public_reel(local_mp4: Path, slug: str) -> Optional[str]:
     # 0) R2 (Cloudflare, CDN fiable) — host PRIMARIO si está configurado. Es la
     # solución de fondo al fail_container_ready (catbox/litterbox eran flaky para Meta).
     r2url = _upload_to_r2(mp4_to_upload, slug)
-    if r2url and _verify_meta_fetchable(r2url):
-        print("  ig: host R2 verificado por Meta ✓")
+    # La URL pública r2.dev pasa por la CDN de Cloudflare: tras el PUT hay un
+    # breve desfase en que UNOS edges devuelven 404 mientras propaga. Nuestro
+    # verify puede dar 200 en un edge caliente pero Meta pega a uno frío → 404
+    # en el 1er contenedor (luego el retry lo pilla, pero la notif sale ❌).
+    # Damos una ventana de propagación más larga (hasta ~70s) + exigimos 2 OK
+    # seguidos ANTES de crear el contenedor → el 1er intento ya sube y la notif
+    # dice la verdad.
+    if r2url and _verify_meta_fetchable(r2url, tries=12, wait=6, consecutive=2):
+        print("  ig: host R2 verificado por Meta ✓ (propagación consistente)")
         try:
             shutil.rmtree(tmp_dir, ignore_errors=True)
         except Exception:
