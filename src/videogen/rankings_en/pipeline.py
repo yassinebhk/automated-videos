@@ -74,12 +74,16 @@ def _pick_topic() -> dict | None:
 
 
 def _upload(meta: dict) -> dict | None:
+    # 21/09: sin canal YT propio → redirige a YT_AITOOLS (único canal EN
+    # que tenemos). Override con env RANKINGS_EN_HOST_YT_PREFIX.
     from ..upload_youtube import upload_video
+    host_prefix = YT_PREFIX
+    if not os.environ.get(YT_PREFIX + "_REFRESH_TOKEN"):
+        host_prefix = os.environ.get("RANKINGS_EN_HOST_YT_PREFIX", "YT_AITOOLS").strip()
     prev = os.environ.get("YT_CHANNEL_PREFIX", "")
-    os.environ["YT_CHANNEL_PREFIX"] = YT_PREFIX
-    print(f"  rankings-en: prefix={YT_PREFIX} · "
-          f"has_refresh={bool(os.environ.get(YT_PREFIX + '_REFRESH_TOKEN'))} · "
-          f"has_client_id={bool(os.environ.get(YT_PREFIX + '_CLIENT_ID'))}")
+    os.environ["YT_CHANNEL_PREFIX"] = host_prefix
+    print(f"  rankings-en: YT host={host_prefix} · "
+          f"has_refresh={bool(os.environ.get(host_prefix + '_REFRESH_TOKEN'))}")
     try:
         vid = upload_video(
             Path(meta["video_path"]),
@@ -117,10 +121,11 @@ def _send_tt_video(meta: dict, url: str) -> None:
 
 
 def run_once() -> dict[str, Any]:
-    """Genera + sube 1 bar chart race EN al canal Global Rankings."""
-    # ⏸ PAUSADO 20/09 (consolidación: sin canal YT propio + sin tracción).
-    # Reactivar = borrar estas 2 líneas + crear YT_RANKINGS_* + `gh workflow enable rankings-en-daily`.
-    print("  rankings-en: ⏸ PAUSADO (consolidación) — no genera"); return {"status": "paused", "channel": "rankings_en"}
+    """Genera + sube 1 bar chart race EN al canal Global Rankings.
+
+    21/09: reactivado. Sin canal YT propio → redirige a YT_AITOOLS (único
+    canal EN existente). Ver _upload() para el fallback host.
+    """
     topic = _pick_topic()
     if not topic:
         return {"status": "no_topic"}

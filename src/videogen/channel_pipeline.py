@@ -45,6 +45,10 @@ class ChannelConfig:
     cooldown_days: int = 90
     # Pool long-form específico (opcional). Si no está, long usa el short pool.
     topic_pool_long_module: str = ""  # ej 'videogen.tax.topic_pool_long'
+    # Canal HOST fallback si el propio yt_prefix no tiene _REFRESH_TOKEN
+    # configurado. Ej: criminopatia → "" (WaitWhy default), trabajos → "YT_LEGAL".
+    # Sin fallback (""), el pipeline skip YT y sigue con IG+TT como antes.
+    host_yt_prefix_fallback: str = ""
 
 
 def _load_ledger(path: Path) -> dict[str, str]:
@@ -356,23 +360,43 @@ def run_channel_once(cfg: ChannelConfig) -> dict[str, Any]:
         slug = service.generate(topic_prompt, ("es",),
                                  lambda m: print(f"  {m}"), ai_hero=True,
                                  precached_scripts=cached_scripts)
-        # YT-upload optional: si no hay secret YT_{prefix}_REFRESH_TOKEN,
-        # skip subida YT y va directo a IG+TT (mp4 local ya generado).
-        has_yt_creds = bool(os.environ.get(cfg.yt_prefix + "_REFRESH_TOKEN"))
+        # YT-upload con fallback host: si no hay secret YT_{prefix}_REFRESH_TOKEN,
+        # usa host_yt_prefix_fallback (canal afín donde subir mientras se crea
+        # el canal propio). Sin fallback → skip YT y sigue con IG+TT.
+        has_own = bool(os.environ.get(cfg.yt_prefix + "_REFRESH_TOKEN"))
+        host_prefix = cfg.yt_prefix if has_own else cfg.host_yt_prefix_fallback
+        # host_prefix == "" es válido → creds default (WaitWhy)
+        if not has_own and host_prefix == "":
+            has_host_creds = bool(os.environ.get("YT_REFRESH_TOKEN"))
+        elif not has_own:
+            has_host_creds = bool(os.environ.get(host_prefix + "_REFRESH_TOKEN"))
+        else:
+            has_host_creds = True
+
         url = ""
         yt_status = "skip_no_creds"
-        if has_yt_creds:
+        if has_host_creds:
             try:
-                print(f"  {cfg.slug}: subiendo al canal {cfg.display_name}…")
-                links = service.publish(slug, ("es",), privacy="public",
-                                         progress=lambda m: print(f"  {m}"), notify=False)
-                url = links.get("es", "?")
-                yt_status = "ok"
+                host_note = "" if has_own else f" (host: {host_prefix or 'WaitWhy default'})"
+                print(f"  {cfg.slug}: subiendo al canal {cfg.display_name}{host_note}…")
+                # Sobreescribir env prefix para que upload use el host
+                _prev_prefix = os.environ.get("YT_CHANNEL_PREFIX", "")
+                os.environ["YT_CHANNEL_PREFIX"] = host_prefix
+                try:
+                    links = service.publish(slug, ("es",), privacy="public",
+                                             progress=lambda m: print(f"  {m}"), notify=False)
+                    url = links.get("es", "?")
+                    yt_status = "ok" if has_own else f"ok-host-{host_prefix or 'YT_WAITWHY'}"
+                finally:
+                    if _prev_prefix:
+                        os.environ["YT_CHANNEL_PREFIX"] = _prev_prefix
+                    else:
+                        os.environ.pop("YT_CHANNEL_PREFIX", None)
             except Exception as e:
                 print(f"  {cfg.slug}: YT upload falló ({type(e).__name__}): sigue con IG+TT")
                 yt_status = f"fail: {type(e).__name__}"
         else:
-            print(f"  {cfg.slug}: sin YT creds → skip YT, sube directo a IG+TT")
+            print(f"  {cfg.slug}: sin YT creds (propias ni host) → skip YT, sube directo a IG+TT")
 
         _mark_used(ROOT / "output" / cfg.ledger_filename, topic["key"])
         cross = _crosspost(cfg, slug, url, topic)

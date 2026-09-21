@@ -17,12 +17,10 @@ CONFIG = ChannelConfig(
     audience_emoji={"general": "💼", "jovenes": "🧑‍💼", "_": "💼"},
     series_name="CuriosLaboral ES",
     cooldown_days=90,
+    # 21/09: sin canal YT propio → redirige a Legal ES (temas laborales/contratos).
+    host_yt_prefix_fallback="YT_LEGAL",
 )
 
 
 def run_once():
-    # ⏸ PAUSADO 20/09 (consolidación: sin canal YT propio + sin tracción).
-    # Reactivar = borrar estas 2 líneas + crear YT_TRABAJOS_* + `gh workflow enable trabajos-daily`.
-    print("  trabajos: ⏸ PAUSADO (consolidación) — no genera")
-    return {"status": "paused", "channel": "trabajos"}
     return run_channel_once(CONFIG)

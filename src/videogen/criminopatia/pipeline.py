@@ -17,12 +17,11 @@ CONFIG = ChannelConfig(
     audience_emoji={"general": "🔍", "_": "🔬"},
     series_name="Criminopatía",
     cooldown_days=90,
+    # 21/09: sin canal YT propio → redirige a WaitWhy (default sin prefix).
+    # true crime encaja perfectamente con el nicho de WaitWhy.
+    host_yt_prefix_fallback="",
 )
 
 
 def run_once():
-    # ⏸ PAUSADO 20/09 (consolidación: sin canal YT propio + sin tracción).
-    # Reactivar = borrar estas 2 líneas + crear YT_CRIMINOPATIA_* + `gh workflow enable criminopatia-daily`.
-    print("  criminopatia: ⏸ PAUSADO (consolidación) — no genera")
-    return {"status": "paused", "channel": "criminopatia"}
     return run_channel_once(CONFIG)

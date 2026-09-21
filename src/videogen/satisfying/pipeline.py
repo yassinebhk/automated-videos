@@ -68,12 +68,17 @@ def run_once() -> dict[str, Any]:
         _notify(f"❌ Satisfying falló generación · {variant['key']}", urgent=True)
         return {"status": "gen_fail", "variant": variant["key"]}
 
-    # YT upload opcional — si no hay YT_SATISFYING_REFRESH_TOKEN, va a IG+TT igual
+    # YT upload con fallback host: si no hay YT_SATISFYING_REFRESH_TOKEN,
+    # redirige a YT_AMBIENT (MenteEnCalma) — misma línea "visual relax".
+    # Override con env SATISFYING_HOST_YT_PREFIX.
     from ..upload_youtube import upload_video
+    host_prefix = YT_PREFIX
+    if not os.environ.get(YT_PREFIX + "_REFRESH_TOKEN"):
+        host_prefix = os.environ.get("SATISFYING_HOST_YT_PREFIX", "YT_AMBIENT").strip()
     prev = os.environ.get("YT_CHANNEL_PREFIX", "")
-    os.environ["YT_CHANNEL_PREFIX"] = YT_PREFIX
-    has_creds = bool(os.environ.get(YT_PREFIX + "_REFRESH_TOKEN"))
-    print(f"  satisfying: prefix={YT_PREFIX} · has_refresh={has_creds}")
+    os.environ["YT_CHANNEL_PREFIX"] = host_prefix
+    has_creds = bool(os.environ.get(host_prefix + "_REFRESH_TOKEN"))
+    print(f"  satisfying: YT host={host_prefix} · has_refresh={has_creds}")
     url = ""
     yt_status = "skip_no_creds"
     if has_creds:
@@ -84,7 +89,7 @@ def run_once() -> dict[str, Any]:
                 category_id="24", is_short=True, privacy="public",
             )
             url = f"https://youtube.com/shorts/{vid}"
-            yt_status = "ok"
+            yt_status = "ok" if host_prefix == YT_PREFIX else f"ok-host-{host_prefix}"
         except Exception as e:
             print(f"  satisfying upload fail: {type(e).__name__}: {e}")
             yt_status = f"fail: {type(e).__name__}"
