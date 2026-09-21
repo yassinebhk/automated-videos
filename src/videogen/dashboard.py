@@ -60,6 +60,12 @@ CHANNELS: list[dict] = [
     dict(key="rankings_en", name="Global Rankings",  pk=None,               handle=None,               cat="Rankings (EN)",           status="paused", lang="EN", group="extra"),
 ]
 
+# IG whitelist (otra sesión 21/09): solo canales afines a true crime ES suben a
+# Instagram @waitwhy_ (evita penalty de Originality Score por mezcla de nichos).
+IG_WHITELIST = {"waitwhy", "criminopatia", "legal", "ayudas", "pov", "trabajos"}
+# Canales huérfanos (sin YT propio) que suben al canal host de otro nicho afín.
+YT_HOST_REDIRECT = {"criminopatia": "WaitWhy", "trabajos": "TusDerechos ES", "padel": "TopRanking ES"}
+
 # Plataformas sociales (no-YouTube) y su handle/URL de perfil
 SOCIALS: list[dict] = [
     dict(pk="tiktok",    name="TikTok",    handle="@interest_stuff", url="https://tiktok.com/@interest_stuff", color="#00f2ea"),
@@ -403,8 +409,9 @@ def build() -> dict:
         first_dates = [first_date_by_vid.get(v) for v in vids_ids if first_date_by_vid.get(v)]
         last_upload = max(first_dates) if first_dates else None
         days_since = _days_since(last_upload)
-        vids_7d = sum(1 for d in first_dates if (_days_since(d) or 999) <= 7)
-        vids_30d = sum(1 for d in first_dates if (_days_since(d) or 999) <= 30)
+        _ds = [x for x in (_days_since(d) for d in first_dates) if x is not None]
+        vids_7d = sum(1 for x in _ds if x <= 7)
+        vids_30d = sum(1 for x in _ds if x <= 30)
         wk = _weekday_hist(vids_ids)
         for i in range(7):
             global_weekday[i] += wk[i]
@@ -435,6 +442,7 @@ def build() -> dict:
             url=_yt_url(ch.get("handle")), cat=ch["cat"], status=ch["status"],
             lang=ch["lang"], group=ch.get("group", "extra"),
             flagship=ch.get("flagship", False), color=color,
+            ig=(ch["key"] in IG_WHITELIST), yt_host=YT_HOST_REDIRECT.get(ch["key"]),
             subs=subs, views=views, videos=videos,
             has_analytics=bool(series),
             likes_total=likes_total, eng_rate=eng_rate,
@@ -621,12 +629,9 @@ def build() -> dict:
             c["health"] = "sin_datos"          # activo pero sin histórico de analítica aún
         elif not c["last_upload"]:
             c["health"] = "sin_subidas"
-        elif (c["days_since"] or 999) <= 2:
-            c["health"] = "al_dia"
-        elif (c["days_since"] or 999) <= 7:
-            c["health"] = "atrasado"
         else:
-            c["health"] = "inactivo"
+            ds = c["days_since"] if c["days_since"] is not None else 999
+            c["health"] = "al_dia" if ds <= 2 else ("atrasado" if ds <= 7 else "inactivo")
         c["missing_long"] = bool(pinfo["short"] and not pinfo["long"] and c["group"] == "core")
 
     # histórico: primer día en que apareció cada vídeo → "publicado"
@@ -715,6 +720,12 @@ def build() -> dict:
         insights.append(dict(tone="bad", title="Canales sin subidas recientes",
             body="Sin actividad detectada últimamente: " + ", ".join(stalled) +
                  ". Revisar cron / credenciales."))
+    ig_ch = [c["name"] for c in channels_out if c.get("ig")]
+    if ig_ch:
+        insights.append(dict(tone="info", title="Instagram: solo nicho true crime ES",
+            body="Para no hundir el alcance por mezclar nichos (Originality Score de Meta), "
+                 "solo suben a IG @waitwhy_: " + ", ".join(ig_ch) +
+                 ". El resto omite IG a propósito (~3-4 reels/día, sweet spot Meta)."))
 
     # series agregadas de red (forward-fill) para gráficas limpias
     net_series = _merge_ff([c["series"] for c in channels_out if c["series"]], ("subs", "views"))

@@ -482,7 +482,7 @@ function renderCanales(){
     <div style="padding:0 17px 7px;display:flex;gap:7px;flex-wrap:wrap;align-items:center">
       ${c.handle?`<a class="linkout" target="_blank" rel="noopener" href="${c.url}">${c.handle} ${svg('ext')}</a>`:'<span class="faint mono" style="font-size:11.5px">sin handle público</span>'}
       <span class="tag">${c.lang}</span></div>
-    <div style="padding:0 17px 11px;display:flex;gap:7px;flex-wrap:wrap">${fmtBadge(c.prod?.short,'Shorts')} ${fmtBadge(c.prod?.long,'Long-form')}</div>
+    <div style="padding:0 17px 11px;display:flex;gap:7px;flex-wrap:wrap">${fmtBadge(c.prod?.short,'Shorts')} ${fmtBadge(c.prod?.long,'Long-form')} ${fmtBadge(c.ig,'IG')}${c.yt_host?`<span class="tag">host: ${c.yt_host}</span>`:''}</div>
     <div class="met"><div><div class="k">Subs</div><div class="v">${fmt(c.subs)}</div></div>
       <div><div class="k">Views</div><div class="v">${short(c.views)}</div></div>
       <div><div class="k">Vídeos</div><div class="v">${fmt(c.videos)}</div></div></div>
@@ -511,7 +511,8 @@ function openChannel(key){
     <div style="flex:1"><h2>${c.name} ${c.flagship?'★':''}</h2>
       <div style="display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:7px">${healthBadge(c.health)}
         <span class="faint mono" style="font-size:12px">${c.cat} · ${c.lang}</span></div>
-      <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:8px">${fmtBadge(c.prod?.short,`Shorts ${c.prod?.short_time||''}`)} ${fmtBadge(c.prod?.long,c.prod?.long?`Long-form ${c.prod.long_day} ${c.prod.long_time}`:'Sin long-form')}</div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:8px">${fmtBadge(c.prod?.short,`Shorts ${c.prod?.short_time||''}`)} ${fmtBadge(c.prod?.long,c.prod?.long?`Long-form ${c.prod.long_day} ${c.prod.long_time}`:'Sin long-form')} ${fmtBadge(c.ig,'Instagram')}</div>
+      ${c.yt_host?`<div class="faint mono" style="font-size:11px;margin-top:6px">↳ sube al canal host: ${c.yt_host}</div>`:''}
       ${c.url?`<a class="linkout" target="_blank" rel="noopener" href="${c.url}" style="margin-top:9px">${c.handle} ${svg('ext')}</a>`:''}</div>
     <button class="iconbtn" id="dclose">${svg('close')}</button></div>
     <div class="db"><div class="grid" style="grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px">
@@ -548,9 +549,10 @@ function renderProduccion(){
     <div class="num" style="font-size:26px;margin:8px 0 3px;color:${tone||'var(--ink)'}">${val}</div>
     <div class="faint" style="font-size:11px">${sub}</div></div>`;
   const rows=core.map(c=>`<tr data-ch="${c.key}" style="cursor:pointer">
-    <td><div class="nm"><span class="cdot" style="background:${c.color}"></span>${c.name} ${c.flagship?'★':''} <span class="tag">${c.lang}</span></div></td>
+    <td><div class="nm"><span class="cdot" style="background:${c.color}"></span>${c.name} ${c.flagship?'★':''} <span class="tag">${c.lang}</span></div>${c.yt_host?`<div class="faint mono" style="font-size:10px">↳ sube a ${c.yt_host}</div>`:''}</td>
     <td>${c.prod?.short?`<span class="fmt on">✓ ${c.prod.short_time}</span>`:'<span class="fmt off">— sin Shorts</span>'}</td>
     <td>${c.prod?.long?`<span class="fmt on">✓ ${c.prod.long_day} ${c.prod.long_time}</span>`:'<span class="fmt off">— falta long</span>'}</td>
+    <td>${c.ig?'<span class="fmt on">✓ IG</span>':'<span class="fmt off">— no IG</span>'}</td>
     <td class="r faint" style="font-size:12px">${agoTxt(c.days_since)}</td>
     <td class="r">${c.per_week||0}</td>
     <td class="r mono">${c.vids_7d} / ${c.vids_30d}</td>
@@ -566,7 +568,7 @@ function renderProduccion(){
       ${stat('En pausa',`${nPausa}/10`,'consolidación',nPausa?'var(--warn)':'var(--good)')}</div>
     <div class="sechead"><h2>Cobertura por canal</h2><span class="eyebrow">clic para el detalle</span></div>
     <div class="card pad" style="overflow-x:auto"><table class="tbl">
-      <thead><tr><th>Canal</th><th>Shorts</th><th>Long-form</th><th>Últ. subida</th><th>/sem</th><th>7d / 30d</th><th>Momentum</th><th>Salud</th></tr></thead>
+      <thead><tr><th>Canal</th><th>Shorts</th><th>Long-form</th><th>IG</th><th>Últ. subida</th><th>/sem</th><th>7d / 30d</th><th>Momentum</th><th>Salud</th></tr></thead>
       <tbody>${rows}</tbody></table></div>
     <div class="grid g32">
       <div class="card pad"><div class="sechead" style="margin:0 0 6px"><h2 style="font-size:15px">Cuándo se publica</h2><span class="eyebrow">vídeos por día de la semana</span></div>
@@ -617,7 +619,8 @@ function renderRedes(){
           <div style="flex:1;min-width:200px"><div style="display:flex;gap:12px;margin-bottom:14px">
             <div class="card pad" style="flex:1;box-shadow:none;background:var(--good-soft);border-color:transparent"><div class="eyebrow">Vídeos OK (14d)</div><div class="num" style="font-size:24px;color:var(--good);margin-top:5px">${ig.ok_recent!=null?ig.ok_recent:ig.ok}</div></div>
             <div class="card pad" style="flex:1;box-shadow:none;background:var(--bad-soft);border-color:transparent"><div class="eyebrow">Sin publicar</div><div class="num" style="font-size:24px;color:var(--bad);margin-top:5px">${(ig.total_recent!=null?ig.total_recent-ig.ok_recent:ig.fail)}</div></div></div>
-            <p class="hint" style="margin:0">% <b>por vídeo</b>: cada uno reintenta si el 1er contenedor falla, así que casi todos acaban subiendo. Host <b>Cloudflare R2</b> (coste 0).</p></div></div>
+            <p class="hint" style="margin:0">% <b>por vídeo</b>: cada uno reintenta si el 1er contenedor falla, así que casi todos acaban subiendo. Host <b>Cloudflare R2</b> (coste 0).</p>
+            <p class="hint" style="margin:8px 0 0">Solo suben a IG los canales <b>afines a true crime ES</b> (${d.channels.filter(c=>c.ig).map(c=>c.name).join(', ')}) para no bajar el alcance por mezcla de nichos.</p></div></div>
         <div class="eyebrow" style="margin:20px 0 8px">Registro reciente</div>
         <div class="iglog">${ig.recent.map(r=>`<div class="row"><span class="s ${r.status==='ok'?'ok':'fail'}"></span>
           <span class="tt">${r.url?`<a href="${r.url}" target="_blank" rel="noopener" style="text-decoration:none">${r.title||r.slug||'reel'}</a>`:(r.title||r.slug||'reel')}${r.status!=='ok'&&r.error?` <span class="faint">— ${r.error}</span>`:''}</span>
