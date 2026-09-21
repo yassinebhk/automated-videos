@@ -89,6 +89,8 @@ HELP_TEXT = (
     "Si recibes «🚨 TOKEN YT CADUCADO» → en la Mac ejecuta `videogen reauth` (1 comando, 30s, abre navegador y listo). Google revoca el token cada ~7 días.\n"
     "/stats — estadísticas de YouTube (suscriptores + por video)\n"
     "/optimal — mejores horas para publicar (YouTube/TikTok)\n"
+    "/panel — 📊 Centro de Mando: panel web con TODAS las métricas de todos los canales y redes, "
+    "conclusiones, top de contenido y la agenda (lista + calendario). Se actualiza solo.\n"
     "/ui — enlace a la UI web (misma WiFi)\n"
     "/start — iniciar y ver tu chat id\n"
     "/help — esta ayuda\n\n"
@@ -117,6 +119,18 @@ async def ui_cmd(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         f"_Tip: aquí en el bot ya puedes hacer todo (generar, revisar, subir). "
         f"La UI es solo la versión visual con historial._",
         parse_mode="Markdown",
+    )
+
+
+async def panel_cmd(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "📊 *Centro de Mando* — panel de control de toda la red\n\n"
+        "https://yassinebhk.github.io/automated-videos/dashboard/\n\n"
+        "Métricas en tiempo real de los 15 canales de YouTube y las 5 redes, "
+        "conclusiones automáticas, top y peor contenido, temas que funcionan y "
+        "la agenda de publicación (lista + calendario + histórico).\n"
+        "_Se regenera solo con cada snapshot diario._",
+        parse_mode="Markdown", disable_web_page_preview=False,
     )
 
 
@@ -2621,6 +2635,7 @@ def run():
     app.add_handler(CommandHandler("stats", stats_cmd))
     app.add_handler(CommandHandler("ideas", ideas_cmd))
     app.add_handler(CommandHandler("ui", ui_cmd))
+    app.add_handler(CommandHandler("panel", panel_cmd))
     app.add_handler(CommandHandler("optimal", optimal))
     # Handler global de errores: evita el flood de "No error handlers are registered"
     # y captura errores de parse Markdown/HTML sin exponer tracebacks al usuario.

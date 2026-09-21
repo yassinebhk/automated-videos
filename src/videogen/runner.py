@@ -168,6 +168,14 @@ async def _run_daily_summary_impl() -> None:
     from . import telegram_bot
     ctx = FakeCtx()
     await telegram_bot.daily_summary(ctx)
+    # Refresca el panel de control (docs/dashboard/data.json) con el snapshot recién
+    # tomado. El reusable job commitea docs/ → GitHub Pages sirve las métricas al día.
+    try:
+        from . import dashboard
+        dest = dashboard.write()
+        print(f"  dashboard: {dest} actualizado ({dest.stat().st_size/1024:.0f} KB)")
+    except Exception as e:  # nunca romper el resumen por el panel
+        print(f"  dashboard: no se pudo regenerar ({e})")
 
 
 async def _dispatch_command_impl(cmd: str, args_text: str = "") -> None:

@@ -1537,6 +1537,23 @@ def backfill_once_cmd(per_platform: int, platforms: str):
         print(f"{plat}: {len(r.get('posted', []))} posted, {len(r.get('failed', []))} failed")
 
 
+@cli.command(name="dashboard")
+def dashboard_cmd():
+    """Regenera docs/dashboard/data.json (panel de control multi-canal, GitHub Pages).
+
+    Agrega TODAS las métricas reales (YouTube/IG/TikTok/Bluesky/Mastodon/Threads),
+    top/peor contenido, análisis de temas y la agenda (cron de cada canal).
+    La UI vive en docs/dashboard/index.html → https://yassinebhk.github.io/automated-videos/dashboard/
+    """
+    from . import dashboard
+    dest = dashboard.write()
+    data = json.loads(dest.read_text(encoding="utf-8"))
+    print(f"✓ {dest} ({dest.stat().st_size/1024:.0f} KB)")
+    print(f"  canales={len(data['channels'])} redes={len(data['socials'])} "
+          f"agenda_próx={len(data['schedule']['upcoming'])} histórico={len(data['schedule']['history'])}")
+    print("  URL: https://yassinebhk.github.io/automated-videos/dashboard/")
+
+
 @cli.command(name="dispatch")
 @click.option("--cmd", required=True, help="Comando (autogen|longgen|snapshot|atomize|send|ideas|stats|help|start)")
 @click.option("--args", "args_text", default="", help="Argumentos textuales del comando")
