@@ -400,6 +400,9 @@ def snapshot_threads() -> list[dict]:
             ins = requests.get(f"{base}/{th_id}/threads_insights",
                                 params={"metric": "followers_count", "access_token": token},
                                 timeout=15).json()
+            if isinstance(ins, dict) and ins.get("error"):
+                print(f"  snapshot threads insights ERROR: {str(ins['error'])[:200]} "
+                      f"(¿falta scope threads_manage_insights?)")
             for m in ins.get("data", []):
                 if m.get("name") == "followers_count":
                     followers = int((m.get("total_value") or {}).get("value") or 0)
@@ -410,10 +413,15 @@ def snapshot_threads() -> list[dict]:
                      "subs": followers, "views": 0, "likes": 0, "source": "api"})
         # Posts reales del perfil (antes NO se capturaban → el panel salía vacío).
         # También sirve para detectar si Meta borra posts (comparar con lo publicado).
-        posts = requests.get(
+        posts_raw = requests.get(
             f"{base}/{th_id}/threads",
             params={"fields": "id,text,timestamp,permalink,media_type",
-                    "limit": 30, "access_token": token}, timeout=20).json().get("data", [])
+                    "limit": 30, "access_token": token}, timeout=20).json()
+        if isinstance(posts_raw, dict) and posts_raw.get("error"):
+            print(f"  snapshot threads POSTS error: {str(posts_raw['error'])[:200]} "
+                  f"(¿falta scope threads_basic para leer el perfil?)")
+        posts = posts_raw.get("data", []) if isinstance(posts_raw, dict) else []
+        print(f"  snapshot threads: followers={followers} · posts_visibles={len(posts)}")
         for p in posts:
             pid = p.get("id")
             if not pid:

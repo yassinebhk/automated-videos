@@ -1,0 +1,17 @@
+name: Snapshot métricas (manual)
+
+# Snapshot de todas las plataformas + regenera el panel, sin mandar el resumen
+# a Telegram. Para refrescar datos on-demand o diagnosticar (p.ej. Threads).
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  snapshot:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: snapshot
+    secrets: inherit

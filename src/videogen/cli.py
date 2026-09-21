@@ -1557,6 +1557,16 @@ def backfill_once_cmd(per_platform: int, platforms: str):
         print(f"{plat}: {len(r.get('posted', []))} posted, {len(r.get('failed', []))} failed")
 
 
+@cli.command(name="snapshot")
+def snapshot_cmd():
+    """Snapshot de métricas de TODAS las plataformas + regenera el panel (sin Telegram)."""
+    from . import analytics, dashboard
+    counts = analytics.snapshot_all(progress=lambda m: print(f"  {m}"))
+    print("snapshot:", json.dumps(counts, ensure_ascii=False))
+    dashboard.write()
+    print("✓ panel regenerado")
+
+
 @cli.command(name="dashboard")
 @click.option("--serve", "serve_", is_flag=True,
               help="Abre el panel en LOCAL (localhost) en vez de solo regenerar el JSON.")
