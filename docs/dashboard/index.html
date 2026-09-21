@@ -454,7 +454,8 @@ function renderVision(){
       <div class="card pad"><div class="sechead" style="margin:0 0 12px"><h2 style="font-size:15px">Crecimiento y proyección</h2></div>
         ${proj}<div class="chartbox sm" style="margin-top:12px"><canvas id="vgrowth"></canvas></div></div>
       <div class="card pad"><div class="sechead" style="margin:0 0 12px"><h2 style="font-size:15px">Rendimiento por nicho</h2><span class="eyebrow">views/vídeo</span></div>
-        <div class="chartbox sm"><canvas id="vcat"></canvas></div></div>
+        <div class="chartbox sm"><canvas id="vcat"></canvas></div>
+        ${(d.content.by_language||[]).length>=2?`<div style="display:flex;gap:18px;margin-top:12px;font-family:var(--mono);font-size:12px;flex-wrap:wrap">${d.content.by_language.map(l=>`<span><b style="font-size:16px">${l.vpv}</b> <span class="faint">${l.lang} · ${l.channels} canal${l.channels>1?'es':''}</span></span>`).join('<span class="faint">·</span>')}<span class="faint">views/vídeo por idioma</span></div>`:''}</div>
     </div>
 
     <div class="sechead"><h2>Qué hace la máquina sola</h2><span class="eyebrow">pipeline de punta a punta</span></div>
@@ -668,9 +669,16 @@ function renderContenido(){
           <div><div class="num" style="font-size:26px">${fmt(cs.likes)}</div><div class="faint" style="font-size:11px">me gusta</div></div></div>
         ${cs.url?`<a class="linkout" target="_blank" rel="noopener" href="${cs.url}">ver vídeo ${svg('ext')}</a>`:''}
       </div></div>`:'';
-  el.innerHTML=`${csCard}
+  const tr=d.content.trending||[];
+  const trow=(v,i)=>`<a class="row" style="--_c:${v.color}" ${v.url?`href="${v.url}" target="_blank" rel="noopener"`:''}>
+    <div class="rk">${i+1}</div><div class="bar"></div>
+    <div class="ti"><div class="t">${v.title}</div><div class="m"><span>${v.channel}</span><span>${fmt(v.views)} views totales</span></div></div>
+    <div class="vv"><b style="color:var(--good)">+${short(v.delta)}</b><span>7 días</span></div></a>`;
+  const enracha=tr.length?`<div class="sechead" style="margin-top:0"><h2>🔥 En racha</h2><span class="eyebrow">views ganadas en los últimos 7 días</span></div>
+    <div class="card pad ranklist">${tr.map(trow).join('')}</div>`:'';
+  el.innerHTML=`${csCard}${enracha}
     <div class="grid two">
-      <div><div class="sechead" style="margin-top:0"><h2>Top contenido</h2><span class="eyebrow">toda la red</span></div>
+      <div><div class="sechead"><h2>Top contenido</h2><span class="eyebrow">toda la red</span></div>
         <div class="card pad ranklist">${d.content.top_overall.map(row).join('')}</div></div>
       <div><div class="sechead" style="margin-top:0"><h2>Menor rendimiento</h2><span class="eyebrow">a revisar</span></div>
         <div class="card pad ranklist">${d.content.worst_overall.map(row).join('')}</div></div></div>

@@ -563,6 +563,47 @@ def build() -> dict:
         pub_cnt[d] += 1
     pub_by_day = [{"date": d, "count": pub_cnt[d]} for d in sorted(pub_cnt)][-60:]
 
+    # ── EN RACHA: vídeos que MÁS views ganan en los últimos ~7 días (de la serie
+    #    temporal que vamos acumulando). Lo que está despegando AHORA. ──
+    vseries: dict[str, list] = defaultdict(list)
+    for r in video_recs:
+        pk = str(r.get("platform", ""))
+        if pk.startswith("youtube") and r.get("video_id"):
+            vseries[r["video_id"]].append((r.get("ts", 0) or 0, r.get("views", 0) or 0))
+    meta_by_vid = {v["video_id"]: v for v in all_videos_flat}
+    trending = []
+    for vid, pts in vseries.items():
+        if len(pts) < 2:
+            continue
+        pts.sort()
+        last_ts, last_v = pts[-1]
+        target = last_ts - 7 * 86400
+        prev = None
+        for ts, vv in pts:
+            if ts <= target:
+                prev = (ts, vv)
+        if prev is None:
+            prev = pts[0]
+        delta = last_v - prev[1]
+        if delta > 0:
+            m = meta_by_vid.get(vid, {})
+            trending.append({"video_id": vid, "title": m.get("title", "(sin título)"),
+                             "channel": m.get("channel", ""), "color": m.get("color", "#8a93a6"),
+                             "url": m.get("url"), "views": last_v, "delta": delta})
+    trending = sorted(trending, key=lambda x: x["delta"], reverse=True)[:10]
+
+    # ── Rendimiento por IDIOMA (ES vs EN) ──
+    langmap: dict[str, dict] = {}
+    for c in channels_out:
+        if c["views"] <= 0:
+            continue
+        m = langmap.setdefault(c["lang"], {"lang": c["lang"], "channels": 0, "videos": 0,
+                                           "views": 0, "subs": 0})
+        m["channels"] += 1; m["videos"] += c["videos"]
+        m["views"] += c["views"]; m["subs"] += c["subs"]
+    by_language = sorted(({**m, "vpv": round(m["views"] / m["videos"]) if m["videos"] else 0}
+                          for m in langmap.values()), key=lambda x: x["views"], reverse=True)
+
     # ── Instagram: ratio real de subidas ──
     ig = dict(total=0, ok=0, fail=0, rate=None, recent=[], by_day=[])
     igp = OUTPUT / "ig_publish_log.json"
@@ -785,6 +826,30 @@ def build() -> dict:
             body="Para no hundir el alcance por mezclar nichos (Originality Score de Meta), "
                  "solo suben a IG @waitwhy_: " + ", ".join(ig_ch) +
                  ". El resto omite IG a propósito (~3-4 reels/día, sweet spot Meta)."))
+    # descubrimiento: cuánto rinde el true crime vs la media de la red
+    act_vpv = [c["views"] / c["videos"] for c in channels_out if c["videos"] and c["views"] > 0]
+    if act_vpv:
+        net_avg = sum(act_vpv) / len(act_vpv)
+        tc = next((c for c in channels_out if c["key"] == "waitwhy"), None)
+        if tc and tc["videos"] and net_avg:
+            mult = round((tc["views"] / tc["videos"]) / net_avg, 1)
+            insights.append(dict(tone="good", title=f"El true crime rinde {mult}× la media",
+                body=f"WaitWhy hace {round(tc['views'] / tc['videos']):,} views/vídeo frente a "
+                     f"{round(net_avg):,} de media de la red. La palanca #1 es la temática."))
+    # descubrimiento: ES vs EN
+    if len(by_language) >= 2:
+        es = next((l for l in by_language if l["lang"] == "ES"), None)
+        en = next((l for l in by_language if l["lang"] == "EN"), None)
+        if es and en and es["vpv"] and en["vpv"]:
+            insights.append(dict(tone="info", title="Español rinde más que inglés (por ahora)",
+                body=f"ES: {es['vpv']:,} views/vídeo ({es['channels']} canales) · "
+                     f"EN: {en['vpv']:,} ({en['channels']}). Los canales EN son nuevos; a vigilar."))
+    # descubrimiento: qué está EN RACHA
+    if trending:
+        t0 = trending[0]
+        insights.append(dict(tone="good", title="En racha ahora mismo",
+            body=f"«{t0['title'][:60]}» (+{t0['delta']:,} views en 7 días). "
+                 f"Mira la pestaña Contenido para el resto de vídeos que despegan."))
 
     # series agregadas de red (forward-fill) para gráficas limpias
     net_series = _merge_ff([c["series"] for c in channels_out if c["series"]], ("subs", "views"))
@@ -859,7 +924,8 @@ def build() -> dict:
         channels=channels_out, socials=socials_out,
         content=dict(top_overall=top_overall, worst_overall=worst_overall,
                      top_topics=top_topics, worst_topics=worst_topics,
-                     best_time=best_time, engagement_top=engagement_top, case_study=case_study),
+                     best_time=best_time, engagement_top=engagement_top, case_study=case_study,
+                     trending=trending, by_language=by_language),
         ig=ig, crosspost=cross,
         weekday=global_weekday,
         showcase=showcase, velocity=velocity, by_category=by_category, capabilities=capabilities,
