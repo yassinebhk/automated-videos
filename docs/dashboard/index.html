@@ -107,6 +107,21 @@ section.view.on{display:block;animation:rise .3s ease}
   padding:3px 8px;border-radius:8px;background:var(--raised);color:var(--muted)}
 .chip.up{background:var(--good-soft);color:var(--good)}
 .chip.down{background:var(--bad-soft);color:var(--bad)}
+.hb{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;font-weight:600;padding:3px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:.03em;white-space:nowrap}
+.hb::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;flex:none}
+.hb.al_dia{background:var(--good-soft);color:var(--good)}
+.hb.atrasado{background:var(--warn-soft);color:var(--warn)}
+.hb.inactivo,.hb.sin_subidas{background:var(--bad-soft);color:var(--bad)}
+.hb.pausado{background:var(--warn-soft);color:var(--warn)}
+.hb.sin_datos{background:var(--accent-soft);color:var(--accent)}
+.fmt{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10.5px;font-weight:600;padding:4px 9px;border-radius:7px}
+.fmt.on{background:var(--accent-soft);color:var(--accent)}
+.fmt.off{background:var(--raised);color:var(--faint)}
+.heat{display:flex;gap:8px;align-items:flex-end;height:140px;padding-top:10px}
+.heat .col{flex:1;display:flex;flex-direction:column;align-items:center;gap:7px;justify-content:flex-end;height:100%}
+.heat .bar{width:100%;max-width:40px;background:linear-gradient(180deg,var(--accent),color-mix(in srgb,var(--accent) 55%,transparent));border-radius:6px 6px 0 0;min-height:4px;position:relative}
+.heat .bar b{position:absolute;top:-18px;left:0;right:0;text-align:center;font-family:var(--mono);font-size:10px;color:var(--muted)}
+.heat .lb{font-family:var(--mono);font-size:11px;color:var(--faint);font-weight:600}
 .tag{font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:6px;border:1px solid var(--border);color:var(--faint)}
 .linkout{display:inline-flex;align-items:center;gap:5px;color:var(--accent);font-weight:600;font-size:12.5px;text-decoration:none}
 .linkout:hover{text-decoration:underline}
@@ -312,7 +327,14 @@ const ICON={
   moon:'<path d="M20 13.5A8 8 0 1 1 10.5 4a6.3 6.3 0 0 0 9.5 9.5z"/>',
   ext:'<path d="M7 17L17 7M9 7h8v8"/>',
   close:'<path d="M6 6l12 12M18 6L6 18"/>',
+  activity:'<path d="M3 12h4l2.5-7 5 14 2.5-7H21"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>',
 };
+const HEALTH={al_dia:'Al día',atrasado:'Atrasado',inactivo:'Inactivo',sin_subidas:'Sin subidas',pausado:'En pausa',sin_datos:'Analítica pendiente'};
+const DOW=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+function healthBadge(h){return `<span class="hb ${h}">${HEALTH[h]||h}</span>`}
+function fmtBadge(on,label){return `<span class="fmt ${on?'on':'off'}">${on?'✓':'—'} ${label}</span>`}
+function agoTxt(days){return days==null?'sin datos':days===0?'hoy':days===1?'ayer':`hace ${days} d`}
 const svg=(k,cls='')=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="${cls}">${ICON[k]||''}</svg>`;
 const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 
@@ -386,6 +408,9 @@ function areaOne(el,labels,data,color,label){
 function go(sec){STATE.sec=sec;clearCharts();
   document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.sec===sec));
   document.querySelectorAll('section.view').forEach(s=>s.classList.toggle('on',s.id==='v-'+sec));
+  const TL={resumen:'Resumen',canales:'Canales',produccion:'Producción',contenido:'Contenido',redes:'Redes sociales',agenda:'Agenda'};
+  const tt=document.getElementById('tb-title');if(tt)tt.textContent=TL[sec]||sec;
+  try{history.replaceState(null,'','#'+sec)}catch(e){}
   R[sec]();window.scrollTo({top:0,behavior:'instant'});}
 function rerender(){clearCharts();R[STATE.sec]();}
 
@@ -406,11 +431,14 @@ function renderResumen(){
     <td class="rank">${i+1}</td>
     <td><div class="nm"><span class="cdot" style="background:${c.color}"></span>${c.name} ${c.flagship?'★':''} <span class="tag">${c.lang}</span></div>
       <div class="faint mono" style="font-size:10.5px">${c.cat}</div></td>
-    <td>${statusPill(c.status)}</td>
+    <td>${healthBadge(c.health)}</td>
     <td class="r">${fmt(c.subs)}</td><td class="r">${fmt(c.views)}</td><td class="r">${fmt(c.videos)}</td>
-    <td class="r">${c.videos?fmt(Math.round(c.views/c.videos)):'—'}</td>
+    <td class="r">${c.vpv!=null?fmt(c.vpv):'—'}</td>
+    <td class="r">${fmt(c.likes_total)}</td>
+    <td class="r">${c.eng_rate!=null?c.eng_rate+'%':'—'}</td>
     <td class="r">${deltaChip(c.delta7_views)}</td>
-    <td style="width:96px"><canvas data-sp="${c.key}" height="26"></canvas></td>
+    <td class="r faint" style="font-size:11px">${agoTxt(c.days_since)}</td>
+    <td style="width:90px"><canvas data-sp="${c.key}" height="26"></canvas></td>
     <td class="r">${c.url?`<a class="linkout" target="_blank" rel="noopener" href="${c.url}">${svg('ext')}</a>`:''}</td></tr>`).join('');
 
   el.innerHTML=`
@@ -436,7 +464,7 @@ function renderResumen(){
 
     <div class="sechead"><h2>Ranking de canales</h2><span class="eyebrow">${d.channels.length} canales</span></div>
     <div class="card pad" style="overflow-x:auto"><table class="tbl">
-      <thead><tr><th>#</th><th>Canal</th><th>Estado</th><th>Subs</th><th>Views</th><th>Vídeos</th><th>V/vídeo</th><th>Δ7 views</th><th>Tendencia</th><th></th></tr></thead>
+      <thead><tr><th>#</th><th>Canal</th><th>Salud</th><th>Subs</th><th>Views</th><th>Vídeos</th><th>V/vídeo</th><th>Likes</th><th>Eng%</th><th>Δ7 views</th><th>Últ. subida</th><th>Tendencia</th><th></th></tr></thead>
       <tbody>${lead}</tbody></table></div>`;
 
   heroChart(document.getElementById('hero'),d.net_series.map(p=>p.date),d.net_series.map(p=>p.views),d.net_series.map(p=>p.subs));
@@ -450,23 +478,28 @@ function renderResumen(){
 function renderCanales(){
   const d=DATA,el=document.getElementById('v-canales');
   const card=c=>`<div class="card chcard" data-ch="${c.key}" style="--_c:${c.color};cursor:pointer">
-    <div class="hd"><h3>${c.name} ${c.flagship?'<span title="canal insignia">★</span>':''}</h3><span class="st">${statusPill(c.status)}</span></div>
-    <div style="padding:0 17px 6px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+    <div class="hd"><h3>${c.name} ${c.flagship?'<span title="canal insignia">★</span>':''}</h3><span class="st">${healthBadge(c.health)}</span></div>
+    <div style="padding:0 17px 7px;display:flex;gap:7px;flex-wrap:wrap;align-items:center">
       ${c.handle?`<a class="linkout" target="_blank" rel="noopener" href="${c.url}">${c.handle} ${svg('ext')}</a>`:'<span class="faint mono" style="font-size:11.5px">sin handle público</span>'}
-      <span class="tag">${c.lang}</span><span class="tag">${c.cat}</span></div>
+      <span class="tag">${c.lang}</span></div>
+    <div style="padding:0 17px 11px;display:flex;gap:7px;flex-wrap:wrap">${fmtBadge(c.prod?.short,'Shorts')} ${fmtBadge(c.prod?.long,'Long-form')}</div>
     <div class="met"><div><div class="k">Subs</div><div class="v">${fmt(c.subs)}</div></div>
       <div><div class="k">Views</div><div class="v">${short(c.views)}</div></div>
       <div><div class="k">Vídeos</div><div class="v">${fmt(c.videos)}</div></div></div>
-    ${c.has_analytics?`<div class="spark"><canvas data-sp="${c.key}" height="42"></canvas></div>`:`<div class="spark" style="display:grid;place-items:center"><span class="hint">Sin analítica dedicada aún</span></div>`}
+    ${c.has_analytics?`<div class="spark"><canvas data-sp="${c.key}" height="42"></canvas></div>`:`<div class="spark" style="display:grid;place-items:center"><span class="hint">Analítica desde el próximo snapshot</span></div>`}
+    <div style="display:flex;gap:14px;padding:2px 17px 4px;font-family:var(--mono);font-size:11px;color:var(--muted);flex-wrap:wrap">
+      <span title="tasa de me gusta">♥ ${c.eng_rate!=null?c.eng_rate+'%':'—'}</span>
+      <span title="vídeos por semana">${c.per_week||0}/sem</span>
+      <span title="última subida detectada">últ: ${agoTxt(c.days_since)}</span></div>
     <div class="ft"><div class="deltas">${deltaChip(c.delta7_subs)} ${deltaChip(c.delta7_views)}</div>
-      <button class="det" data-det="${c.key}">Ver detalle →</button></div></div>`;
-  const act=d.channels.filter(c=>c.status==='active'),pau=d.channels.filter(c=>c.status==='paused');
-  el.innerHTML=`<div class="sechead" style="margin-top:0"><h2>Canales activos</h2><span class="eyebrow">${act.length} en producción</span></div>
-    <div class="grid chgrid">${act.map(card).join('')}</div>
-    <div class="sechead"><h2>En pausa</h2><span class="eyebrow">consolidación · calidad &gt; volumen</span></div>
-    <div class="grid chgrid" style="opacity:.85">${pau.map(card).join('')}</div>`;
+      <span class="det">Ver detalle →</span></div></div>`;
+  const core=d.channels.filter(c=>c.group==='core'),extra=d.channels.filter(c=>c.group==='extra');
+  el.innerHTML=`<div class="sechead" style="margin-top:0"><h2>Tus canales de YouTube</h2><span class="eyebrow">${core.length} canales · ${core.filter(c=>c.status==='active').length} activos</span></div>
+    <div class="grid chgrid">${core.map(card).join('')}</div>
+    <div class="sechead"><h2>Líneas de contenido y experimentales</h2><span class="eyebrow">sin canal YT dedicado / en evaluación</span></div>
+    <div class="grid chgrid" style="opacity:.9">${extra.map(card).join('')}</div>`;
   el.querySelectorAll('canvas[data-sp]').forEach(cv=>{const c=d.channels.find(x=>x.key===cv.dataset.sp);spark(cv,c.series.map(p=>p.views),c.color)});
-  el.querySelectorAll('.chcard[data-ch]').forEach(card=>card.onclick=e=>{if(e.target.closest('a'))return;openChannel(card.dataset.ch)});
+  el.querySelectorAll('.chcard[data-ch]').forEach(cd=>cd.onclick=e=>{if(e.target.closest('a'))return;openChannel(cd.dataset.ch)});
 }
 function openChannel(key){
   const c=DATA.channels.find(x=>x.key===key),dr=document.getElementById('drawer');
@@ -476,15 +509,26 @@ function openChannel(key){
     <div class="vv"><b>${fmt(v.views)}</b><span>views</span></div></a>`;
   dr.innerHTML=`<div class="dh"><div style="width:8px;height:36px;border-radius:4px;background:${c.color};flex:none"></div>
     <div style="flex:1"><h2>${c.name} ${c.flagship?'★':''}</h2>
-      <div class="faint mono" style="font-size:12px;margin-top:4px">${c.cat} · ${c.lang} · ${statusPill(c.status)}</div>
-      ${c.url?`<a class="linkout" target="_blank" rel="noopener" href="${c.url}" style="margin-top:7px">${c.handle} ${svg('ext')}</a>`:''}</div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:7px">${healthBadge(c.health)}
+        <span class="faint mono" style="font-size:12px">${c.cat} · ${c.lang}</span></div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:8px">${fmtBadge(c.prod?.short,`Shorts ${c.prod?.short_time||''}`)} ${fmtBadge(c.prod?.long,c.prod?.long?`Long-form ${c.prod.long_day} ${c.prod.long_time}`:'Sin long-form')}</div>
+      ${c.url?`<a class="linkout" target="_blank" rel="noopener" href="${c.url}" style="margin-top:9px">${c.handle} ${svg('ext')}</a>`:''}</div>
     <button class="iconbtn" id="dclose">${svg('close')}</button></div>
-    <div class="db"><div class="grid" style="grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">
+    <div class="db"><div class="grid" style="grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px">
       <div class="card pad"><div class="eyebrow">Suscriptores</div><div class="num" style="font-size:24px;margin:7px 0 5px">${fmt(c.subs)}</div><div style="display:flex;gap:5px">${deltaChip(c.delta7_subs,' 7d')}${deltaChip(c.delta30_subs,' 30d')}</div></div>
       <div class="card pad"><div class="eyebrow">Views</div><div class="num" style="font-size:24px;margin:7px 0 5px">${fmt(c.views)}</div><div style="display:flex;gap:5px">${deltaChip(c.delta7_views,' 7d')}${deltaChip(c.delta30_views,' 30d')}</div></div>
       <div class="card pad"><div class="eyebrow">Vídeos</div><div class="num" style="font-size:24px;margin:7px 0 5px">${fmt(c.videos)}</div></div>
-      <div class="card pad"><div class="eyebrow">Views/vídeo</div><div class="num" style="font-size:24px;margin:7px 0 5px">${c.videos?fmt(Math.round(c.views/c.videos)):'—'}</div></div></div>
-    ${c.has_analytics?`<div class="card pad" style="margin-bottom:20px"><div class="eyebrow" style="margin-bottom:12px">Evolución · views + suscriptores</div><div class="chartbox sm"><canvas id="drchart"></canvas></div></div>`:'<div class="card pad hint" style="margin-bottom:20px">Este canal genera vídeos pero aún no tiene snapshot de analítica propio.</div>'}
+      <div class="card pad"><div class="eyebrow">Views/vídeo</div><div class="num" style="font-size:24px;margin:7px 0 5px">${c.vpv!=null?fmt(c.vpv):'—'}</div></div></div>
+    <div style="display:flex;gap:18px;flex-wrap:wrap;margin-bottom:20px;font-family:var(--mono);font-size:12.5px;color:var(--muted)">
+      <span title="me gusta totales">♥ ${fmt(c.likes_total)}</span>
+      <span title="tasa de me gusta">Eng ${c.eng_rate!=null?c.eng_rate+'%':'—'}</span>
+      <span title="mediana de views">Mediana ${short(c.median_views)}</span>
+      <span title="ritmo">${c.per_week||0}/sem · ${c.vids_7d} en 7d</span>
+      <span title="última subida">Últ: ${agoTxt(c.days_since)}</span>
+      <span title="aceleración de views">Momentum ${deltaChip(c.momentum)}</span></div>
+    ${c.has_analytics?`<div class="card pad" style="margin-bottom:20px"><div class="eyebrow" style="margin-bottom:12px">Evolución · views + suscriptores</div><div class="chartbox sm"><canvas id="drchart"></canvas></div></div>`:'<div class="card pad hint" style="margin-bottom:20px">Este canal ya sube vídeos; su analítica empezará a poblarse en el próximo snapshot diario.</div>'}
+    ${c.topics&&c.topics.length?`<div class="eyebrow" style="margin:4px 0 9px">Temas del canal · vistas medias</div><div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:6px">${c.topics.map(t=>`<span class="chip">${t.keyword} · ${short(t.avg_views)}</span>`).join('')}</div>`:''}
+    ${c.weekday&&c.weekday.some(x=>x)?`<div class="eyebrow" style="margin:18px 0 8px">Publicación por día</div><div class="card pad" style="margin-bottom:20px"><div class="heat" style="height:100px">${c.weekday.map((v,i)=>{const mx=Math.max(...c.weekday,1);return `<div class="col"><div class="bar" style="height:${Math.max(4,Math.round(100*v/mx))}%"><b>${v}</b></div><div class="lb">${DOW[i]}</div></div>`}).join('')}</div></div>`:''}
     ${c.top_videos.length?`<div class="eyebrow" style="margin:4px 0 10px">Mejores vídeos</div><div class="card pad ranklist">${c.top_videos.map(vid).join('')}</div>`:''}
     ${c.worst_videos.length>1?`<div class="eyebrow" style="margin:22px 0 10px">Menor rendimiento</div><div class="card pad ranklist">${c.worst_videos.slice(0,5).map(vid).join('')}</div>`:''}
     ${recent.length?`<div class="eyebrow" style="margin:22px 0 10px">Publicaciones recientes</div><div class="card pad ranklist">${recent.map(h=>`<a class="row" style="--_c:${c.color}" ${h.url?`href="${h.url}" target="_blank" rel="noopener"`:''}><div class="bar"></div><div class="ti"><div class="t">${h.title||'(sin título)'}</div><div class="m"><span>${h.date||''}</span></div></div>${h.url?`<span class="linkout">${svg('ext')}</span>`:''}</a>`).join('')}</div>`:''}</div>`;
@@ -493,6 +537,46 @@ function openChannel(key){
   if(c.has_analytics)heroChart(document.getElementById('drchart'),c.series.map(p=>p.date),c.series.map(p=>p.views),c.series.map(p=>p.subs));
 }
 function closeDrawer(){document.getElementById('scrim').classList.remove('on');document.getElementById('drawer').classList.remove('on');clearCharts();R[STATE.sec]();}
+
+/* ── PRODUCCIÓN ── */
+function renderProduccion(){
+  const d=DATA,el=document.getElementById('v-produccion');
+  const core=d.channels.filter(c=>c.group==='core');
+  const nShort=core.filter(c=>c.prod?.short).length, nLong=core.filter(c=>c.prod?.long).length;
+  const nDia=core.filter(c=>c.health==='al_dia').length, nPausa=core.filter(c=>c.status==='paused').length;
+  const stat=(lab,val,sub,tone)=>`<div class="card pad"><div class="eyebrow">${lab}</div>
+    <div class="num" style="font-size:26px;margin:8px 0 3px;color:${tone||'var(--ink)'}">${val}</div>
+    <div class="faint" style="font-size:11px">${sub}</div></div>`;
+  const rows=core.map(c=>`<tr data-ch="${c.key}" style="cursor:pointer">
+    <td><div class="nm"><span class="cdot" style="background:${c.color}"></span>${c.name} ${c.flagship?'★':''} <span class="tag">${c.lang}</span></div></td>
+    <td>${c.prod?.short?`<span class="fmt on">✓ ${c.prod.short_time}</span>`:'<span class="fmt off">— sin Shorts</span>'}</td>
+    <td>${c.prod?.long?`<span class="fmt on">✓ ${c.prod.long_day} ${c.prod.long_time}</span>`:'<span class="fmt off">— falta long</span>'}</td>
+    <td class="r faint" style="font-size:12px">${agoTxt(c.days_since)}</td>
+    <td class="r">${c.per_week||0}</td>
+    <td class="r mono">${c.vids_7d} / ${c.vids_30d}</td>
+    <td class="r">${deltaChip(c.momentum)}</td>
+    <td>${healthBadge(c.health)}</td></tr>`).join('');
+  const mx=Math.max(...d.weekday,1);
+  el.innerHTML=`
+    <div class="sechead" style="margin-top:0"><h2>Salud de producción</h2><span class="eyebrow">tus 10 canales · Shorts + Long-form</span></div>
+    <div class="grid" style="grid-template-columns:repeat(4,1fr)">
+      ${stat('Con Shorts',`${nShort}/10`,'suben Shorts a diario',nShort>=10?'var(--good)':'var(--warn)')}
+      ${stat('Con Long-form',`${nLong}/10`,'suben long-form semanal',nLong>=10?'var(--good)':'var(--warn)')}
+      ${stat('Al día',`${nDia}/10`,'con subida ≤ 2 días','var(--good)')}
+      ${stat('En pausa',`${nPausa}/10`,'consolidación',nPausa?'var(--warn)':'var(--good)')}</div>
+    <div class="sechead"><h2>Cobertura por canal</h2><span class="eyebrow">clic para el detalle</span></div>
+    <div class="card pad" style="overflow-x:auto"><table class="tbl">
+      <thead><tr><th>Canal</th><th>Shorts</th><th>Long-form</th><th>Últ. subida</th><th>/sem</th><th>7d / 30d</th><th>Momentum</th><th>Salud</th></tr></thead>
+      <tbody>${rows}</tbody></table></div>
+    <div class="grid g32">
+      <div class="card pad"><div class="sechead" style="margin:0 0 6px"><h2 style="font-size:15px">Cuándo se publica</h2><span class="eyebrow">vídeos por día de la semana</span></div>
+        <div class="heat">${d.weekday.map((v,i)=>`<div class="col"><div class="bar" style="height:${Math.max(4,Math.round(100*v/mx))}%"><b>${v}</b></div><div class="lb">${DOW[i]}</div></div>`).join('')}</div></div>
+      <div class="card pad"><div class="sechead" style="margin:0 0 10px"><h2 style="font-size:15px">Notas</h2></div>
+        <p class="hint" style="margin:0 0 10px">Las <b>líneas experimentales</b> (Pádel, Infinite Fractals, CuriosLaboral, Criminopatía, Global Rankings) no cuentan entre los 10 canales.</p>
+        <p class="hint" style="margin:0 0 10px">Los <b>canales en pausa</b> siguen con cron pero su pipeline no genera (consolidación). Reactivar = editar su pipeline.</p>
+        <p class="hint" style="margin:0">⚠️ Ojo con la cuota de Gemini al reactivar / añadir long-form (más generaciones LLM/día).</p></div></div>`;
+  el.querySelectorAll('tr[data-ch]').forEach(r=>r.onclick=()=>openChannel(r.dataset.ch));
+}
 
 /* ── CONTENIDO ── */
 function renderContenido(){
@@ -618,7 +702,7 @@ function histView(d){
         ${h.url?`<span class="linkout">${svg('ext')}</span>`:''}</a>`).join('')}</div></div>`).join('')}`;
 }
 
-const R={resumen:renderResumen,canales:renderCanales,contenido:renderContenido,redes:renderRedes,agenda:renderAgenda};
+const R={resumen:renderResumen,canales:renderCanales,produccion:renderProduccion,contenido:renderContenido,redes:renderRedes,agenda:renderAgenda};
 
 /* ── theme ── */
 function applyTheme(t){
@@ -633,7 +717,7 @@ function toggleTheme(){const cur=document.documentElement.getAttribute('data-the
 
 /* ── boot ── */
 function shell(){
-  const nav=[['resumen','grid','Resumen'],['canales','play','Canales'],['contenido','film','Contenido'],['redes','share','Redes'],['agenda','cal','Agenda']];
+  const nav=[['resumen','grid','Resumen'],['canales','play','Canales'],['produccion','activity','Producción'],['contenido','film','Contenido'],['redes','share','Redes'],['agenda','cal','Agenda']];
   document.getElementById('root').outerHTML=`<div class="app">
     <aside class="rail"><div class="brand"><div class="dot">V</div><div><b>Centro de Mando</b><span>videogen network</span></div></div>
       <nav class="nav">${nav.map(([k,i,l])=>`<button data-sec="${k}">${svg(i)}<span>${l}</span></button>`).join('')}</nav>
@@ -644,9 +728,10 @@ function shell(){
         <div class="tb-right"><button class="iconbtn" id="themebtn"></button></div></div>
       <div class="wrap">
         <section class="view" id="v-resumen"></section><section class="view" id="v-canales"></section>
+        <section class="view" id="v-produccion"></section>
         <section class="view" id="v-contenido"></section><section class="view" id="v-redes"></section>
         <section class="view" id="v-agenda"></section></div></div></div>`;
-  const TL={resumen:'Resumen',canales:'Canales',contenido:'Contenido',redes:'Redes sociales',agenda:'Agenda'};
+  const TL={resumen:'Resumen',canales:'Canales',produccion:'Producción',contenido:'Contenido',redes:'Redes sociales',agenda:'Agenda'};
   document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>{document.getElementById('tb-title').textContent=TL[b.dataset.sec];go(b.dataset.sec)});
   document.getElementById('themebtn').onclick=toggleTheme;
   document.getElementById('scrim').onclick=closeDrawer;
@@ -659,7 +744,9 @@ async function boot(){
   if(t)document.documentElement.setAttribute('data-theme',t);
   try{DATA=window.__DASHBOARD_DATA__||await (await fetch('data.json',{cache:'no-store'})).json();}
   catch(e){document.getElementById('root').innerHTML='<div class="loading"><div>No se pudo cargar <b>data.json</b>. Genera con <code>videogen dashboard</code>.</div></div>';return;}
-  shell();applyTheme(t);go('resumen');startAutoRefresh();
+  shell();applyTheme(t);
+  const init=(location.hash||'').slice(1);
+  go(R[init]?init:'resumen');startAutoRefresh();
 }
 function startAutoRefresh(){
   if(window.__DASHBOARD_DATA__)return; // datos incrustados → sin fetch

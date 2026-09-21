@@ -172,6 +172,14 @@ def snapshot_youtube_ranking() -> list[dict]:
     return _snapshot_channel_generic("YT_RANKING", "youtube_ranking")
 
 
+def snapshot_youtube_ia() -> list[dict]:
+    return _snapshot_channel_generic("YT_IA", "youtube_ia")
+
+
+def snapshot_youtube_aitools() -> list[dict]:
+    return _snapshot_channel_generic("YT_AITOOLS", "youtube_aitools")
+
+
 def snapshot_instagram() -> list[dict]:
     """IG Graph API (Instagram Business Login). Requiere IG_TOKEN + IG_USER_ID.
     Fallback a legacy IG_ACCESS_TOKEN + IG_BUSINESS_ACCOUNT_ID."""
@@ -559,6 +567,8 @@ def snapshot_all(progress=lambda m: None) -> dict[str, int]:
                           ("youtube_ambient", snapshot_youtube_ambient),
                           ("youtube_pov", snapshot_youtube_pov),
                           ("youtube_ranking", snapshot_youtube_ranking),
+                          ("youtube_ia", snapshot_youtube_ia),
+                          ("youtube_aitools", snapshot_youtube_aitools),
                           ("instagram", snapshot_instagram),
                           ("threads", snapshot_threads),
                           ("tiktok", snapshot_tiktok),

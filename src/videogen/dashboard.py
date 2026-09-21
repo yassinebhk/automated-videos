@@ -40,23 +40,24 @@ CH_COLORS = [
     "#ffd6a5", "#a0c4ff", "#ffadad", "#caffbf", "#bdb2ff",
 ]
 
+# group="core" = los 10 canales YouTube reales del usuario; "extra" = líneas de
+# contenido / experimentales (sin canal YT dedicado o en evaluación).
 CHANNELS: list[dict] = [
-    # key(interno)   display                platform_key      handle                url_yt                                        cat            status   lang
-    dict(key="waitwhy",    name="WaitWhy",           pk="youtube",         handle="@waitwhy_ybb",     cat="True crime / corrupción", status="active", lang="ES", flagship=True),
-    dict(key="ayudas",     name="AyudaGob",          pk="youtube_ayudas",  handle="@AyudaGob_es",     cat="Ayudas y subvenciones",   status="active", lang="ES"),
-    dict(key="motor",      name="Motor60s",          pk="youtube_motor",   handle="@Motor60sES",      cat="Motor / curiosidades",    status="active", lang="ES"),
-    dict(key="pov",        name="TiempoAtrás ES",    pk="youtube_pov",      handle="@TiempoAtras_ES",  cat="Historia / POV",          status="active", lang="ES"),
-    dict(key="ranking",    name="TopRanking ES",     pk="youtube_ranking",  handle="@TopRanking_ES",   cat="Rankings / datos",        status="active", lang="ES"),
-    dict(key="ia",         name="IA Autónomos ES",   pk=None,              handle="@IAAutonomos_es",  cat="IA para autónomos",       status="active", lang="ES"),
-    dict(key="aitools",    name="AI Tools Weekly",   pk=None,              handle=None,               cat="AI tools",                status="active", lang="EN"),
-    dict(key="padel",      name="Pádel",             pk=None,              handle=None,               cat="Pádel (Manim)",           status="active", lang="ES"),
-    dict(key="satisfying", name="Infinite Fractals", pk=None,              handle=None,               cat="Satisfying / hipnótico",  status="active", lang="EN"),
-    dict(key="tax",        name="TaxHack ES",        pk="youtube_tax",     handle="@TaxHack_es",      cat="Fiscalidad",              status="paused", lang="ES"),
-    dict(key="legal",      name="TusDerechos ES",    pk="youtube_legal",   handle="@TusDerechos_ES",  cat="Derecho laboral",         status="paused", lang="ES"),
-    dict(key="ambient",    name="MenteEnCalma",      pk="youtube_ambient", handle=None,               cat="Relax / binaural",        status="paused", lang="ES"),
-    dict(key="trabajos",   name="CuriosLaboral ES",  pk=None,              handle="@CuriosLaboral_ES",cat="Curiosidades laborales",  status="paused", lang="ES"),
-    dict(key="criminopatia", name="Criminopatía",    pk=None,              handle="@Criminopatia_ES", cat="Criminología",            status="paused", lang="ES"),
-    dict(key="rankings_en", name="Global Rankings",  pk=None,              handle=None,               cat="Rankings (EN)",           status="paused", lang="EN"),
+    dict(key="waitwhy",    name="WaitWhy",           pk="youtube",          handle="@waitwhy_ybb",     cat="True crime / corrupción", status="active", lang="ES", group="core", flagship=True),
+    dict(key="ayudas",     name="AyudaGob",          pk="youtube_ayudas",   handle="@AyudaGob_es",     cat="Ayudas y subvenciones",   status="active", lang="ES", group="core"),
+    dict(key="motor",      name="Motor60s",          pk="youtube_motor",    handle="@Motor60sES",      cat="Motor / curiosidades",    status="active", lang="ES", group="core"),
+    dict(key="pov",        name="TiempoAtrás ES",    pk="youtube_pov",      handle="@TiempoAtras_ES",  cat="Historia / POV",          status="active", lang="ES", group="core"),
+    dict(key="ranking",    name="TopRanking ES",     pk="youtube_ranking",  handle="@TopRanking_ES",   cat="Rankings / datos",        status="active", lang="ES", group="core"),
+    dict(key="ia",         name="IA Autónomos ES",   pk="youtube_ia",       handle="@IAAutonomos_es",  cat="IA para autónomos",       status="active", lang="ES", group="core"),
+    dict(key="aitools",    name="AI Tools Weekly",   pk="youtube_aitools",  handle=None,               cat="AI tools",                status="active", lang="EN", group="core"),
+    dict(key="tax",        name="TaxHack ES",        pk="youtube_tax",      handle="@TaxHack_es",      cat="Fiscalidad",              status="paused", lang="ES", group="core"),
+    dict(key="legal",      name="TusDerechos ES",    pk="youtube_legal",    handle="@TusDerechos_ES",  cat="Derecho laboral",         status="paused", lang="ES", group="core"),
+    dict(key="ambient",    name="MenteEnCalma",      pk="youtube_ambient",  handle=None,               cat="Relax / binaural",        status="paused", lang="ES", group="core"),
+    dict(key="padel",      name="Pádel",             pk=None,               handle=None,               cat="Pádel (Manim)",           status="active", lang="ES", group="extra"),
+    dict(key="satisfying", name="Infinite Fractals", pk=None,               handle=None,               cat="Satisfying / hipnótico",  status="active", lang="EN", group="extra"),
+    dict(key="trabajos",   name="CuriosLaboral ES",  pk=None,               handle="@CuriosLaboral_ES",cat="Curiosidades laborales",  status="paused", lang="ES", group="extra"),
+    dict(key="criminopatia", name="Criminopatía",    pk=None,               handle="@Criminopatia_ES", cat="Criminología",            status="paused", lang="ES", group="extra"),
+    dict(key="rankings_en", name="Global Rankings",  pk=None,               handle=None,               cat="Rankings (EN)",           status="paused", lang="EN", group="extra"),
 ]
 
 # Plataformas sociales (no-YouTube) y su handle/URL de perfil
@@ -317,6 +318,37 @@ def build() -> dict:
     for r in video_recs:
         vids_by_pk[r["platform"]].append(r)
 
+    # primera fecha en que se vio cada vídeo ≈ fecha de publicación
+    first_date_by_vid: dict[str, str] = {}
+    for r in sorted(video_recs, key=lambda x: x.get("ts", 0) or 0):
+        vid = r.get("video_id")
+        if vid and vid not in first_date_by_vid and r.get("date"):
+            first_date_by_vid[vid] = r["date"]
+
+    today = datetime.now(_MADRID).date()
+
+    def _days_since(d: str | None) -> int | None:
+        if not d:
+            return None
+        try:
+            return (today - datetime.strptime(d, "%Y-%m-%d").date()).days
+        except Exception:
+            return None
+
+    def _weekday_hist(vids) -> list[int]:
+        h = [0] * 7  # lunes..domingo
+        for v in vids:
+            d = first_date_by_vid.get(v)
+            if not d:
+                continue
+            try:
+                h[datetime.strptime(d, "%Y-%m-%d").date().weekday()] += 1
+            except Exception:
+                pass
+        return h
+
+    global_weekday = [0] * 7
+
     # ── canales YouTube ──
     channels_out = []
     net_subs = net_views = net_videos = 0
@@ -355,8 +387,41 @@ def build() -> dict:
                     if w not in _STOP:
                         kw_stats[w].append(vv)
         vlist.sort(key=lambda x: x["views"], reverse=True)
-        top_videos = vlist[:6]
-        worst_videos = [v for v in reversed(vlist) if v["views"] >= 0][:6]
+        top_videos = vlist[:8]
+        worst_videos = [v for v in reversed(vlist) if v["views"] >= 0][:8]
+
+        # ── métricas ricas por canal ──
+        vids_ids = [v["video_id"] for v in vlist]
+        likes_total = sum(v["likes"] for v in vlist)
+        views_sum = sum(v["views"] for v in vlist)
+        eng_rate = round(100 * likes_total / views_sum, 2) if views_sum else None
+        views_vals = sorted(v["views"] for v in vlist)
+        median_views = views_vals[len(views_vals) // 2] if views_vals else 0
+        best_views = views_vals[-1] if views_vals else 0
+        first_dates = [first_date_by_vid.get(v) for v in vids_ids if first_date_by_vid.get(v)]
+        last_upload = max(first_dates) if first_dates else None
+        days_since = _days_since(last_upload)
+        vids_7d = sum(1 for d in first_dates if (_days_since(d) or 999) <= 7)
+        vids_30d = sum(1 for d in first_dates if (_days_since(d) or 999) <= 30)
+        wk = _weekday_hist(vids_ids)
+        for i in range(7):
+            global_weekday[i] += wk[i]
+        # momentum: Δviews últimos 7d vs 7d previos
+        d7v = _delta(series, "views", 7)
+        d14v = _delta(series, "views", 14)
+        prev7v = (d14v - d7v) if (d7v is not None and d14v is not None) else None
+        momentum = (d7v - prev7v) if (d7v is not None and prev7v is not None) else None
+        # temas del canal
+        ch_kw: dict[str, list[int]] = defaultdict(list)
+        for v in vlist:
+            if v["views"] > 0 and v["title"]:
+                for w in re.findall(r"[a-záéíóúñ0-9]{4,}", v["title"].lower()):
+                    if w not in _STOP:
+                        ch_kw[w].append(v["views"])
+        ch_topics = sorted(
+            ({"keyword": k, "avg_views": round(sum(vv) / len(vv)), "count": len(vv)}
+             for k, vv in ch_kw.items() if len(vv) >= 2),
+            key=lambda x: x["avg_views"], reverse=True)[:8]
 
         if ch["status"] == "active":
             net_subs += subs
@@ -366,11 +431,19 @@ def build() -> dict:
         channels_out.append(dict(
             key=ch["key"], name=ch["name"], handle=ch.get("handle"),
             url=_yt_url(ch.get("handle")), cat=ch["cat"], status=ch["status"],
-            lang=ch["lang"], flagship=ch.get("flagship", False), color=color,
+            lang=ch["lang"], group=ch.get("group", "extra"),
+            flagship=ch.get("flagship", False), color=color,
             subs=subs, views=views, videos=videos,
             has_analytics=bool(series),
+            likes_total=likes_total, eng_rate=eng_rate,
+            median_views=median_views, best_views=best_views,
+            vpv=(round(views / videos) if videos else None),
+            last_upload=last_upload, days_since=days_since,
+            vids_7d=vids_7d, vids_30d=vids_30d,
+            per_week=round(vids_30d / 4.3, 1) if vids_30d else 0,
+            momentum=momentum, weekday=wk, topics=ch_topics,
             delta7_subs=_delta(series, "subs", 7), delta30_subs=_delta(series, "subs", 30),
-            delta7_views=_delta(series, "views", 7), delta30_views=_delta(series, "views", 30),
+            delta7_views=d7v, delta30_views=_delta(series, "views", 30),
             series=series, top_videos=top_videos, worst_videos=worst_videos,
         ))
 
@@ -500,6 +573,36 @@ def build() -> dict:
                               days=days_lbl, cron=cd["cron"])))
     recurring.sort(key=lambda x: (0 if x["category"] == "content" else 1, x["time"]))
 
+    # ── producción esperada (short/long) + salud por canal ──
+    prod: dict[str, dict] = {}
+    for r in recurring:
+        p = prod.setdefault(r["channel"], {"short": False, "long": False,
+                                           "short_time": None, "long_time": None, "long_day": None})
+        if r["category"] == "content":
+            p["short"] = True
+            p["short_time"] = r["time"]
+        elif r["category"] == "longform":
+            p["long"] = True
+            p["long_time"] = r["time"]
+            p["long_day"] = r["days"]
+    for c in channels_out:
+        pinfo = prod.get(c["name"], {"short": False, "long": False,
+                                     "short_time": None, "long_time": None, "long_day": None})
+        c["prod"] = pinfo
+        if c["status"] == "paused":
+            c["health"] = "pausado"
+        elif not c["has_analytics"]:
+            c["health"] = "sin_datos"          # activo pero sin histórico de analítica aún
+        elif not c["last_upload"]:
+            c["health"] = "sin_subidas"
+        elif (c["days_since"] or 999) <= 2:
+            c["health"] = "al_dia"
+        elif (c["days_since"] or 999) <= 7:
+            c["health"] = "atrasado"
+        else:
+            c["health"] = "inactivo"
+        c["missing_long"] = bool(pinfo["short"] and not pinfo["long"] and c["group"] == "core")
+
     # histórico: primer día en que apareció cada vídeo → "publicado"
     first_seen: dict[str, dict] = {}
     for r in sorted(video_recs, key=lambda x: x.get("ts", 0) or 0):
@@ -564,11 +667,24 @@ def build() -> dict:
     if paused:
         insights.append(dict(tone="info", title=f"{len(paused)} canales en pausa (consolidación)",
             body="Pausados para priorizar calidad sobre volumen: " + ", ".join(paused) + "."))
-    no_track = [c["name"] for c in channels_out if c["status"] == "active" and not c["has_analytics"]]
+    no_track = [c["name"] for c in channels_out
+                if c["group"] == "core" and c["status"] == "active" and not c["has_analytics"]]
     if no_track:
-        insights.append(dict(tone="warn", title="Canales activos sin analítica dedicada",
-            body="No hay snapshot de métricas para: " + ", ".join(no_track) +
-                 ". Añadir su snapshot para medir tracción real."))
+        insights.append(dict(tone="info", title="Nuevos canales entrando en analítica",
+            body="Empiezan a medirse en el próximo snapshot diario: " + ", ".join(no_track) +
+                 " (snapshot YT_IA / YT_AITOOLS recién añadido)."))
+    # huecos de producción en los 10 canales core
+    core = [c for c in channels_out if c["group"] == "core"]
+    miss_long = [c["name"] for c in core if c.get("missing_long")]
+    if miss_long:
+        insights.append(dict(tone="warn", title="Canales sin long-form programado",
+            body="Solo suben Shorts (falta el long-form semanal): " + ", ".join(miss_long) + "."))
+    stalled = [c["name"] for c in core
+               if c["has_analytics"] and c["health"] in ("inactivo", "sin_subidas")]
+    if stalled:
+        insights.append(dict(tone="bad", title="Canales sin subidas recientes",
+            body="Sin actividad detectada últimamente: " + ", ".join(stalled) +
+                 ". Revisar cron / credenciales."))
 
     # series agregadas de red (forward-fill) para gráficas limpias
     net_series = _merge_ff([c["series"] for c in channels_out if c["series"]], ("subs", "views"))
@@ -585,6 +701,7 @@ def build() -> dict:
         content=dict(top_overall=top_overall, worst_overall=worst_overall,
                      top_topics=top_topics, worst_topics=worst_topics),
         ig=ig, crosspost=cross,
+        weekday=global_weekday,
         schedule=dict(recurring=recurring, upcoming=upcoming, history=history[:400]),
         pages_base=PAGES_BASE,
     )
