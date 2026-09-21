@@ -142,6 +142,11 @@ def _latest_per(records: list[dict], key: str) -> dict[str, dict]:
     return best
 
 
+def _strip_html(s: str) -> str:
+    """Quita etiquetas HTML (Mastodon/Bluesky guardan <p>…</p>) y colapsa espacios."""
+    return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", s or "")).strip()
+
+
 def _video_url(platform: str, vid: str) -> str | None:
     if not vid:
         return None
@@ -383,11 +388,21 @@ def build() -> dict:
         for r in chan_by_pk.get(s["pk"], []):
             if r.get("likes"):
                 likes = max(likes, r.get("likes", 0) or 0)
+        # top posts por engagement (views, si no likes, si no comentarios)
+        plist = []
+        for vid, r in vmap.items():
+            plist.append(dict(
+                video_id=vid, title=_strip_html(r.get("title") or "") or "(sin texto)",
+                views=r.get("views", 0) or 0, likes=r.get("likes", 0) or 0,
+                comments=r.get("comments", 0) or 0, date=r.get("date"),
+                url=_video_url(s["pk"], vid)))
+        plist.sort(key=lambda x: (x["views"], x["likes"], x["comments"]), reverse=True)
         socials_out.append(dict(
             pk=s["pk"], name=s["name"], handle=s.get("handle"), url=s.get("url"),
             color=s["color"], followers=followers, posts=posts, likes=likes,
             delta7=_delta(series, "subs", 7), delta30=_delta(series, "subs", 30),
-            series=series,
+            series=series, top_posts=plist[:8], recent_posts=sorted(
+                plist, key=lambda x: x.get("date") or "", reverse=True)[:8],
         ))
 
     # ── análisis de temas (mejores / peores) ──
@@ -592,10 +607,32 @@ def serve(port: int = 5056, open_browser: bool = True) -> None:
     import socketserver
     import webbrowser
 
+    import threading
+    import time
+
     write()  # datos frescos
     directory = str((DOCS / "dashboard").resolve())
 
+    # rebuild periódico en segundo plano → si stats_history cambia, el panel se
+    # actualiza solo (cada 10 min). El front-end también re-consulta data.json.
+    def _loop_rebuild():
+        while True:
+            time.sleep(600)
+            try:
+                write()
+            except Exception as e:
+                print(f"  dashboard rebuild fallo: {e}")
+    threading.Thread(target=_loop_rebuild, daemon=True).start()
+
     class _Handler(http.server.SimpleHTTPRequestHandler):
+        def guess_type(self, path):
+            t = super().guess_type(path)
+            # fuerza UTF-8 en HTML y JSON (evita mojibake: ★ ▲ → í Δ)
+            if t in ("text/html", "application/json") or str(path).endswith((".html", ".json")):
+                base = "text/html" if str(path).endswith(".html") else "application/json"
+                return f"{base}; charset=utf-8"
+            return t
+
         def end_headers(self):
             # sin caché → el navegador siempre lee el data.json más reciente
             self.send_header("Cache-Control", "no-store, max-age=0")

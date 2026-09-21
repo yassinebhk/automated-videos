@@ -1,3 +1,5 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Centro de Mando</title>
 <meta name="description" content="Panel de control en tiempo real de todos los canales de YouTube y redes sociales.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -371,6 +373,14 @@ function iggauge(el,ok,fail){
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{enabled:false}}}});
   CHARTS.push(c);return c;
 }
+function areaOne(el,labels,data,color,label){
+  const o=baseOpts();
+  o.scales={x:{grid:{display:false},ticks:{maxRotation:0,autoSkip:true,maxTicksLimit:7,font:{size:10}}},
+            y:{grid:{color:css('--border'),drawBorder:false},ticks:{callback:v=>short(v),font:{size:10}},beginAtZero:true}};
+  const g=el.getContext('2d').createLinearGradient(0,0,0,220);g.addColorStop(0,color+'40');g.addColorStop(1,color+'02');
+  const c=new Chart(el,{type:'line',data:{labels,datasets:[{label,data,borderColor:color,backgroundColor:g,borderWidth:2.4,tension:.35,pointRadius:0,pointHoverRadius:4,fill:true}]},options:o});
+  CHARTS.push(c);return c;
+}
 
 /* ── nav ── */
 function go(sec){STATE.sec=sec;clearCharts();
@@ -392,7 +402,7 @@ function renderResumen(){
   const reach=[{label:'YouTube',v:d.totals.yt_subs,c:css('--accent')},
     ...d.socials.map(s=>({label:s.name,v:s.followers,c:s.color}))].sort((a,b)=>b.v-a.v);
 
-  const lead=[...d.channels].sort((a,b)=>b.views-a.views).map((c,i)=>`<tr>
+  const lead=[...d.channels].sort((a,b)=>b.views-a.views).map((c,i)=>`<tr data-ch="${c.key}" style="cursor:pointer">
     <td class="rank">${i+1}</td>
     <td><div class="nm"><span class="cdot" style="background:${c.color}"></span>${c.name} ${c.flagship?'★':''} <span class="tag">${c.lang}</span></div>
       <div class="faint mono" style="font-size:10.5px">${c.cat}</div></td>
@@ -433,12 +443,13 @@ function renderResumen(){
   donut(document.getElementById('share'),shareCh.map(c=>({label:c.name,v:c.views,c:c.color})));
   hbar(document.getElementById('reach'),reach);
   el.querySelectorAll('canvas[data-sp]').forEach(cv=>{const c=d.channels.find(x=>x.key===cv.dataset.sp);spark(cv,c.series.map(p=>p.views).length?c.series.map(p=>p.views):[0,0],c.color)});
+  el.querySelectorAll('tr[data-ch]').forEach(r=>r.onclick=e=>{if(e.target.closest('a'))return;openChannel(r.dataset.ch)});
 }
 
 /* ── CANALES ── */
 function renderCanales(){
   const d=DATA,el=document.getElementById('v-canales');
-  const card=c=>`<div class="card chcard" style="--_c:${c.color}">
+  const card=c=>`<div class="card chcard" data-ch="${c.key}" style="--_c:${c.color};cursor:pointer">
     <div class="hd"><h3>${c.name} ${c.flagship?'<span title="canal insignia">★</span>':''}</h3><span class="st">${statusPill(c.status)}</span></div>
     <div style="padding:0 17px 6px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
       ${c.handle?`<a class="linkout" target="_blank" rel="noopener" href="${c.url}">${c.handle} ${svg('ext')}</a>`:'<span class="faint mono" style="font-size:11.5px">sin handle público</span>'}
@@ -455,10 +466,11 @@ function renderCanales(){
     <div class="sechead"><h2>En pausa</h2><span class="eyebrow">consolidación · calidad &gt; volumen</span></div>
     <div class="grid chgrid" style="opacity:.85">${pau.map(card).join('')}</div>`;
   el.querySelectorAll('canvas[data-sp]').forEach(cv=>{const c=d.channels.find(x=>x.key===cv.dataset.sp);spark(cv,c.series.map(p=>p.views),c.color)});
-  el.querySelectorAll('[data-det]').forEach(b=>b.onclick=()=>openChannel(b.dataset.det));
+  el.querySelectorAll('.chcard[data-ch]').forEach(card=>card.onclick=e=>{if(e.target.closest('a'))return;openChannel(card.dataset.ch)});
 }
 function openChannel(key){
   const c=DATA.channels.find(x=>x.key===key),dr=document.getElementById('drawer');
+  const recent=DATA.schedule.history.filter(h=>h.channel===c.name).slice(0,8);
   const vid=v=>`<a class="row" style="--_c:${c.color}" ${v.url?`href="${v.url}" target="_blank" rel="noopener"`:''}>
     <div class="bar"></div><div class="ti"><div class="t">${v.title}</div><div class="m"><span>${v.date||''}</span>${v.likes?`<span>♥ ${fmt(v.likes)}</span>`:''}</div></div>
     <div class="vv"><b>${fmt(v.views)}</b><span>views</span></div></a>`;
@@ -467,13 +479,15 @@ function openChannel(key){
       <div class="faint mono" style="font-size:12px;margin-top:4px">${c.cat} · ${c.lang} · ${statusPill(c.status)}</div>
       ${c.url?`<a class="linkout" target="_blank" rel="noopener" href="${c.url}" style="margin-top:7px">${c.handle} ${svg('ext')}</a>`:''}</div>
     <button class="iconbtn" id="dclose">${svg('close')}</button></div>
-    <div class="db"><div class="grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px">
-      <div class="card pad"><div class="eyebrow">Suscriptores</div><div class="num" style="font-size:25px;margin:7px 0 4px">${fmt(c.subs)}</div>${deltaChip(c.delta30_subs)} <span class="faint" style="font-size:10px">30d</span></div>
-      <div class="card pad"><div class="eyebrow">Views</div><div class="num" style="font-size:25px;margin:7px 0 4px">${fmt(c.views)}</div>${deltaChip(c.delta30_views)} <span class="faint" style="font-size:10px">30d</span></div>
-      <div class="card pad"><div class="eyebrow">Vídeos</div><div class="num" style="font-size:25px;margin:7px 0 4px">${fmt(c.videos)}</div></div></div>
-    ${c.has_analytics?`<div class="card pad" style="margin-bottom:20px"><div class="eyebrow" style="margin-bottom:12px">Evolución</div><div class="chartbox sm"><canvas id="drchart"></canvas></div></div>`:'<div class="card pad hint" style="margin-bottom:20px">Este canal genera vídeos pero aún no tiene snapshot de analítica propio.</div>'}
+    <div class="db"><div class="grid" style="grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">
+      <div class="card pad"><div class="eyebrow">Suscriptores</div><div class="num" style="font-size:24px;margin:7px 0 5px">${fmt(c.subs)}</div><div style="display:flex;gap:5px">${deltaChip(c.delta7_subs,' 7d')}${deltaChip(c.delta30_subs,' 30d')}</div></div>
+      <div class="card pad"><div class="eyebrow">Views</div><div class="num" style="font-size:24px;margin:7px 0 5px">${fmt(c.views)}</div><div style="display:flex;gap:5px">${deltaChip(c.delta7_views,' 7d')}${deltaChip(c.delta30_views,' 30d')}</div></div>
+      <div class="card pad"><div class="eyebrow">Vídeos</div><div class="num" style="font-size:24px;margin:7px 0 5px">${fmt(c.videos)}</div></div>
+      <div class="card pad"><div class="eyebrow">Views/vídeo</div><div class="num" style="font-size:24px;margin:7px 0 5px">${c.videos?fmt(Math.round(c.views/c.videos)):'—'}</div></div></div>
+    ${c.has_analytics?`<div class="card pad" style="margin-bottom:20px"><div class="eyebrow" style="margin-bottom:12px">Evolución · views + suscriptores</div><div class="chartbox sm"><canvas id="drchart"></canvas></div></div>`:'<div class="card pad hint" style="margin-bottom:20px">Este canal genera vídeos pero aún no tiene snapshot de analítica propio.</div>'}
     ${c.top_videos.length?`<div class="eyebrow" style="margin:4px 0 10px">Mejores vídeos</div><div class="card pad ranklist">${c.top_videos.map(vid).join('')}</div>`:''}
-    ${c.worst_videos.length>1?`<div class="eyebrow" style="margin:22px 0 10px">Menor rendimiento</div><div class="card pad ranklist">${c.worst_videos.slice(0,5).map(vid).join('')}</div>`:''}</div>`;
+    ${c.worst_videos.length>1?`<div class="eyebrow" style="margin:22px 0 10px">Menor rendimiento</div><div class="card pad ranklist">${c.worst_videos.slice(0,5).map(vid).join('')}</div>`:''}
+    ${recent.length?`<div class="eyebrow" style="margin:22px 0 10px">Publicaciones recientes</div><div class="card pad ranklist">${recent.map(h=>`<a class="row" style="--_c:${c.color}" ${h.url?`href="${h.url}" target="_blank" rel="noopener"`:''}><div class="bar"></div><div class="ti"><div class="t">${h.title||'(sin título)'}</div><div class="m"><span>${h.date||''}</span></div></div>${h.url?`<span class="linkout">${svg('ext')}</span>`:''}</a>`).join('')}</div>`:''}</div>`;
   document.getElementById('scrim').classList.add('on');dr.classList.add('on');
   document.getElementById('dclose').onclick=closeDrawer;
   if(c.has_analytics)heroChart(document.getElementById('drchart'),c.series.map(p=>p.date),c.series.map(p=>p.views),c.series.map(p=>p.subs));
@@ -504,7 +518,7 @@ function renderContenido(){
 /* ── REDES ── */
 function renderRedes(){
   const d=DATA,el=document.getElementById('v-redes'),ig=d.ig,cp=d.crosspost;
-  const soc=d.socials.map(s=>`<div class="card soc" style="--_c:${s.color}">
+  const soc=d.socials.map(s=>`<div class="card soc" data-soc="${s.pk}" style="--_c:${s.color};cursor:pointer">
     <div class="nm"><span class="cdot" style="background:${s.color}"></span>${s.name}</div>
     <div class="big">${fmt(s.followers)}</div><div class="sub">seguidores ${deltaChip(s.delta7)} 7d</div>
     <div class="spark"><canvas data-ss="${s.pk}" height="40"></canvas></div>
@@ -531,7 +545,31 @@ function renderRedes(){
           <div class="tr"><div style="width:${cp.videos?Math.round(100*v/cp.videos):0}%;background:${c}"></div></div></div>`).join('')}</div>
         <p class="hint" style="margin-top:16px">1 post por short y textos rotados para evitar borrados por contenido repetido.</p></div></div>`;
   el.querySelectorAll('canvas[data-ss]').forEach(cv=>{const s=d.socials.find(x=>x.pk===cv.dataset.ss);const pts=s.series.map(p=>p.subs);spark(cv,pts.length?pts:[0,0],s.color)});
+  el.querySelectorAll('.soc[data-soc]').forEach(card=>card.onclick=e=>{if(e.target.closest('a'))return;openSocial(card.dataset.soc)});
   iggauge(document.getElementById('iggauge'),ig.ok,ig.fail);
+}
+function openSocial(pk){
+  const s=DATA.socials.find(x=>x.pk===pk),dr=document.getElementById('drawer');
+  const post=p=>`<a class="row" style="--_c:${s.color}" ${p.url?`href="${p.url}" target="_blank" rel="noopener"`:''}>
+    <div class="bar"></div><div class="ti"><div class="t">${p.title}</div>
+      <div class="m">${p.date?`<span>${p.date}</span>`:''}${p.likes?`<span>♥ ${fmt(p.likes)}</span>`:''}${p.comments?`<span>💬 ${fmt(p.comments)}</span>`:''}</div></div>
+    <div class="vv"><b>${p.views?fmt(p.views):(p.likes?fmt(p.likes):'—')}</b><span>${p.views?'views':(p.likes?'likes':'')}</span></div></a>`;
+  const hasV=s.top_posts.some(p=>p.views>0);
+  dr.innerHTML=`<div class="dh"><div style="width:8px;height:36px;border-radius:4px;background:${s.color};flex:none"></div>
+    <div style="flex:1"><h2>${s.name}</h2>
+      <div class="faint mono" style="font-size:12px;margin-top:4px">${s.handle||'red social'} · ${fmt(s.posts)} publicaciones</div>
+      ${s.url?`<a class="linkout" target="_blank" rel="noopener" href="${s.url}" style="margin-top:7px">abrir perfil ${svg('ext')}</a>`:''}</div>
+    <button class="iconbtn" id="dclose">${svg('close')}</button></div>
+    <div class="db"><div class="grid" style="grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">
+      <div class="card pad"><div class="eyebrow">Seguidores</div><div class="num" style="font-size:24px;margin:7px 0 5px">${fmt(s.followers)}</div><div style="display:flex;gap:5px">${deltaChip(s.delta7,' 7d')}${deltaChip(s.delta30,' 30d')}</div></div>
+      <div class="card pad"><div class="eyebrow">Publicaciones</div><div class="num" style="font-size:24px;margin:7px 0 5px">${fmt(s.posts)}</div></div>
+      <div class="card pad"><div class="eyebrow">Me gusta</div><div class="num" style="font-size:24px;margin:7px 0 5px">${s.likes?fmt(s.likes):'—'}</div></div></div>
+    ${s.series.length?`<div class="card pad" style="margin-bottom:20px"><div class="eyebrow" style="margin-bottom:12px">Evolución de seguidores</div><div class="chartbox sm"><canvas id="socchart"></canvas></div></div>`:'<div class="card pad hint" style="margin-bottom:20px">Aún sin histórico de seguidores.</div>'}
+    ${s.top_posts.length?`<div class="eyebrow" style="margin:4px 0 10px">${hasV?'Publicaciones con más alcance':'Publicaciones con más interacción'}</div><div class="card pad ranklist">${s.top_posts.map(post).join('')}</div>`:'<div class="hint">Sin publicaciones registradas en analítica.</div>'}
+    ${s.recent_posts.length?`<div class="eyebrow" style="margin:22px 0 10px">Publicaciones recientes</div><div class="card pad ranklist">${s.recent_posts.map(post).join('')}</div>`:''}</div>`;
+  document.getElementById('scrim').classList.add('on');dr.classList.add('on');
+  document.getElementById('dclose').onclick=closeDrawer;
+  if(s.series.length)areaOne(document.getElementById('socchart'),s.series.map(p=>p.date),s.series.map(p=>p.subs),s.color,'Seguidores');
 }
 
 /* ── AGENDA ── */
@@ -621,7 +659,21 @@ async function boot(){
   if(t)document.documentElement.setAttribute('data-theme',t);
   try{DATA=window.__DASHBOARD_DATA__||await (await fetch('data.json',{cache:'no-store'})).json();}
   catch(e){document.getElementById('root').innerHTML='<div class="loading"><div>No se pudo cargar <b>data.json</b>. Genera con <code>videogen dashboard</code>.</div></div>';return;}
-  shell();applyTheme(t);go('resumen');
+  shell();applyTheme(t);go('resumen');startAutoRefresh();
+}
+function startAutoRefresh(){
+  if(window.__DASHBOARD_DATA__)return; // datos incrustados → sin fetch
+  setInterval(async()=>{
+    try{
+      const fresh=await (await fetch('data.json',{cache:'no-store'})).json();
+      if(fresh&&fresh.generated_at&&fresh.generated_at!==DATA.generated_at){
+        DATA=fresh;
+        const fu=document.getElementById('foot-upd');if(fu)fu.textContent=DATA.generated_local;
+        const tu=document.getElementById('tb-upd');if(tu)tu.textContent='act. '+DATA.generated_local;
+        if(!document.getElementById('drawer').classList.contains('on'))rerender();
+      }
+    }catch(e){}
+  },120000); // cada 2 min
 }
 boot();
 </script>
