@@ -35,3 +35,5 @@ music/*.mp3
 # Logs locales del bot Mac (no van al repo)
 /tmp/videogen_bot.log
 *.log
+# reels servidos ahora por Cloudflare R2, no por Pages (rompía el build >1GB)
+docs/reels/
