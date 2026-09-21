@@ -303,6 +303,12 @@ section.view.on{display:block;animation:rise .3s ease}
   .kpis{grid-template-columns:repeat(2,1fr)}
 }
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media print{
+  .rail,.topbar,#scrim,#drawer,.noprint{display:none!important}
+  .app{display:block} .wrap{max-width:100%;padding:0}
+  body{background:#fff} .card{box-shadow:none;border:1px solid #ddd;break-inside:avoid}
+  section.view{display:none!important} section.view#v-informe{display:block!important}
+}
 </style>
 
 <div id="root"><div class="loading"><div class="spin"></div><div>Cargando métricas…</div></div></div>
@@ -333,6 +339,8 @@ const ICON={
   film2:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 9h18M8 5v14"/>',
   cost:'<circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2 0 0 1 5 0c0 2-3 1.5-3 3M12 15.5v.5"/>',
   globe:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/>',
+  report:'<path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6M9 13h6M9 17h6M9 9h2"/>',
+  print:'<path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5h20v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z"/>',
 };
 const HEALTH={al_dia:'Al día',atrasado:'Atrasado',inactivo:'Inactivo',sin_subidas:'Sin subidas',pausado:'En pausa',sin_datos:'Analítica pendiente'};
 const DOW=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
@@ -421,7 +429,7 @@ function areaOne(el,labels,data,color,label){
 function go(sec){STATE.sec=sec;clearCharts();
   document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.sec===sec));
   document.querySelectorAll('section.view').forEach(s=>s.classList.toggle('on',s.id==='v-'+sec));
-  const TL={vision:'Visión',resumen:'Resumen',canales:'Canales',produccion:'Producción',contenido:'Contenido',redes:'Redes sociales',monetizacion:'Monetización',agenda:'Agenda'};
+  const TL={vision:'Visión',resumen:'Resumen',canales:'Canales',produccion:'Producción',contenido:'Contenido',redes:'Redes sociales',monetizacion:'Monetización',agenda:'Agenda',informe:'Informe'};
   const tt=document.getElementById('tb-title');if(tt)tt.textContent=TL[sec]||sec;
   try{history.replaceState(null,'','#'+sec)}catch(e){}
   R[sec]();window.scrollTo({top:0,behavior:'instant'});}
@@ -810,6 +818,43 @@ function openSocial(pk){
   if(s.series.length)areaOne(document.getElementById('socchart'),s.series.map(p=>p.date),s.series.map(p=>p.subs),s.color,'Seguidores');
 }
 
+/* ── INFORME semanal (imprimible / PDF) ── */
+function renderInforme(){
+  const d=DATA,el=document.getElementById('v-informe'),w=d.weekly||{};
+  const rowli=(v,i,metric)=>`<a class="row" style="--_c:${v.color}" ${v.url?`href="${v.url}" target="_blank" rel="noopener"`:''}>
+    <div class="rk">${i+1}</div><div class="bar"></div>
+    <div class="ti"><div class="t">${v.title}</div><div class="m"><span>${v.channel}</span></div></div>
+    <div class="vv"><b>${metric(v)}</b><span>${v.delta!=null?'7 días':'views'}</span></div></a>`;
+  const stat=(v,l,tone)=>`<div class="card pad" style="padding:14px 16px"><div class="eyebrow">${l}</div>
+    <div class="num" style="font-size:26px;margin-top:6px;color:${tone||'var(--ink)'}">${v}</div></div>`;
+  const dchip=v=>v==null?'—':(v>=0?'+':'')+fmt(v);
+  const al=(d.alerts||[]).slice(0,6),recs=(d.recommendations||[]).slice(0,5);
+  el.innerHTML=`
+    <div class="sechead" style="margin-top:0"><h2>Informe semanal</h2>
+      <span class="eyebrow">${w.from_date||''} → ${w.to_date||''}</span>
+      <button class="iconbtn noprint" style="margin-left:auto;width:auto;padding:0 14px;gap:7px" onclick="window.print()">${svg('print')}<span style="font-size:13px;font-weight:600">Imprimir / PDF</span></button></div>
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr))">
+      ${stat(dchip(w.subs_7d),'Suscriptores (7d)','var(--good)')}
+      ${stat(dchip(w.views_7d),'Visualizaciones (7d)','var(--good)')}
+      ${stat(dchip(w.social_7d),'Seguidores redes (7d)','var(--good)')}
+      ${stat(fmt(w.content_7d||0),'Vídeos nuevos en analítica')}
+      ${stat((w.best_day||'—')+' · '+(w.best_hour||''),'Mejor momento')}</div>
+
+    <div class="grid two" style="margin-top:18px">
+      <div><div class="sechead" style="margin-top:0"><h2 style="font-size:15px">Lo más visto (nuevo esta semana)</h2></div>
+        <div class="card pad ranklist">${(w.new_top||[]).map((v,i)=>rowli(v,i,x=>fmt(x.views))).join('')||'<div class="hint">Sin datos aún.</div>'}</div></div>
+      <div><div class="sechead" style="margin-top:0"><h2 style="font-size:15px">🔥 En racha</h2></div>
+        <div class="card pad ranklist">${(w.top_movers||[]).map((v,i)=>rowli(v,i,x=>'+'+short(x.delta))).join('')||'<div class="hint">—</div>'}</div></div></div>
+
+    <div class="grid two" style="margin-top:6px">
+      <div><div class="sechead"><h2 style="font-size:15px">Alertas</h2></div>
+        <div class="grid" style="grid-template-columns:1fr">${al.map(a=>`<div class="card ins ${a.tone}" style="padding:12px 15px"><h4 style="font-size:13px">${a.title}</h4><p style="font-size:12px">${a.body}</p></div>`).join('')||'<div class="hint">Sin alertas.</div>'}</div></div>
+      <div><div class="sechead"><h2 style="font-size:15px">Qué publicar</h2></div>
+        <div class="grid" style="grid-template-columns:1fr">${recs.map(r=>`<div class="card pad" style="padding:12px 15px;border-left:3px solid ${r.color}"><div style="font-weight:700;font-size:13px">${r.channel}</div><div style="font-size:12.5px;margin-top:3px">${r.suggestion}</div></div>`).join('')||'<div class="hint">—</div>'}</div></div></div>
+
+    <p class="hint" style="margin-top:18px">Centro de Mando · videogen network · generado ${d.generated_local} · ${DATA.pages_base||''}/dashboard/</p>`;
+}
+
 /* ── MONETIZACIÓN ── */
 function renderMonetiz(){
   const d=DATA,el=document.getElementById('v-monetizacion'),m=d.monetization||{};
@@ -894,7 +939,7 @@ function histView(d){
         ${h.url?`<span class="linkout">${svg('ext')}</span>`:''}</a>`).join('')}</div></div>`).join('')}`;
 }
 
-const R={vision:renderVision,resumen:renderResumen,canales:renderCanales,produccion:renderProduccion,contenido:renderContenido,redes:renderRedes,monetizacion:renderMonetiz,agenda:renderAgenda};
+const R={vision:renderVision,resumen:renderResumen,canales:renderCanales,produccion:renderProduccion,contenido:renderContenido,redes:renderRedes,monetizacion:renderMonetiz,agenda:renderAgenda,informe:renderInforme};
 
 /* ── theme ── */
 function applyTheme(t){
@@ -909,7 +954,7 @@ function toggleTheme(){const cur=document.documentElement.getAttribute('data-the
 
 /* ── boot ── */
 function shell(){
-  const nav=[['vision','rocket','Visión'],['resumen','grid','Resumen'],['canales','play','Canales'],['produccion','activity','Producción'],['contenido','film','Contenido'],['redes','share','Redes'],['monetizacion','cost','Monetización'],['agenda','cal','Agenda']];
+  const nav=[['vision','rocket','Visión'],['resumen','grid','Resumen'],['canales','play','Canales'],['produccion','activity','Producción'],['contenido','film','Contenido'],['redes','share','Redes'],['monetizacion','cost','Monetización'],['agenda','cal','Agenda'],['informe','report','Informe']];
   document.getElementById('root').outerHTML=`<div class="app">
     <aside class="rail"><div class="brand"><div class="dot">V</div><div><b>Centro de Mando</b><span>videogen network</span></div></div>
       <nav class="nav">${nav.map(([k,i,l])=>`<button data-sec="${k}">${svg(i)}<span>${l}</span></button>`).join('')}</nav>
@@ -924,8 +969,9 @@ function shell(){
         <section class="view" id="v-produccion"></section>
         <section class="view" id="v-contenido"></section><section class="view" id="v-redes"></section>
         <section class="view" id="v-monetizacion"></section>
-        <section class="view" id="v-agenda"></section></div></div></div>`;
-  const TL={vision:'Visión',resumen:'Resumen',canales:'Canales',produccion:'Producción',contenido:'Contenido',redes:'Redes sociales',monetizacion:'Monetización',agenda:'Agenda'};
+        <section class="view" id="v-agenda"></section>
+        <section class="view" id="v-informe"></section></div></div></div>`;
+  const TL={vision:'Visión',resumen:'Resumen',canales:'Canales',produccion:'Producción',contenido:'Contenido',redes:'Redes sociales',monetizacion:'Monetización',agenda:'Agenda',informe:'Informe'};
   document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>{document.getElementById('tb-title').textContent=TL[b.dataset.sec];go(b.dataset.sec)});
   document.getElementById('themebtn').onclick=toggleTheme;
   document.getElementById('scrim').onclick=closeDrawer;

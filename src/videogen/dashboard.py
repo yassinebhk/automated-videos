@@ -912,7 +912,20 @@ def build() -> dict:
     if th and th["followers"] == 0:
         alerts.append(dict(tone="warn", title="Threads sin seguidores",
                            body="Publica pero no crece; la API no da palancas de growth."))
-    alerts = alerts[:9]
+    # anomalías finas: vídeo viral (delta >> mediana) + desaceleración de la red
+    _vv = sorted(v["views"] for v in all_videos_flat if v["views"] > 0)
+    med = _vv[len(_vv) // 2] if _vv else 0
+    if trending and med and trending[0]["delta"] >= 4 * med:
+        alerts.append(dict(tone="good", title="Posible viral",
+                           body=f"«{trending[0]['title'][:44]}» gana +{trending[0]['delta']:,} en 7 días, "
+                                f"{round(trending[0]['delta'] / med)}× la mediana ({med:,}). Exprímelo con contenido relacionado."))
+    d7 = sum((c["delta7_views"] or 0) for c in active_ch)
+    d30 = sum((c["delta30_views"] or 0) for c in active_ch)
+    if d30 and d7 < (d30 / 4) * 0.6:
+        alerts.append(dict(tone="warn", title="El crecimiento de views se desacelera",
+                           body=f"+{d7:,} views esta semana vs ~{round(d30 / 4):,}/sem el último mes. "
+                                f"Revisar qué cambió (temas, horario, formato)."))
+    alerts = alerts[:10]
 
     # ── (3) Recomendador "qué publicar ahora" (temas que rinden + mejor momento) ──
     recommendations = []
@@ -1038,6 +1051,30 @@ def build() -> dict:
               "tráfico a YouTube, con afiliados o con propinas.",
     )
 
+    # ── Informe semanal (resumen imprimible/exportable) ──
+    _today = datetime.now(_MADRID).date()
+    new_this_week = []
+    for v in all_videos_flat:
+        d = first_date_by_vid.get(v["video_id"])
+        if d:
+            try:
+                if (_today - datetime.strptime(d, "%Y-%m-%d").date()).days <= 7:
+                    new_this_week.append(v)
+            except Exception:
+                pass
+    new_this_week.sort(key=lambda x: x["views"], reverse=True)
+    weekly = dict(
+        from_date=(_today - timedelta(days=7)).strftime("%Y-%m-%d"),
+        to_date=_today.strftime("%Y-%m-%d"),
+        subs_7d=_delta(net_series, "subs", 7),
+        views_7d=_delta(net_series, "views", 7),
+        content_7d=len(new_this_week),
+        new_top=new_this_week[:6],
+        top_movers=trending[:6],
+        best_day=best_time.get("best_weekday"), best_hour=best_time.get("best_hour"),
+        social_7d=sum((s.get("delta7") or 0) for s in socials_out),
+    )
+
     return dict(
         generated_at=datetime.now(timezone.utc).isoformat(),
         generated_local=datetime.now(_MADRID).strftime("%Y-%m-%d %H:%M"),
@@ -1054,7 +1091,7 @@ def build() -> dict:
         weekday=global_weekday,
         showcase=showcase, velocity=velocity, by_category=by_category, capabilities=capabilities,
         alerts=alerts, recommendations=recommendations, interaction=interaction, funnel=funnel,
-        monetization=monetization,
+        monetization=monetization, weekly=weekly,
         schedule=dict(recurring=recurring, upcoming=upcoming, history=history[:400],
                       pub_by_day=pub_by_day),
         pages_base=PAGES_BASE,
