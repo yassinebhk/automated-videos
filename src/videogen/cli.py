@@ -198,19 +198,41 @@ def reauth_cmd(channel_prefix: str):
 
     try:
         if channel_prefix:
-            # Multi-canal: OAuth directo con InstalledAppFlow (no llama a
-            # _get_credentials que exige refresh_token previo — justo lo que
-            # queremos regenerar aquí).
-            console.print("[yellow]Modo multi-canal: OAuth flow directo (client_secret.json local)[/]")
-            console.print(f"[yellow]Prepara: cuenta Google del canal {channel_prefix} para elegir en el navegador[/]")
-            if not upload_youtube.CLIENT_SECRET.exists():
-                console.print(f"[bold red]❌ Falta {upload_youtube.CLIENT_SECRET}[/]")
-                console.print("[red]Descarga OAuth client 'Desktop App' del Google Cloud Console con scopes YouTube Data API v3[/]")
+            # Multi-canal: OAuth directo con InstalledAppFlow.
+            # CRÍTICO: usar los CLIENT_ID/SECRET DEL CANAL (env vars),
+            # NO el client_secret.json principal (bug 21/09: refresh_token
+            # generado con client principal NO funciona con YT_X_CLIENT_ID
+            # distinto → invalid_grant Bad Request al usar).
+            cid_env = f"{channel_prefix}_CLIENT_ID"
+            csec_env = f"{channel_prefix}_CLIENT_SECRET"
+            cid = os.environ.get(cid_env, "").strip()
+            csec = os.environ.get(csec_env, "").strip()
+
+            console.print(f"[yellow]Modo multi-canal: OAuth directo para {channel_prefix}[/]")
+            if not (cid and csec):
+                console.print(f"[bold red]❌ Faltan env vars {cid_env} + {csec_env}[/]")
+                console.print(f"[yellow]Cópialos de GH Secrets y expórtalos ANTES de correr reauth:[/]")
+                console.print(f"[cyan]  export {cid_env}='...'[/]")
+                console.print(f"[cyan]  export {csec_env}='...'[/]")
+                console.print(f"[cyan]  .venv/bin/videogen reauth --channel {channel_prefix}[/]")
+                console.print(f"[dim]O añádelos a tu .env local en la raíz del repo.[/]")
                 raise SystemExit(1)
+
+            # Construir client_config inline (no depende de client_secret.json)
+            client_config = {
+                "installed": {
+                    "client_id": cid,
+                    "client_secret": csec,
+                    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                    "token_uri": "https://oauth2.googleapis.com/token",
+                    "redirect_uris": ["http://localhost"],
+                }
+            }
             import google_auth_oauthlib.flow
-            flow = google_auth_oauthlib.flow.InstalledAppFlow.from_client_secrets_file(
-                str(upload_youtube.CLIENT_SECRET), upload_youtube.SCOPES,
+            flow = google_auth_oauthlib.flow.InstalledAppFlow.from_client_config(
+                client_config, upload_youtube.SCOPES,
             )
+            console.print(f"[dim]client_id: {cid}[/]")
             console.print("[bold cyan]Abriendo navegador — elige la cuenta Google del canal correcto[/]")
             creds = flow.run_local_server(port=0)
             console.print(f"[bold green]✅ OAuth completado[/]")
@@ -218,9 +240,7 @@ def reauth_cmd(channel_prefix: str):
             console.print("")
             console.print(f"[white on blue]{creds.refresh_token}[/]")
             console.print("")
-            console.print(f"[dim]También (por si acaso) actualiza {channel_prefix}_CLIENT_ID y {channel_prefix}_CLIENT_SECRET con los mismos del client_secret.json local:[/]")
-            console.print(f"[dim]  client_id: {creds.client_id}[/]")
-            console.print(f"[dim]  client_secret: {creds.client_secret}[/]")
+            console.print(f"[dim]NO actualizar CLIENT_ID/SECRET (ya son los correctos del canal)[/]")
             return
 
         # Modo WaitWhy default (comportamiento original)
