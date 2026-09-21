@@ -19,6 +19,7 @@ SCOPES = [
     # de videos propios (necesario para limpiar zombies duplicados y otras
     # operaciones de mantenimiento del canal desde el pipeline).
     "https://www.googleapis.com/auth/youtube.force-ssl",
+    "https://www.googleapis.com/auth/yt-analytics.readonly",
 ]
 CLIENT_SECRET = SECRETS_DIR / "youtube_client_secret.json"
 TOKEN_FILE = SECRETS_DIR / "youtube_token.json"

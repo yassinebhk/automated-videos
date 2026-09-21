@@ -75,6 +75,55 @@ def _yt_client(channel_prefix: str = ""):
     return build("youtube", "v3", credentials=creds)
 
 
+def fetch_watch_metrics(channel_prefix: str = "") -> dict:
+    """Watch-hours (365 días) + views de Shorts (90 días) vía YouTube Analytics API,
+    para el progreso REAL de YPP. Requiere scope `yt-analytics.readonly` → hasta que
+    se reautorice el canal, devuelve {} (graceful, no rompe nada)."""
+    import os
+    from datetime import date, timedelta
+    from googleapiclient.discovery import build
+    from google.oauth2.credentials import Credentials
+    from .upload_youtube import _get_credentials, TOKEN_FILE, SCOPES
+    tag = channel_prefix or "main"
+    try:
+        if channel_prefix:
+            prev = os.environ.get("YT_CHANNEL_PREFIX", "")
+            os.environ["YT_CHANNEL_PREFIX"] = channel_prefix
+            try:
+                creds = _get_credentials()
+            finally:
+                if prev:
+                    os.environ["YT_CHANNEL_PREFIX"] = prev
+                else:
+                    os.environ.pop("YT_CHANNEL_PREFIX", None)
+        else:
+            if not TOKEN_FILE.exists():
+                return {}
+            creds = Credentials.from_authorized_user_file(str(TOKEN_FILE), SCOPES)
+        ya = build("youtubeAnalytics", "v2", credentials=creds)
+    except Exception as e:
+        print(f"  watch-metrics {tag}: auth fail {type(e).__name__}: {str(e)[:80]}")
+        return {}
+    today = date.today()
+    out: dict = {}
+    try:
+        r = ya.reports().query(ids="channel==MINE", startDate=str(today - timedelta(days=365)),
+                               endDate=str(today), metrics="estimatedMinutesWatched").execute()
+        rows = r.get("rows") or [[0]]
+        out["watch_hours"] = round((rows[0][0] or 0) / 60)
+    except Exception as e:
+        print(f"  watch-metrics {tag}: hours fail {str(e)[:90]} (¿falta scope yt-analytics.readonly?)")
+    try:
+        r2 = ya.reports().query(ids="channel==MINE", startDate=str(today - timedelta(days=90)),
+                                endDate=str(today), metrics="views",
+                                dimensions="creatorContentType").execute()
+        out["shorts_views_90d"] = sum((row[1] or 0) for row in (r2.get("rows") or [])
+                                      if str(row[0]).upper() == "SHORTS")
+    except Exception as e:
+        print(f"  watch-metrics {tag}: shorts fail {str(e)[:90]}")
+    return out
+
+
 def fetch_channel_stats(channel_prefix: str = "") -> dict | None:
     """Stats del canal: suscriptores, views totales, nº de videos.
 

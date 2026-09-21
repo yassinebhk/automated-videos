@@ -818,7 +818,12 @@ function renderMonetiz(){
     <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px"><span style="font-weight:600">${label}</span>
       <span class="mono faint">${fmt(cur)} / ${fmt(tgt)}${pct>=100?' ✓':` · faltan ${fmt(missing)}`}</span></div>${pbar(pct,color)}</div>`;
   const yt=m.youtube||{};
-  const ytRows=(yt.channels||[]).map(c=>line(`${c.name}${c.flagship?' ★':''}`,c.current,c.target,c.missing,c.pct,'var(--accent)')).join('');
+  const ytRows=(yt.channels||[]).map(c=>{
+    let x=line(`${c.name}${c.flagship?' ★':''}`,c.current,c.target,c.missing,c.pct,'var(--accent)');
+    if(c.watch)x+=`<div style="margin:-6px 0 12px 14px">${line('↳ horas de visionado (365d)',c.watch.current,c.watch.target,c.watch.missing,c.watch.pct,'var(--accent-2)')}</div>`;
+    if(c.shorts)x+=`<div style="margin:-6px 0 12px 14px">${line('↳ views de Shorts (90d)',c.shorts.current,c.shorts.target,c.shorts.missing,c.shorts.pct,'var(--accent-2)')}</div>`;
+    return x;
+  }).join('');
   const socCard=(x,color)=>x?`<div class="card pad"><div style="font-weight:700;font-size:14.5px">${x.label}</div>
       <div class="faint mono" style="font-size:11px;margin:6px 0 14px">${x.req}</div>
       ${line('seguidores',x.current,x.target,x.missing,x.pct,color)}

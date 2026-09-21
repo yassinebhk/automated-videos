@@ -94,13 +94,18 @@ def snapshot_youtube() -> list[dict]:
     rows: list[dict] = []
     ch = stats.fetch_channel_stats() or {}
     if ch:
-        rows.append({
+        crow = {
             "platform": "youtube", "kind": "channel",
             "subs": int(ch.get("subscribers", 0) or 0),
             "views": int(ch.get("views", 0) or 0),
             "likes": 0,
             "source": "api",
-        })
+        }
+        try:
+            crow.update(stats.fetch_watch_metrics())
+        except Exception:
+            pass
+        rows.append(crow)
     for v in (stats.fetch_youtube_stats() or []):
         rows.append({
             "platform": "youtube", "kind": "video",
@@ -120,7 +125,7 @@ def _snapshot_channel_generic(yt_prefix: str, platform_key: str) -> list[dict]:
     try:
         ch = stats.fetch_channel_stats(channel_prefix=yt_prefix) or {}
         if ch:
-            rows.append({
+            crow = {
                 "platform": platform_key, "kind": "channel",
                 "subs": int(ch.get("subscribers", 0) or 0),
                 "views": int(ch.get("views", 0) or 0),
@@ -128,7 +133,12 @@ def _snapshot_channel_generic(yt_prefix: str, platform_key: str) -> list[dict]:
                 "videos": int(ch.get("videos", 0) or 0),
                 "title": ch.get("title", ""),
                 "source": "api",
-            })
+            }
+            try:
+                crow.update(stats.fetch_watch_metrics(yt_prefix))
+            except Exception:
+                pass
+            rows.append(crow)
         for v in (stats.fetch_youtube_stats(channel_prefix=yt_prefix) or []):
             rows.append({
                 "platform": platform_key, "kind": "video",

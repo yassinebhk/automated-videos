@@ -375,11 +375,16 @@ def build() -> dict:
         latest = series[-1] if series else {}
         subs = latest.get("subs", 0)
         views = latest.get("views", 0)
-        # nº vídeos: del último snapshot que lo traiga, o distinct video_ids
+        # nº vídeos + watch-metrics: del último snapshot que los traiga
         videos = 0
+        watch_hours = shorts90 = None
         for r in sorted(chan_by_pk.get(pk, []), key=lambda x: x.get("ts", 0) or 0):
             if r.get("videos"):
                 videos = r["videos"]
+            if r.get("watch_hours") is not None:
+                watch_hours = r["watch_hours"]
+            if r.get("shorts_views_90d") is not None:
+                shorts90 = r["shorts_views_90d"]
         if not videos and pk:
             videos = len({r.get("video_id") for r in vids_by_pk.get(pk, []) if r.get("video_id")})
 
@@ -448,6 +453,7 @@ def build() -> dict:
             lang=ch["lang"], group=ch.get("group", "extra"),
             flagship=ch.get("flagship", False), color=color,
             ig=(ch["key"] in IG_WHITELIST), yt_host=YT_HOST_REDIRECT.get(ch["key"]),
+            watch_hours=watch_hours, shorts90=shorts90,
             subs=subs, views=views, videos=videos,
             has_analytics=bool(series),
             likes_total=likes_total, eng_rate=eng_rate,
@@ -991,8 +997,18 @@ def build() -> dict:
         return dict(current=cur, target=tgt,
                     pct=min(100, round(100 * cur / tgt)) if tgt else 0,
                     missing=max(0, tgt - cur))
-    yt_chs = [dict(name=c["name"], flagship=c.get("flagship", False), **_prog(c["subs"], 1000))
-              for c in channels_out if c["group"] == "core"]
+    def _ymon(c):
+        d = dict(name=c["name"], flagship=c.get("flagship", False), **_prog(c["subs"], 1000))
+        wh, sh = c.get("watch_hours"), c.get("shorts90")
+        d["watch_hours"], d["shorts90"] = wh, sh
+        d["analytics"] = (wh is not None or sh is not None)
+        if wh is not None:
+            d["watch"] = _prog(wh, 4000)
+        if sh is not None:
+            d["shorts"] = _prog(sh, 10_000_000)
+        return d
+    yt_chs = [_ymon(c) for c in channels_out if c["group"] == "core"]
+    yt_has_analytics = any(c["analytics"] for c in yt_chs)
     tt = next((s for s in socials_out if s["pk"] == "tiktok"), {})
     igp = next((s for s in socials_out if s["pk"] == "instagram"), {})
     monetization = dict(
@@ -1000,8 +1016,12 @@ def build() -> dict:
             label="YouTube · Programa de Socios (YPP)",
             req="1.000 suscriptores + 4.000 h de visionado (12 meses) o 10 M de views de Shorts (90 días)",
             channels=sorted(yt_chs, key=lambda x: x["pct"], reverse=True),
-            note="Aquí medimos los suscriptores (la puerta de entrada). Las horas de visionado y las "
-                 "views de Shorts en 90 días aún no se capturan en analítica — se añadirán."),
+            analytics_on=yt_has_analytics,
+            note=("Suscriptores + horas de visionado (365 d) y views de Shorts (90 d) — datos reales de "
+                  "YouTube Analytics." if yt_has_analytics else
+                  "Ahora mismo solo medimos suscriptores. Las horas de visionado y views de Shorts "
+                  "necesitan reautorizar los canales con permiso de analítica (yt-analytics.readonly): "
+                  "pulsa «RENOVAR TODOS» en Telegram y se activarán solas.")),
         tiktok=dict(
             label="TikTok · Creativity Program",
             req="10.000 seguidores + 100.000 views (30 días) + 18 años",
