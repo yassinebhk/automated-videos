@@ -212,6 +212,22 @@ def _upload_to_r2(mp4_path: Path, slug: str) -> Optional[str]:
         s3.upload_file(str(mp4_path), bucket, key, ExtraArgs={"ContentType": "video/mp4"})
         url = f"{pub}/{key}"
         print(f"  ig: R2 upload OK → {url}")
+        # 🧹 Auto-limpieza: borra mp4 > R2_RETENTION_DAYS (default 2) → el bucket se
+        # queda en ~2 días de posts (<100 MB) → IMPOSIBLE acercarse a los 10 GB gratis.
+        try:
+            from datetime import datetime as _dt, timezone as _tz, timedelta as _td
+            cutoff = _dt.now(_tz.utc) - _td(days=int(os.environ.get("R2_RETENTION_DAYS", "2")))
+            to_del = []
+            for page in s3.get_paginator("list_objects_v2").paginate(Bucket=bucket, Prefix="reels/"):
+                for obj in page.get("Contents", []):
+                    if obj["Key"] != key and obj["LastModified"] < cutoff:
+                        to_del.append({"Key": obj["Key"]})
+            for i in range(0, len(to_del), 1000):
+                s3.delete_objects(Bucket=bucket, Delete={"Objects": to_del[i:i + 1000]})
+            if to_del:
+                print(f"  ig: R2 auto-limpieza borró {len(to_del)} mp4 viejos")
+        except Exception as _e:
+            print(f"  ig: R2 cleanup skip ({str(_e)[:80]})")
         return url
     except Exception as e:
         print(f"  ig: R2 fail {type(e).__name__}: {str(e)[:150]}")
