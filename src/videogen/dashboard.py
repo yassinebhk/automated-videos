@@ -390,8 +390,8 @@ def build() -> dict:
             title = (r.get("title") or "").strip()
             vv = r.get("views", 0) or 0
             item = dict(video_id=vid, title=title or "(sin título)", views=vv,
-                        likes=r.get("likes", 0) or 0, date=r.get("date"),
-                        url=_video_url(pk, vid))
+                        likes=r.get("likes", 0) or 0, comments=r.get("comments", 0) or 0,
+                        date=r.get("date"), url=_video_url(pk, vid))
             vlist.append(item)
             all_videos_flat.append({**item, "channel": ch["name"], "color": color, "cat": ch["cat"]})
             # análisis de temas (solo canales con tracción real)
@@ -603,6 +603,37 @@ def build() -> dict:
         m["views"] += c["views"]; m["subs"] += c["subs"]
     by_language = sorted(({**m, "vpv": round(m["views"] / m["videos"]) if m["videos"] else 0}
                           for m in langmap.values()), key=lambda x: x["views"], reverse=True)
+
+    # ── (1) Curva de vistas por vídeo: downsample de la serie a ~16 puntos ──
+    def _vspark(vid: str, n: int = 16) -> list[int]:
+        pts = sorted(vseries.get(vid, []))
+        vals = [v for _ts, v in pts]
+        if len(vals) <= n:
+            return vals
+        step = len(vals) / n
+        return [vals[min(len(vals) - 1, int(i * step))] for i in range(n)]
+    for v in trending:
+        v["spark"] = _vspark(v["video_id"])
+    for v in top_overall:
+        v["spark"] = _vspark(v["video_id"])
+
+    # ── (5) Interacción: totales de me gusta / comentarios + más comentados ──
+    total_likes = sum(v["likes"] for v in all_videos_flat)
+    total_comments = sum(v.get("comments", 0) for v in all_videos_flat)
+    most_commented = sorted((v for v in all_videos_flat if v.get("comments", 0) > 0),
+                            key=lambda x: x["comments"], reverse=True)[:8]
+    interaction = dict(likes=total_likes, comments=total_comments,
+                       eng_rate=round(100 * total_likes / net_views, 2) if net_views else None,
+                       most_commented=most_commented)
+
+    # ── (6) Embudo / alcance estimado ──
+    funnel = dict(
+        impresiones=net_views,
+        interacciones=total_likes + total_comments,
+        seguidores=net_subs + social_followers,
+        r_interaccion=round(100 * (total_likes + total_comments) / net_views, 2) if net_views else None,
+        r_seguidor=round(100 * (net_subs + social_followers) / net_views, 3) if net_views else None,
+    )
 
     # ── Instagram: ratio real de subidas ──
     ig = dict(total=0, ok=0, fail=0, rate=None, recent=[], by_day=[])
@@ -851,6 +882,47 @@ def build() -> dict:
             body=f"«{t0['title'][:60]}» (+{t0['delta']:,} views en 7 días). "
                  f"Mira la pestaña Contenido para el resto de vídeos que despegan."))
 
+    # ── (2) ALERTAS automáticas: qué necesita atención AHORA ──
+    alerts = []
+    if trending:
+        alerts.append(dict(tone="good", title=f"Despegando: {trending[0]['title'][:46]}",
+                           body=f"+{trending[0]['delta']:,} views en 7 días. Considera un vídeo relacionado."))
+    for c in channels_out:
+        if c["status"] == "active" and c.get("delta7_subs") is not None and c["delta7_subs"] < 0:
+            alerts.append(dict(tone="warn", title=f"{c['name']} pierde seguidores",
+                               body=f"{c['delta7_subs']} suscriptores en 7 días."))
+    for c in channels_out:
+        if c["group"] == "core" and c["status"] == "active" and c["has_analytics"] and c["health"] == "inactivo":
+            alerts.append(dict(tone="bad", title=f"{c['name']} sin subidas",
+                               body=f"Última hace {c['days_since']} días. Revisar cron/credenciales."))
+    if ig.get("rate_recent") is not None and ig["rate_recent"] < 55:
+        alerts.append(dict(tone="bad", title=f"Instagram al {ig['rate_recent']}% (14 días)",
+                           body="Ratio de subida bajo — revisar host R2 / verify."))
+    mast = next((s for s in socials_out if s["pk"] == "mastodon"), None)
+    if mast and (mast.get("delta7") or 0) < 0:
+        alerts.append(dict(tone="warn", title="Mastodon pierde seguidores",
+                           body=f"{mast['delta7']} en 7 días — la estrategia de hashtags es reciente."))
+    th = next((s for s in socials_out if s["pk"] == "threads"), None)
+    if th and th["followers"] == 0:
+        alerts.append(dict(tone="warn", title="Threads sin seguidores",
+                           body="Publica pero no crece; la API no da palancas de growth."))
+    alerts = alerts[:9]
+
+    # ── (3) Recomendador "qué publicar ahora" (temas que rinden + mejor momento) ──
+    recommendations = []
+    bt_day = best_time.get("best_weekday"); bt_hour = best_time.get("best_hour")
+    for c in channels_out:
+        if c["status"] != "active" or c["group"] != "core":
+            continue
+        kws = [t["keyword"] for t in (c.get("topics") or [])[:3]]
+        if not kws:
+            continue
+        recommendations.append(dict(
+            channel=c["name"], color=c["color"],
+            suggestion="Ángulos que rinden: " + ", ".join(kws),
+            why=f"Sus temas con más vistas medias" + (f" · mejor {bt_day} ~{bt_hour}" if bt_day else "")))
+    recommendations = recommendations[:9]
+
     # series agregadas de red (forward-fill) para gráficas limpias
     net_series = _merge_ff([c["series"] for c in channels_out if c["series"]], ("subs", "views"))
     social_series = _merge_ff([s["series"] for s in socials_out if s["series"]], ("subs",))
@@ -929,6 +1001,7 @@ def build() -> dict:
         ig=ig, crosspost=cross,
         weekday=global_weekday,
         showcase=showcase, velocity=velocity, by_category=by_category, capabilities=capabilities,
+        alerts=alerts, recommendations=recommendations, interaction=interaction, funnel=funnel,
         schedule=dict(recurring=recurring, upcoming=upcoming, history=history[:400],
                       pub_by_day=pub_by_day),
         pages_base=PAGES_BASE,

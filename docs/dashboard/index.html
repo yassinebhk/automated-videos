@@ -450,6 +450,13 @@ function renderVision(){
       <span class="eyebrow">a coste cero · ${s.days} días en marcha</span></div>
     <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr))">${tiles}</div>
 
+    ${(()=>{const f=d.funnel||{};if(!f.impresiones)return '';const step=(v,l,sub)=>`<div style="text-align:center;flex:1;min-width:130px"><div class="num" style="font-size:26px">${short(v)}</div><div class="faint mono" style="font-size:11px">${l}</div>${sub?`<div class="faint" style="font-size:10px">${sub}</div>`:''}</div>`;const arrow=r=>`<div style="align-self:center;text-align:center;color:var(--muted);font-family:var(--mono);font-size:11px;padding:0 4px">→<br><span style="font-size:10px">${r}</span></div>`;return `<div class="sechead"><h2>Embudo de alcance</h2><span class="eyebrow">de vista a seguidor</span></div>
+      <div class="card pad" style="display:flex;flex-wrap:wrap;gap:6px;align-items:stretch">
+        ${step(f.impresiones,'Visualizaciones','impresiones YouTube')}${arrow((f.r_interaccion!=null?f.r_interaccion+'%':''))}
+        ${step(f.interacciones,'Interacciones','me gusta + comentarios')}${arrow('')}
+        ${step(f.seguidores,'Seguidores',(f.r_seguidor!=null?f.r_seguidor+'% de las vistas':''))}
+      </div>`;})()}
+
     <div class="grid g32" style="margin-top:22px">
       <div class="card pad"><div class="sechead" style="margin:0 0 12px"><h2 style="font-size:15px">Crecimiento y proyección</h2></div>
         ${proj}<div class="chartbox sm" style="margin-top:12px"><canvas id="vgrowth"></canvas></div></div>
@@ -499,7 +506,11 @@ function renderResumen(){
     <td style="width:90px"><canvas data-sp="${c.key}" height="26"></canvas></td>
     <td class="r">${c.url?`<a class="linkout" target="_blank" rel="noopener" href="${c.url}">${svg('ext')}</a>`:''}</td></tr>`).join('');
 
-  el.innerHTML=`
+  const al=d.alerts||[];
+  const alertsBlock=al.length?`<div class="sechead" style="margin-top:0"><h2>⚠️ Alertas</h2><span class="eyebrow">qué necesita atención ahora</span></div>
+    <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(270px,1fr));margin-bottom:8px">
+      ${al.map(a=>`<div class="card ins ${a.tone}" style="padding:13px 15px"><h4 style="font-size:13px">${a.title}</h4><p style="font-size:12px">${a.body}</p></div>`).join('')}</div>`:'';
+  el.innerHTML=`${alertsBlock}
     <div class="grid kpis">${kpi}</div>
     <div class="sechead"><h2>Crecimiento de la red</h2><span class="eyebrow">acumulado · toda la red · ${d.range.first} → ${d.range.last}</span></div>
     <div class="card hero"><div class="top"><div class="legend">
@@ -639,6 +650,15 @@ function renderProduccion(){
 }
 
 /* ── CONTENIDO ── */
+function multiline(el,labels,ds){
+  const o=baseOpts();o.interaction={mode:'index',intersect:false};
+  o.plugins.legend={display:true,labels:{usePointStyle:true,pointStyle:'circle',boxWidth:7,font:{family:css('--sans'),weight:'600'},color:css('--muted')}};
+  o.scales={x:{grid:{display:false},ticks:{maxRotation:0,autoSkip:true,maxTicksLimit:7,font:{size:10}}},
+            y:{grid:{color:css('--border'),drawBorder:false},ticks:{callback:v=>short(v),font:{size:10}},beginAtZero:true}};
+  const c=new Chart(el,{type:'line',data:{labels,datasets:ds.map(d=>({label:d.label,data:d.data,borderColor:d.color,
+    backgroundColor:'transparent',borderWidth:2,tension:.3,pointRadius:0,pointHoverRadius:4}))},options:o});
+  CHARTS.push(c);return c;
+}
 function vbar(el,items,color){
   const o=baseOpts();o.interaction={mode:'index',intersect:false};
   o.scales={x:{grid:{display:false},ticks:{font:{size:9},maxRotation:0,autoSkip:true,maxTicksLimit:13}},
@@ -673,10 +693,16 @@ function renderContenido(){
   const trow=(v,i)=>`<a class="row" style="--_c:${v.color}" ${v.url?`href="${v.url}" target="_blank" rel="noopener"`:''}>
     <div class="rk">${i+1}</div><div class="bar"></div>
     <div class="ti"><div class="t">${v.title}</div><div class="m"><span>${v.channel}</span><span>${fmt(v.views)} views totales</span></div></div>
+    <canvas class="tsp" data-vid="${v.video_id}" width="90" height="30" style="flex:none;width:90px;height:30px"></canvas>
     <div class="vv"><b style="color:var(--good)">+${short(v.delta)}</b><span>7 días</span></div></a>`;
-  const enracha=tr.length?`<div class="sechead" style="margin-top:0"><h2>🔥 En racha</h2><span class="eyebrow">views ganadas en los últimos 7 días</span></div>
+  const enracha=tr.length?`<div class="sechead" style="margin-top:0"><h2>🔥 En racha</h2><span class="eyebrow">views ganadas en 7 días · curva de vida del vídeo</span></div>
     <div class="card pad ranklist">${tr.map(trow).join('')}</div>`:'';
-  el.innerHTML=`${csCard}${enracha}
+  const recs=d.recommendations||[];
+  const recBlock=recs.length?`<div class="sechead"><h2>💡 Qué publicar ahora</h2><span class="eyebrow">temas que rinden × mejor momento</span></div>
+    <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(320px,1fr))">
+      ${recs.map(r=>`<div class="card pad" style="border-left:3px solid ${r.color}"><div class="nm" style="font-weight:700;font-size:13.5px">${r.channel}</div>
+        <div style="font-size:13px;margin-top:5px">${r.suggestion}</div><div class="faint mono" style="font-size:11px;margin-top:4px">${r.why}</div></div>`).join('')}</div>`:'';
+  el.innerHTML=`${csCard}${enracha}${recBlock}
     <div class="grid two">
       <div><div class="sechead"><h2>Top contenido</h2><span class="eyebrow">toda la red</span></div>
         <div class="card pad ranklist">${d.content.top_overall.map(row).join('')}</div></div>
@@ -698,6 +724,7 @@ function renderContenido(){
     <div class="sechead"><h2>Más engagement</h2><span class="eyebrow">me gusta ÷ visualizaciones · mín. 50 views</span></div>
     <div class="card pad ranklist">${eng.length?eng.map(engrow).join(''):'<div class="hint">Aún sin suficientes likes registrados.</div>'}</div>
     <p class="hint" style="margin-top:14px">El engagement (no solo las vistas) marca qué conecta de verdad — aquí lideran los casos de corrupción/true crime.</p>`;
+  el.querySelectorAll('canvas.tsp').forEach(cv=>{const v=tr.find(x=>x.video_id===cv.dataset.vid);if(v&&v.spark&&v.spark.length>1)spark(cv,v.spark,css('--good'))});
   vbar(document.getElementById('cday'),(bt.by_weekday||[]).map(w=>({label:w.label,v:w.avg})),css('--accent'));
   vbar(document.getElementById('chour'),(bt.by_hour||[]).map(h=>({label:h.label,v:h.avg})),css('--accent-2'));
   hbar(document.getElementById('topkw'),d.content.top_topics.slice(0,10).map(t=>({label:t.keyword,v:t.avg_views,c:css('--good')})));
@@ -714,9 +741,20 @@ function renderRedes(){
     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
       <span class="faint mono" style="font-size:11px">${fmt(s.posts)} posts${s.likes?` · ♥ ${fmt(s.likes)}`:''}</span>
       ${s.url?`<a class="linkout" target="_blank" rel="noopener" href="${s.url}">abrir ${svg('ext')}</a>`:''}</div></div>`).join('');
+  const it=d.interaction||{};
   el.innerHTML=`<div class="sechead" style="margin-top:0"><h2>Plataformas sociales</h2><span class="eyebrow">${fmt(d.totals.social_followers)} seguidores totales</span></div>
     <div class="grid socgrid">${soc}</div>
     <div class="grid g32" style="margin-top:24px">
+      <div class="card pad"><div class="sechead" style="margin:0 0 12px"><h2 style="font-size:15px">Crecimiento de seguidores por red</h2></div>
+        <div class="chartbox sm"><canvas id="socgrowth"></canvas></div></div>
+      <div class="card pad"><div class="sechead" style="margin:0 0 12px"><h2 style="font-size:15px">Interacción total</h2></div>
+        <div style="display:flex;gap:26px;flex-wrap:wrap;font-family:var(--mono)">
+          <div><div class="num" style="font-size:28px">${fmt(it.likes||0)}</div><div class="faint" style="font-size:11px">me gusta</div></div>
+          <div><div class="num" style="font-size:28px">${fmt(it.comments||0)}</div><div class="faint" style="font-size:11px">comentarios</div></div>
+          <div><div class="num" style="font-size:28px;color:var(--good)">${it.eng_rate!=null?it.eng_rate+'%':'—'}</div><div class="faint" style="font-size:11px">tasa engagement</div></div></div>
+        <p class="hint" style="margin-top:14px">Me gusta y comentarios agregados de toda la red. La tasa de engagement (♥÷views) es la señal de qué CONECTA, más allá del alcance bruto.</p></div>
+    </div>
+    <div class="grid g32" style="margin-top:16px">
       <div class="card pad"><div class="sechead" style="margin:0 0 16px"><h2 style="font-size:15px">Publicación en Instagram</h2><span class="eyebrow">${ig.total} vídeos · ${ig.attempts||ig.total} intentos</span></div>
         <div class="gauge"><div class="ring"><canvas id="iggauge"></canvas><div class="mid"><b>${(ig.rate_recent!=null?ig.rate_recent:ig.rate)==null?'—':(ig.rate_recent!=null?ig.rate_recent:ig.rate)+'%'}</b><span>14 días</span></div></div>
           <div style="flex:1;min-width:200px"><div style="display:flex;gap:12px;margin-bottom:14px">
@@ -735,6 +773,8 @@ function renderRedes(){
           <div class="tr"><div style="width:${cp.videos?Math.round(100*v/cp.videos):0}%;background:${c}"></div></div></div>`).join('')}</div>
         <p class="hint" style="margin-top:16px">1 post por short y textos rotados para evitar borrados por contenido repetido.</p></div></div>`;
   el.querySelectorAll('canvas[data-ss]').forEach(cv=>{const s=d.socials.find(x=>x.pk===cv.dataset.ss);const pts=s.series.map(p=>p.subs);spark(cv,pts.length?pts:[0,0],s.color)});
+  const glabels=[...new Set(d.socials.flatMap(s=>s.series.map(p=>p.date)))].sort();
+  multiline(document.getElementById('socgrowth'),glabels,d.socials.filter(s=>s.series.length).map(s=>({label:s.name,color:s.color,data:glabels.map(dt=>{const p=s.series.find(x=>x.date===dt);return p?p.subs:null})})));
   el.querySelectorAll('.soc[data-soc]').forEach(card=>card.onclick=e=>{if(e.target.closest('a'))return;openSocial(card.dataset.soc)});
   iggauge(document.getElementById('iggauge'),ig.ok_recent!=null?ig.ok_recent:ig.ok,(ig.total_recent!=null?ig.total_recent-ig.ok_recent:ig.fail));
 }
