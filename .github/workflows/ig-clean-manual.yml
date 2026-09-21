@@ -1,0 +1,40 @@
+name: IG clean manual
+
+# Borra reels IG del log via DELETE /{media_id}.
+# Uso: Actions → "IG clean manual" → Run workflow → filter + confirmar.
+
+on:
+  workflow_dispatch:
+    inputs:
+      filter:
+        description: "Substring del slug (ej. 'padel', 'fractal', 'motor'). Vacío = TODOS los reels"
+        required: false
+        default: ""
+        type: string
+      older_than_days:
+        description: "Solo borra reels de hace >N días (0 = ignora fecha)"
+        required: false
+        default: "0"
+        type: string
+      dry_run:
+        description: "true = solo lista candidatos, false = borra de verdad"
+        required: true
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+
+permissions:
+  contents: write
+
+jobs:
+  clean:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: ig-clean
+      extra_env: |
+        IG_CLEAN_FILTER=${{ inputs.filter }}
+        IG_CLEAN_OLDER_DAYS=${{ inputs.older_than_days }}
+        IG_CLEAN_DRY_RUN=${{ inputs.dry_run }}
+    secrets: inherit

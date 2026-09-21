@@ -934,6 +934,111 @@ def yt_cookies_check_cmd():
             print(f"tg notify fail: {e}")
 
 
+@cli.command(name="ig-clean")
+@click.option("--filter", "filter_", type=str, default="",
+              help="Substring del slug/canal a borrar (ej. 'padel', 'fractal'). Vacío = TODOS")
+@click.option("--older-than-days", type=int, default=0,
+              help="Solo borra reels de hace >N días (0 = todos)")
+@click.option("--dry-run", is_flag=True, help="Solo lista, no borra")
+@click.option("--yes", is_flag=True, help="Confirma sin preguntar")
+def ig_clean_cmd(filter_: str, older_than_days: int, dry_run: bool, yes: bool):
+    """Borra reels IG del log local via DELETE /{media_id}.
+
+    Ejemplos:
+      videogen ig-clean --filter padel --dry-run  → lista candidatos padel
+      videogen ig-clean --filter padel --yes      → borra todos los padel
+      videogen ig-clean --older-than-days 7 --yes → borra >7 días
+      videogen ig-clean --yes                     → borra TODO (peligro)
+
+    Sólo borra reels registrados en output/ig_publish_log.json como
+    'ok' (con media_id). Actualiza el log tras cada borrado.
+    """
+    from datetime import datetime, timezone, timedelta
+    from .instagram_poster import IG_LOG_PATH, delete_ig_reel
+
+    # Env var overrides para workflow_dispatch (no puede pasar --flags CLI)
+    import os as _os
+    env_filter = _os.environ.get("IG_CLEAN_FILTER", "").strip()
+    env_older = _os.environ.get("IG_CLEAN_OLDER_DAYS", "").strip()
+    env_dry = _os.environ.get("IG_CLEAN_DRY_RUN", "").strip().lower()
+    if env_filter: filter_ = env_filter
+    if env_older:
+        try: older_than_days = int(env_older)
+        except ValueError: pass
+    if env_dry in ("true", "1", "yes"):
+        dry_run = True
+    elif env_dry in ("false", "0", "no"):
+        dry_run = False
+        yes = True  # workflow dispatch → auto-confirm si dry=false explícito
+
+    if not IG_LOG_PATH.exists():
+        console.print("[red]No hay log IG local[/]")
+        return
+    log = json.loads(IG_LOG_PATH.read_text(encoding="utf-8"))
+    ok_entries = [e for e in log if e.get("status") == "ok" and e.get("media_id")]
+    console.print(f"Total reels OK en log: {len(ok_entries)}")
+
+    # Filtros
+    cutoff = None
+    if older_than_days > 0:
+        cutoff = datetime.now(timezone.utc) - timedelta(days=older_than_days)
+
+    candidates = []
+    for e in ok_entries:
+        if filter_ and filter_.lower() not in e.get("slug", "").lower():
+            continue
+        if cutoff:
+            try:
+                ts = datetime.fromisoformat(e.get("ts", ""))
+                if ts > cutoff:
+                    continue
+            except Exception:
+                continue
+        candidates.append(e)
+
+    console.print(f"[cyan]Candidatos a borrar: {len(candidates)}[/]")
+    for e in candidates[:20]:
+        console.print(f"  {e.get('ts','?')[:19]} · {e.get('media_id')} · {e.get('slug','?')[:50]}")
+    if len(candidates) > 20:
+        console.print(f"  ... y {len(candidates) - 20} más")
+
+    if dry_run:
+        console.print("[yellow]DRY-RUN — no se borra nada[/]")
+        return
+    if not candidates:
+        console.print("[yellow]0 candidatos, nada que hacer[/]")
+        return
+
+    if not yes:
+        console.print(f"[bold red]¿Borrar {len(candidates)} reels? Añade --yes para confirmar[/]")
+        return
+
+    # Borrar
+    ok_count, fail_count = 0, 0
+    borrados_media_ids = set()
+    for i, e in enumerate(candidates, 1):
+        mid = e["media_id"]
+        success, msg = delete_ig_reel(mid)
+        if success:
+            ok_count += 1
+            borrados_media_ids.add(mid)
+            console.print(f"  [green]✓[/] {i}/{len(candidates)} {mid} — {e.get('slug','?')[:40]}")
+        else:
+            fail_count += 1
+            console.print(f"  [red]✗[/] {i}/{len(candidates)} {mid} — {msg[:80]}")
+
+    console.print(f"\n[bold]Resultado: {ok_count} borrados · {fail_count} fallos[/]")
+
+    # Actualiza log — marca borrados
+    if borrados_media_ids:
+        for e in log:
+            if e.get("media_id") in borrados_media_ids:
+                e["status"] = "deleted"
+                e["deleted_at"] = datetime.now(timezone.utc).isoformat()
+        IG_LOG_PATH.write_text(json.dumps(log, indent=2, ensure_ascii=False), encoding="utf-8")
+        console.print(f"[dim]Log actualizado: {len(borrados_media_ids)} entries marcadas 'deleted'[/]")
+
+
 @cli.command(name="ig-status")
 def ig_status_cmd():
     """Diagnóstico Instagram: token OK + últimos 10 intentos IG (log local).

@@ -106,6 +106,28 @@ def _reencode_for_ig(local_mp4: Path, dest: Path) -> bool:
 _LAST_CATBOX_STATUS: str = ""
 
 
+def delete_ig_reel(media_id: str) -> tuple[bool, str]:
+    """Borra un reel IG dado su media_id via DELETE /{media_id}.
+
+    Devuelve (success, message). Necesita IG_TOKEN con scope
+    instagram_content_publish (mismo que para post).
+    """
+    access_token = os.environ.get("IG_TOKEN") or os.environ.get("IG_ACCESS_TOKEN")
+    if not access_token:
+        return False, "IG_TOKEN not set"
+    try:
+        r = requests.delete(
+            f"{IG_API_BASE}/{media_id}",
+            params={"access_token": access_token},
+            timeout=30,
+        )
+        if r.status_code == 200:
+            return True, "deleted"
+        return False, f"HTTP {r.status_code}: {r.text[:200]}"
+    except Exception as e:
+        return False, f"{type(e).__name__}: {str(e)[:150]}"
+
+
 def _upload_to_catbox(mp4_path: Path) -> Optional[str]:
     """Sube mp4 a catbox.moe (anónimo, sin API key, propagación instantánea).
 
