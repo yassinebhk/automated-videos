@@ -415,6 +415,60 @@ def _ig_creds():
             os.environ.get("IG_USER_ID") or os.environ.get("IG_BUSINESS_ACCOUNT_ID"))
 
 
+def _upload_resumable(access_token: str, ig_account_id: str,
+                      local_mp4: Path, caption: str) -> Optional[str]:
+    """Sube el vídeo por BYTES directos a Meta (Resumable Upload Protocol) → SIN URL
+    pública. Elimina el 'fail_container_ready' por fetch (que dejaba IG a ~50%).
+    Devuelve container_id (a la espera de FINISHED) o None → cae al flujo URL."""
+    import subprocess as _sp
+    import tempfile
+    tmp_dir = Path(tempfile.mkdtemp(prefix="ig_ru_"))
+    enc = tmp_dir / "reel.mp4"
+    try:
+        # Re-encode compatible IG (H.264+AAC, ≤89s), igual que el flujo URL
+        if not _reencode_for_ig(local_mp4, enc):
+            r = _sp.run(["ffmpeg", "-y", "-i", str(local_mp4), "-c", "copy", "-t", "89",
+                         "-movflags", "+faststart", str(enc)],
+                        capture_output=True, text=True, timeout=60)
+            if not (r.returncode == 0 and enc.exists() and enc.stat().st_size > 10000):
+                enc = local_mp4
+        size = enc.stat().st_size
+        # 1) crear contenedor en modo resumable → devuelve id + uri de subida
+        r = requests.post(
+            f"{IG_API_BASE}/{ig_account_id}/media",
+            params={"media_type": "REELS", "upload_type": "resumable",
+                    "caption": caption[:2200], "share_to_feed": "true",
+                    "access_token": access_token}, timeout=60,
+        )
+        d = r.json() if r.content else {}
+        cid, uri = d.get("id"), d.get("uri")
+        if not (cid and uri):
+            print(f"  ig: resumable container fail {r.status_code} — {str(d)[:200]}")
+            return None
+        # 2) subir los bytes al uri (Authorization: OAuth <token>, offset+file_size)
+        with open(enc, "rb") as f:
+            up = requests.post(uri, headers={"Authorization": f"OAuth {access_token}",
+                                             "offset": "0", "file_size": str(size)},
+                               data=f, timeout=300)
+        try:
+            upj = up.json()
+        except Exception:
+            upj = {}
+        if up.status_code == 200 and (upj.get("success") in (True, "true", 1) or upj.get("id")):
+            print(f"  ig: resumable bytes subidos OK ({size//1024}KB) → container {cid}")
+            return cid
+        print(f"  ig: resumable upload fail {up.status_code} — {str(upj)[:200]}")
+        return None
+    except Exception as e:
+        print(f"  ig: resumable exception {type(e).__name__}: {str(e)[:150]}")
+        return None
+    finally:
+        try:
+            shutil.rmtree(tmp_dir, ignore_errors=True)
+        except Exception:
+            pass
+
+
 def post_reel_to_instagram(video_title: str, video_url: str,
                             local_mp4: Path, slug: str,
                             teaser: str = "", caption_override: str = "", dry_run: bool = False) -> dict[str, Any] | None:
@@ -481,6 +535,22 @@ def post_reel_to_instagram(video_title: str, video_url: str,
     if dry_run:
         print(f"  ig DRY-RUN — {len(caption)} chars:\n{caption}")
         return {"dry_run": True, "caption": caption}
+
+    # 🚀 PRIMARIO (21/09): Resumable Upload — bytes directos a Meta, SIN URL pública.
+    # Elimina el fail_container_ready por fetch (que dejaba IG a ~50%). Si funciona,
+    # publica y retorna aquí; si no, cae al flujo de URL pública de abajo (intacto).
+    _ru_cid = _upload_resumable(access_token, ig_account_id, local_mp4, caption)
+    if _ru_cid and _wait_container_ready(access_token, _ru_cid):
+        _mid = _publish_container(access_token, ig_account_id, _ru_cid)
+        if _mid:
+            _url = f"https://instagram.com/reel/{_mid}"
+            print(f"  ig: ✅ Reel publicado (resumable, sin URL) → {_url}")
+            _append_ig_log({"slug": slug, "title": video_title[:80], "status": "ok",
+                            "media_id": _mid, "url": _url, "via": "resumable"})
+            return {"media_id": _mid, "url": _url, "caption": caption}
+        print("  ig: resumable llegó a FINISHED pero publish falló → fallback URL")
+    elif _ru_cid:
+        print("  ig: resumable no llegó a FINISHED → fallback URL")
 
     # 1) Copiar mp4 a docs/reels/ para servir vía GH Pages
     public_url = _prepare_public_reel(local_mp4, slug)
