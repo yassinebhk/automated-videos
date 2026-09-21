@@ -188,6 +188,36 @@ def _verify_meta_fetchable(url: str, tries: int = 6, wait: int = 5) -> bool:
     return False
 
 
+def _upload_to_r2(mp4_path: Path, slug: str) -> Optional[str]:
+    """Sube a Cloudflare R2 (S3-compatible, CDN fiable) → host PRIMARIO para IG.
+    Mucho más estable que catbox para el fetcher de Meta. Requiere secrets:
+    R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET, R2_PUBLIC_BASE.
+    Sin ellos → None (cae a catbox). Devuelve URL pública o None."""
+    acct = os.environ.get("R2_ACCOUNT_ID", "").strip()
+    akey = os.environ.get("R2_ACCESS_KEY_ID", "").strip()
+    skey = os.environ.get("R2_SECRET_ACCESS_KEY", "").strip()
+    bucket = os.environ.get("R2_BUCKET", "").strip()
+    pub = os.environ.get("R2_PUBLIC_BASE", "").strip().rstrip("/")
+    if not all([acct, akey, skey, bucket, pub]):
+        return None
+    try:
+        import boto3
+        from botocore.config import Config
+        s3 = boto3.client(
+            "s3", endpoint_url=f"https://{acct}.r2.cloudflarestorage.com",
+            aws_access_key_id=akey, aws_secret_access_key=skey,
+            config=Config(signature_version="s3v4"), region_name="auto",
+        )
+        key = f"reels/{slug}.mp4"
+        s3.upload_file(str(mp4_path), bucket, key, ExtraArgs={"ContentType": "video/mp4"})
+        url = f"{pub}/{key}"
+        print(f"  ig: R2 upload OK → {url}")
+        return url
+    except Exception as e:
+        print(f"  ig: R2 fail {type(e).__name__}: {str(e)[:150]}")
+        return None
+
+
 def _prepare_public_reel(local_mp4: Path, slug: str) -> Optional[str]:
     """Re-encode strict IG + sube a catbox.moe. Retorna URL pública o None.
 
@@ -223,6 +253,19 @@ def _prepare_public_reel(local_mp4: Path, slug: str) -> Optional[str]:
         else:
             print(f"  ig: stream-copy falló, uso mp4 original")
             mp4_to_upload = local_mp4
+
+    # 0) R2 (Cloudflare, CDN fiable) — host PRIMARIO si está configurado. Es la
+    # solución de fondo al fail_container_ready (catbox/litterbox eran flaky para Meta).
+    r2url = _upload_to_r2(mp4_to_upload, slug)
+    if r2url and _verify_meta_fetchable(r2url):
+        print("  ig: host R2 verificado por Meta ✓")
+        try:
+            shutil.rmtree(tmp_dir, ignore_errors=True)
+        except Exception:
+            pass
+        return r2url
+    if r2url:
+        print("  ig: R2 subió pero no verifica para Meta → sigo con catbox")
 
     # 1) Hosts instantáneos CON VERIFICACIÓN de que Meta puede descargar (fix
     # fail_container_ready 20/09): sube → comprueba con facebookexternalhit → úsalo
@@ -536,10 +579,10 @@ def post_reel_to_instagram(video_title: str, video_url: str,
         print(f"  ig DRY-RUN — {len(caption)} chars:\n{caption}")
         return {"dry_run": True, "caption": caption}
 
-    # 🚀 PRIMARIO (21/09): Resumable Upload — bytes directos a Meta, SIN URL pública.
-    # Elimina el fail_container_ready por fetch (que dejaba IG a ~50%). Si funciona,
-    # publica y retorna aquí; si no, cae al flujo de URL pública de abajo (intacto).
-    _ru_cid = _upload_resumable(access_token, ig_account_id, local_mp4, caption)
+    # Resumable Upload DESACTIVADO 21/09: la API de IG Business Login NO lo soporta
+    # (devuelve 400 "video_url is required"). Dormante tras IG_RESUMABLE=1 por si en
+    # el futuro Meta lo habilita. El fix real es R2 (host fiable) — ver _prepare_public_reel.
+    _ru_cid = _upload_resumable(access_token, ig_account_id, local_mp4, caption) if os.environ.get("IG_RESUMABLE") == "1" else None
     if _ru_cid and _wait_container_ready(access_token, _ru_cid):
         _mid = _publish_container(access_token, ig_account_id, _ru_cid)
         if _mid:
