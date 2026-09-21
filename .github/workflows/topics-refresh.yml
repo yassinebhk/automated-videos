@@ -9,7 +9,7 @@ name: Topics refresh (dynamic pool)
 
 on:
   schedule:
-    - cron: "22 5 1,15 * *"
+    - cron: "22 5 * * 1"   # semanal (lunes) — antes 2×/mes; +frescura anti-repetición
   workflow_dispatch: {}
 
 permissions:

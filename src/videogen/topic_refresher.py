@@ -26,7 +26,17 @@ from .config import ROOT
 
 
 DYNAMIC_DIR = ROOT / "output"
-REFRESH_INTERVAL_DAYS = 14  # regenerar cada 2 semanas
+REFRESH_INTERVAL_DAYS = 7  # regenerar cada semana (antes 14 → se repetían a las 2 sem)
+
+
+def _covered_block(covered) -> str:
+    """Bloque de exclusión con lo YA publicado, para el prompt del refresher."""
+    ts = [t for t in (covered or []) if t][:70]
+    if not ts:
+        return ""
+    body = "\n".join(f"- {t[:95]}" for t in ts)
+    return ("\n\n⛔ YA PUBLICADO EN NUESTRO CANAL — PROHIBIDO repetir o parecerse "
+            "(usa temas y ÁNGULOS COMPLETAMENTE distintos, no variaciones):\n" + body + "\n")
 
 
 # Feeds RSS específicos por nicho (para inspiración de topics reales)
@@ -181,9 +191,10 @@ def _niche_context(niche: str) -> dict:
     }.get(niche, {})
 
 
-def refresh_topics_for(niche: str, n: int = 15) -> list[dict] | None:
+def refresh_topics_for(niche: str, n: int = 15, covered=None) -> list[dict] | None:
     """Genera N topics frescos vía Gemini usando RSS del nicho como
-    inspiración de temas trending. Guarda en dynamic_topics_{niche}.json."""
+    inspiración de temas trending. Guarda en dynamic_topics_{niche}.json.
+    `covered` = títulos ya publicados → se excluyen del prompt y del output."""
     ctx = _niche_context(niche)
     if not ctx:
         print(f"  refresher: nicho '{niche}' desconocido")
@@ -249,6 +260,7 @@ def refresh_topics_for(niche: str, n: int = 15) -> list[dict] | None:
             f"- cifra_ancla: '{ctx['cifra_typical']}'\n\n"
             f"NO repitas topics obvios ya cubiertos por canales grandes ES.\n"
             f"Prioriza NOVEDADES 2026 y temas long-tail infravalorados."
+            + _covered_block(covered)
         )
         resp = client.models.generate_content(
             model="gemini-3.5-flash-lite",
@@ -267,6 +279,17 @@ def refresh_topics_for(niche: str, n: int = 15) -> list[dict] | None:
             print(f"  refresher: JSON parse fail — {je}")
             return None
         topics = data.get("topics") or []
+        # Filtro anti-repeat: descarta los que se parezcan a lo ya publicado.
+        if covered:
+            try:
+                from . import dedup_common
+                before = len(topics)
+                topics = [t for t in topics
+                          if not dedup_common.title_is_repeat(t.get("titulo", ""), covered)]
+                if before - len(topics):
+                    print(f"  refresher {niche}: filtró {before-len(topics)} topics repetidos")
+            except Exception:
+                pass
         if len(topics) < 3:
             print(f"  refresher: solo {len(topics)} topics generados — insuficiente")
             return None
@@ -294,20 +317,29 @@ def get_all_topics_merged(static_pool: list[dict], niche: str,
     key_suffix = "_long" if kind == "long" else ""
     dyn_niche = f"{niche}{key_suffix}"
     if is_refresh_due(dyn_niche):
+        # Lo YA publicado (pool estático + historial real) → el refresher lo excluye
+        # al generar, para traer temas GENUINAMENTE nuevos (no variaciones).
+        covered = [t.get("titulo", "") for t in static_pool if t.get("titulo")]
+        try:
+            from . import dedup_common
+            covered += dedup_common.recent_titles_from_history("youtube_" + niche, days=120)
+        except Exception:
+            pass
         if kind == "long":
-            refresh_longform_topics_for(niche)
+            refresh_longform_topics_for(niche, covered=covered)
         else:
-            refresh_topics_for(niche)
+            refresh_topics_for(niche, covered=covered)
     dyn = _load_dynamic(dyn_niche).get("topics", [])
     seen_keys = {t.get("key") for t in static_pool}
     fresh = [t for t in dyn if t.get("key") not in seen_keys]
     return list(static_pool) + fresh
 
 
-def refresh_longform_topics_for(niche: str, n: int = 8) -> list[dict] | None:
+def refresh_longform_topics_for(niche: str, n: int = 8, covered=None) -> list[dict] | None:
     """Genera N topics de PROFUNDIDAD (long-form 7min) para el nicho.
     Prompt distinto — pide temas grandes con múltiples ángulos, no snacks.
-    Guarda en dynamic_topics_{niche}_long.json."""
+    Guarda en dynamic_topics_{niche}_long.json.
+    `covered` = títulos ya publicados → se excluyen del prompt y del output."""
     ctx = _niche_context(niche)
     if not ctx:
         return None
@@ -373,6 +405,7 @@ def refresh_longform_topics_for(niche: str, n: int = 8) -> list[dict] | None:
             f"Prioriza NOVEDADES 2026 y temas que quedan bien en 7min\n"
             f"(no 30s). Cada topic debe tener contenido suficiente para\n"
             f"3-5 capítulos distintos."
+            + _covered_block(covered)
         )
         resp = client.models.generate_content(
             model="gemini-3.5-flash-lite",
@@ -391,6 +424,16 @@ def refresh_longform_topics_for(niche: str, n: int = 8) -> list[dict] | None:
             print(f"  refresher long {niche}: JSON parse fail — {je}")
             return None
         topics = data.get("topics") or []
+        if covered:
+            try:
+                from . import dedup_common
+                before = len(topics)
+                topics = [t for t in topics
+                          if not dedup_common.title_is_repeat(t.get("titulo", ""), covered)]
+                if before - len(topics):
+                    print(f"  refresher long {niche}: filtró {before-len(topics)} repetidos")
+            except Exception:
+                pass
         if len(topics) < 3:
             print(f"  refresher long {niche}: solo {len(topics)} topics")
             return None

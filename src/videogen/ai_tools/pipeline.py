@@ -82,12 +82,39 @@ def _pick_topic(kind: str = "short") -> dict | None:
     fresh = [t for t in all_t if not _recently_used(_key(t))]
     if not fresh:
         fresh = all_t
+    # Anti-repeat SEMÁNTICO: descarta topics cuyo título repita lo ya publicado
+    # (el patrón 'Top 5 AI tools for X' repetía muchísimo la misma X).
+    try:
+        from .. import dedup_common
+        recents = dedup_common.recent_titles_from_history("youtube_aitools", days=150)
+        if recents:
+            fresh2 = [t for t in fresh
+                      if not dedup_common.title_is_repeat(t.get("titulo") or t.get("key", ""), recents)]
+            if fresh2:
+                if len(fresh) - len(fresh2):
+                    print(f"  aitools-{kind}: anti-repeat descartó {len(fresh)-len(fresh2)} topics")
+                fresh = fresh2
+    except Exception as e:
+        print(f"  aitools-{kind}: dedup título skip ({e})")
     # Balance por categoria (variedad de tipos de herramienta)
     by_cat: dict[str, list[dict]] = {}
     for t in fresh:
         by_cat.setdefault(t.get("categoria", "misc"), []).append(t)
     cat_choice = random.choice(list(by_cat.keys()))
     return random.choice(by_cat[cat_choice])
+
+
+def _avoid_block() -> str:
+    """'Do not repeat' con títulos ya publicados del canal AI Tools."""
+    try:
+        from .. import dedup_common
+        block = dedup_common.recent_titles_block("youtube_aitools", days=150, n=25)
+        if block:
+            return (f" ⛔ DO NOT repeat or resemble these ALREADY-PUBLISHED titles: {block}. "
+                    f"Pick a clearly DIFFERENT use case and title.")
+    except Exception:
+        pass
+    return ""
 
 
 def _build_short_prompt(t: dict) -> str:
@@ -112,6 +139,7 @@ def _build_short_prompt(t: dict) -> str:
         f"The title MUST follow the pattern 'Top 5 AI tools for [X] · #{ep}'. "
         f"thumbnail_text MUST show 'TOP 5' on line 1 and the category/use on line 2. "
         f"MANDATORY closing CTA: 'Follow for the best AI tools every day.'"
+        + _avoid_block()
     )
 
 
@@ -129,6 +157,7 @@ def _build_long_prompt(t: dict) -> str:
         f"Only real, verifiable tools and facts — no invented pricing/features. "
         f"Title format: '[Topic] — The Complete Guide (2026)'. "
         f"Mandatory closing: 'Subscribe for a new AI deep-dive every week.'"
+        + _avoid_block()
     )
 
 

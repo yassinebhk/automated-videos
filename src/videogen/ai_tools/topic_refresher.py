@@ -167,7 +167,16 @@ _VERACITY_RULES = (
 )
 
 
-def refresh_topics_for(n: int = 15) -> list[dict] | None:
+def _covered_block(covered) -> str:
+    ts = [t for t in (covered or []) if t][:70]
+    if not ts:
+        return ""
+    body = "\n".join(f"- {t[:95]}" for t in ts)
+    return ("\n\n⛔ ALREADY PUBLISHED ON OUR CHANNEL — DO NOT repeat or resemble these "
+            "(pick COMPLETELY different use cases/angles, not variations):\n" + body + "\n")
+
+
+def refresh_topics_for(n: int = 15, covered=None) -> list[dict] | None:
     """Genera N topics SHORT frescos (formato 'Top 5 AI tools for X')."""
     trends, n_sources = _trends_block()
     prompt = (
@@ -187,9 +196,21 @@ def refresh_topics_for(n: int = 15) -> list[dict] | None:
         f"- cifra_ancla: a soft VERIFIABLE anchor (e.g. 'all have free tiers')\n\n"
         f"Prefer fresh, long-tail use cases (a specific job/audience), NOT generic "
         f"'best AI tools' already covered by huge channels. Rotate use cases widely."
+        + _covered_block(covered)
     )
     topics = _gemini_topics(prompt, temperature=1.0)
     if not topics:
+        return None
+    if covered:
+        try:
+            from .. import dedup_common
+            b = len(topics)
+            topics = [t for t in topics if not dedup_common.title_is_repeat(t.get("titulo", ""), covered)]
+            if b - len(topics):
+                print(f"  aitools refresher: filtró {b-len(topics)} topics repetidos")
+        except Exception:
+            pass
+    if len(topics) < 3:
         return None
     _save_dynamic({
         "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -200,7 +221,7 @@ def refresh_topics_for(n: int = 15) -> list[dict] | None:
     return topics
 
 
-def refresh_longform_topics_for(n: int = 8) -> list[dict] | None:
+def refresh_longform_topics_for(n: int = 8, covered=None) -> list[dict] | None:
     """Genera N topics LONG-FORM (~8 min, guía/comparativa en profundidad)."""
     trends, n_sources = _trends_block()
     prompt = (
@@ -220,9 +241,18 @@ def refresh_longform_topics_for(n: int = 8) -> list[dict] | None:
         f"- hook: what the viewer will learn, max 100 chars\n"
         f"- cifra_ancla: a soft verifiable anchor / key takeaway\n\n"
         f"Each topic must have enough substance for 3-5 distinct chapters."
+        + _covered_block(covered)
     )
     topics = _gemini_topics(prompt, temperature=0.9)
     if not topics:
+        return None
+    if covered:
+        try:
+            from .. import dedup_common
+            topics = [t for t in topics if not dedup_common.title_is_repeat(t.get("titulo", ""), covered)]
+        except Exception:
+            pass
+    if len(topics) < 3:
         return None
     _save_dynamic({
         "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -237,10 +267,16 @@ def refresh_longform_topics_for(n: int = 8) -> list[dict] | None:
 def get_all_topics_merged(static_pool: list[dict], kind: str = "short") -> list[dict]:
     """Pool estático + dinámicos (dedup por key). Auto-refresca si toca."""
     if is_refresh_due(kind):
+        covered = [t.get("titulo", "") for t in static_pool if t.get("titulo")]
+        try:
+            from .. import dedup_common
+            covered += dedup_common.recent_titles_from_history("youtube_aitools", days=150)
+        except Exception:
+            pass
         if kind == "long":
-            refresh_longform_topics_for()
+            refresh_longform_topics_for(covered=covered)
         else:
-            refresh_topics_for()
+            refresh_topics_for(covered=covered)
     dyn = _load_dynamic(kind).get("topics", [])
     seen = {t.get("key") for t in static_pool}
     fresh = [t for t in dyn if t.get("key") not in seen]
