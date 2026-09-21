@@ -1750,7 +1750,15 @@ async def _run_autogen_daily(chat_id: int, ctx: ContextTypes.DEFAULT_TYPE) -> No
         print(msg)
         await ctx.bot.send_message(chat_id, msg)
         return
-    topic = fresh[0]
+    # ~20% de los días prioriza una idea de CURIOSIDAD-CON-CIFRA ([ACTUALIDAD]) — el
+    # formato de mejor mediana del canal (21/09). El resto de días: corrupción (fresh[0]).
+    import random as _rnd
+    curio = [f for f in fresh if "[ACTUALIDAD]" in f.upper()]
+    if curio and _rnd.random() < 0.20:
+        topic = curio[0]
+        print(f"  autogen: turno CURIOSIDAD-número → {topic[:70]}")
+    else:
+        topic = fresh[0]
 
     # Palanca B — SERIE numerada: prefijar topic con "[Episodio #N ...]" para
     # que el prompt genere titles del tipo "Estafas Españolas #47: <hook>"
