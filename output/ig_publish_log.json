@@ -1,18 +1,5 @@
 [
   {
-    "slug": "top-5-trabajos-peor-pagados",
-    "title": "TOP 5 trabajos PEOR pagados · Salario mínimo · #1",
-    "status": "fail_container_ready",
-    "container_id": "18095910992188569",
-    "public_url": "https://yassinebhk.github.io/automated-videos/reels/top-5-trabajos-peor-pagados.mp4",
-    "attempts": 4,
-    "catbox_status": "rc=412 body=Invalid uploader",
-    "status_ext": "ERROR",
-    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
-    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095910992188569'}",
-    "ts": "2026-09-19T19:01:38.405360+00:00"
-  },
-  {
     "slug": "5-crimenes-resueltos-ciencia-forense",
     "title": "5 asesinos atrapados por la ciencia · 5 sentencias firmes · #1",
     "status": "ok",
@@ -1108,5 +1095,13 @@
     "media_id": "18115696540989414",
     "url": "https://instagram.com/reel/18115696540989414",
     "ts": "2026-09-21T13:15:24.143618+00:00"
+  },
+  {
+    "slug": "articulos-seo-ia-gratis-agencia",
+    "title": "Escribe 4 artículos SEO con IA gratis · 500€/mes · #1",
+    "status": "ok",
+    "media_id": "18096894803258486",
+    "url": "https://instagram.com/reel/18096894803258486",
+    "ts": "2026-09-21T15:33:56.959202+00:00"
   }
 ]
