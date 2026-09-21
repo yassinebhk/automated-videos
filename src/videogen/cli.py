@@ -1538,20 +1538,29 @@ def backfill_once_cmd(per_platform: int, platforms: str):
 
 
 @cli.command(name="dashboard")
-def dashboard_cmd():
-    """Regenera docs/dashboard/data.json (panel de control multi-canal, GitHub Pages).
+@click.option("--serve", "serve_", is_flag=True,
+              help="Abre el panel en LOCAL (localhost) en vez de solo regenerar el JSON.")
+@click.option("--port", default=5056, show_default=True, help="Puerto del servidor local.")
+@click.option("--no-open", is_flag=True, help="No abrir el navegador automáticamente.")
+def dashboard_cmd(serve_: bool, port: int, no_open: bool):
+    """Panel de control multi-canal (Centro de Mando).
+
+    Sin flags: regenera docs/dashboard/data.json (lo que usa el job diario).
+    --serve: regenera y lo SIRVE EN LOCAL en http://127.0.0.1:<port>/ (abre el navegador).
 
     Agrega TODAS las métricas reales (YouTube/IG/TikTok/Bluesky/Mastodon/Threads),
     top/peor contenido, análisis de temas y la agenda (cron de cada canal).
-    La UI vive en docs/dashboard/index.html → https://yassinebhk.github.io/automated-videos/dashboard/
     """
     from . import dashboard
+    if serve_:
+        dashboard.serve(port=port, open_browser=not no_open)
+        return
     dest = dashboard.write()
     data = json.loads(dest.read_text(encoding="utf-8"))
     print(f"✓ {dest} ({dest.stat().st_size/1024:.0f} KB)")
     print(f"  canales={len(data['channels'])} redes={len(data['socials'])} "
           f"agenda_próx={len(data['schedule']['upcoming'])} histórico={len(data['schedule']['history'])}")
-    print("  URL: https://yassinebhk.github.io/automated-videos/dashboard/")
+    print("  Para verlo en local:  videogen dashboard --serve")
 
 
 @cli.command(name="dispatch")

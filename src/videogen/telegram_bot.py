@@ -89,8 +89,8 @@ HELP_TEXT = (
     "Si recibes «🚨 TOKEN YT CADUCADO» → en la Mac ejecuta `videogen reauth` (1 comando, 30s, abre navegador y listo). Google revoca el token cada ~7 días.\n"
     "/stats — estadísticas de YouTube (suscriptores + por video)\n"
     "/optimal — mejores horas para publicar (YouTube/TikTok)\n"
-    "/panel — 📊 Centro de Mando: panel web con TODAS las métricas de todos los canales y redes, "
-    "conclusiones, top de contenido y la agenda (lista + calendario). Se actualiza solo.\n"
+    "/panel — 📊 Centro de Mando: panel LOCAL (`videogen dashboard --serve`) con TODAS las métricas "
+    "de todos los canales y redes, conclusiones, top de contenido y la agenda (lista + calendario).\n"
     "/ui — enlace a la UI web (misma WiFi)\n"
     "/start — iniciar y ver tu chat id\n"
     "/help — esta ayuda\n\n"
@@ -125,12 +125,13 @@ async def ui_cmd(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 async def panel_cmd(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "📊 *Centro de Mando* — panel de control de toda la red\n\n"
-        "https://yassinebhk.github.io/automated-videos/dashboard/\n\n"
-        "Métricas en tiempo real de los 15 canales de YouTube y las 5 redes, "
-        "conclusiones automáticas, top y peor contenido, temas que funcionan y "
-        "la agenda de publicación (lista + calendario + histórico).\n"
-        "_Se regenera solo con cada snapshot diario._",
-        parse_mode="Markdown", disable_web_page_preview=False,
+        "En tu Mac, ejecuta:\n"
+        "`videogen dashboard --serve`\n\n"
+        "Se abre en el navegador en http://127.0.0.1:5056 con las métricas de los "
+        "15 canales de YouTube y las 5 redes, conclusiones automáticas, top y peor "
+        "contenido, temas que funcionan y la agenda (lista + calendario + histórico).\n"
+        "_Regenera los datos al arrancar._",
+        parse_mode="Markdown",
     )
 
 

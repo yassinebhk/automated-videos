@@ -584,6 +584,44 @@ def write(dest: Path | None = None) -> Path:
     return dest
 
 
+def serve(port: int = 5056, open_browser: bool = True) -> None:
+    """Sirve el panel en local (http://127.0.0.1:<port>/). Regenera data.json al
+    arrancar. Coste cero, sin depender de GitHub Pages. Ctrl+C para parar."""
+    import functools
+    import http.server
+    import socketserver
+    import webbrowser
+
+    write()  # datos frescos
+    directory = str((DOCS / "dashboard").resolve())
+
+    class _Handler(http.server.SimpleHTTPRequestHandler):
+        def end_headers(self):
+            # sin caché → el navegador siempre lee el data.json más reciente
+            self.send_header("Cache-Control", "no-store, max-age=0")
+            super().end_headers()
+
+        def log_message(self, *_a):  # silencio (no ensuciar la terminal)
+            pass
+
+    handler = functools.partial(_Handler, directory=directory)
+    socketserver.TCPServer.allow_reuse_address = True
+    url = f"http://127.0.0.1:{port}/"
+    with socketserver.TCPServer(("127.0.0.1", port), handler) as httpd:
+        print(f"\n  📊 Centro de Mando en LOCAL → {url}")
+        print(f"     sirviendo {directory}")
+        print("     (Ctrl+C para parar)\n")
+        if open_browser:
+            try:
+                webbrowser.open(url)
+            except Exception:
+                pass
+        try:
+            httpd.serve_forever()
+        except KeyboardInterrupt:
+            print("\n  panel detenido.")
+
+
 if __name__ == "__main__":
     p = write()
     d = json.loads(p.read_text(encoding="utf-8"))
