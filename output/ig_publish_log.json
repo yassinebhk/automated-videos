@@ -1,31 +1,5 @@
 [
   {
-    "slug": "top-4-neumaticos-low-cost-evitar-ocu",
-    "title": "TOP 4 neumáticos low cost a evitar · 12 metros más frenada · #1",
-    "status": "fail_container_ready",
-    "container_id": "18095903819188569",
-    "public_url": "https://yassinebhk.github.io/automated-videos/reels/top-4-neumaticos-low-cost-evitar-ocu.mp4",
-    "attempts": 4,
-    "catbox_status": "rc=412 body=Invalid uploader",
-    "status_ext": "ERROR",
-    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
-    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095903819188569'}",
-    "ts": "2026-09-19T17:49:28.925803+00:00"
-  },
-  {
-    "slug": "top-tesoros-flota-indias-1588",
-    "title": "TOP 4 Tesoros ocultos de los galeones · 1588 · #1",
-    "status": "fail_container_ready",
-    "container_id": "18095905661188569",
-    "public_url": "https://yassinebhk.github.io/automated-videos/reels/top-tesoros-flota-indias-1588.mp4",
-    "attempts": 4,
-    "catbox_status": "rc=412 body=Invalid uploader",
-    "status_ext": "ERROR",
-    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
-    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095905661188569'}",
-    "ts": "2026-09-19T18:09:57.820890+00:00"
-  },
-  {
     "slug": "articulos-seo-ia-gratis-agencia",
     "title": "Escribe 4 artículos SEO con IA gratis · 500€/mes · #1",
     "status": "ok",
@@ -1113,5 +1087,26 @@
     "media_id": "18111259277029012",
     "url": "https://instagram.com/reel/18111259277029012",
     "ts": "2026-09-21T11:42:01.343516+00:00"
+  },
+  {
+    "slug": "padel_tactic_smash_20260921_114549",
+    "title": "The 'Por Tres' Smash — Padel Tactics #padel #shorts",
+    "status": "fail_container_ready",
+    "container_id": "18096105908188569",
+    "public_url": "https://yassinebhk.github.io/automated-videos/reels/padel_tactic_smash_20260921_114549.mp4",
+    "attempts": 4,
+    "catbox_status": "rc=412 body=Invalid uploader",
+    "status_ext": "ERROR",
+    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
+    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18096105908188569'}",
+    "ts": "2026-09-21T12:01:30.211187+00:00"
+  },
+  {
+    "slug": "padel_tactic_smash_20260921_114549",
+    "title": "The 'Por Tres' Smash — Padel Tactics #padel #shorts",
+    "status": "ok",
+    "media_id": "18216424867353779",
+    "url": "https://instagram.com/reel/18216424867353779",
+    "ts": "2026-09-21T12:06:24.428668+00:00"
   }
 ]
