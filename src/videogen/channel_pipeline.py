@@ -216,27 +216,33 @@ def _crosspost(cfg: ChannelConfig, slug: str, url: str, topic: dict) -> dict[str
                 print(f"  {cfg.slug} {name} fail: {e}")
                 result[icon] = False
 
-    # Instagram Reels — sube el video mp4 real, no solo link
-    try:
-        from .config import UPLOADED_DIR, PENDING_DIR
-        from . import instagram_poster
-        mp4 = None
-        for base in (UPLOADED_DIR, PENDING_DIR):
-            p = base / slug / "video_es_vertical.mp4"
-            if p.exists():
-                mp4 = p
-                break
-        if mp4:
-            r = instagram_poster.post_reel_to_instagram(
-                title, url, mp4, slug, teaser=teaser,
-            )
-            result["📸"] = bool(r)
-        else:
-            print(f"  {cfg.slug} ig: no mp4 encontrado para {slug}")
-            result["📸"] = False
-    except Exception as e:
-        print(f"  {cfg.slug} ig fail: {e}")
+    # Instagram Reels — SOLO whitelist true crime ES (fix 21/09 tras
+    # deep research: cuenta @waitwhy_ perdía -40-80% reach por mezcla).
+    from .crosspost_full import _ig_allowed
+    if not _ig_allowed(cfg.slug):
+        print(f"  {cfg.slug} ig: SKIP (no en whitelist true crime ES)")
         result["📸"] = False
+    else:
+        try:
+            from .config import UPLOADED_DIR, PENDING_DIR
+            from . import instagram_poster
+            mp4 = None
+            for base in (UPLOADED_DIR, PENDING_DIR):
+                p = base / slug / "video_es_vertical.mp4"
+                if p.exists():
+                    mp4 = p
+                    break
+            if mp4:
+                r = instagram_poster.post_reel_to_instagram(
+                    title, url, mp4, slug, teaser=teaser,
+                )
+                result["📸"] = bool(r)
+            else:
+                print(f"  {cfg.slug} ig: no mp4 encontrado para {slug}")
+                result["📸"] = False
+        except Exception as e:
+            print(f"  {cfg.slug} ig fail: {e}")
+            result["📸"] = False
 
     return result
 
