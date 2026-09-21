@@ -69,14 +69,22 @@ def _get_credentials() -> Credentials:
                 client_id=client_id,
                 client_secret=client_secret,
                 token_uri="https://oauth2.googleapis.com/token",
-                scopes=SCOPES,
+                # ⚠️ NUNCA pasar scopes en el REFRESH. Google, en un refresh_token
+                # grant, si mandas `scope` exige que sea SUBSET de lo concedido; pedir
+                # un scope que el token no tiene (p.ej. yt-analytics.readonly antes de
+                # reautorizar) → invalid_scope → refresh KO → subida rota. Con scopes=None
+                # no se manda `scope` y Google devuelve los concedidos (incluye analytics
+                # SOLO si el token ya lo tenía → activación graceful). Bug 21/09 aefc60d.
+                scopes=None,
             )
             creds.refresh(Request())
             return creds
         print(f"  YT: prefix={prefix} sin creds completas, fallback a token file")
     creds: Credentials | None = None
     if TOKEN_FILE.exists():
-        creds = Credentials.from_authorized_user_file(str(TOKEN_FILE), SCOPES)
+        # scopes=None → usa los scopes guardados en el propio token file (siempre
+        # subset de lo concedido) → el refresh no puede dar invalid_scope.
+        creds = Credentials.from_authorized_user_file(str(TOKEN_FILE), None)
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())

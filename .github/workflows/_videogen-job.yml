@@ -238,11 +238,11 @@ jobs:
           PYTHONUNBUFFERED: "1"
           AUTOGEN_PUBLISH_HOUR: ${{ inputs.publish_hour || '21' }}
           EXTRA_ENV: ${{ inputs.extra_env }}
-          # Analytics YT (watch-time real YPP): activo. Requiere que TODOS los
-          # canales estén reautorizados con este scope. Si un token viejo no lo
-          # tiene → invalid_scope → healthcheck manda botón "RENOVAR TODOS" a
-          # Telegram → 1 click reauth batch en cadena → fix.
-          YT_ANALYTICS_SCOPE: "1"
+          # YT_ANALYTICS_SCOPE: NO se fuerza aquí (bug 21/09 5673465: forzarlo pedía el
+          # scope yt-analytics.readonly en CADA refresh → invalid_scope en todo token no
+          # reautorizado → subidas rotas). El watch-time real (YPP) se activa solo si el
+          # token del canal ya tiene ese scope concedido (vía reauth por Telegram); el
+          # refresh ya no pide scopes (upload_youtube._get_credentials) → activación graceful.
           # YT_COOKIES: cada step tiene su propio env aislado. El step 1
           # "Reconstruir .env" lo usaba para dump a /tmp/yt_cookies.txt, pero
           # el CLI yt-cookies-check lee os.environ.get("YT_COOKIES") DIRECTO
