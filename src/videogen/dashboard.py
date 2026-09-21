@@ -731,6 +731,65 @@ def build() -> dict:
     net_series = _merge_ff([c["series"] for c in channels_out if c["series"]], ("subs", "views"))
     social_series = _merge_ff([s["series"] for s in socials_out if s["series"]], ("subs",))
 
+    # ── VISIÓN EJECUTIVA (escala + proyección + rendimiento por nicho + capacidades) ──
+    from datetime import date as _date
+
+    def _d(s):
+        try:
+            return _date.fromisoformat(s)
+        except Exception:
+            return None
+
+    yt_videos_total = sum(c["videos"] for c in channels_out)
+    social_posts_total = sum(s["posts"] for s in socials_out)
+    per_day = sum(1 for r in recurring
+                  if r["category"] == "content" and r["days"] == "Cada día" and not r["paused"])
+    showcase = dict(
+        videos_yt=yt_videos_total, posts_social=social_posts_total,
+        content_total=yt_videos_total + social_posts_total,
+        views_yt=net_views, audience=net_subs + social_followers,
+        days=rng["days"], channels=len(core),
+        channels_active=len([c for c in channels_out if c["status"] == "active"]),
+        networks=1 + len(socials_out), langs=len({c["lang"] for c in channels_out}),
+        per_day=per_day, cost=0,
+    )
+    velocity = {}
+    if len(net_series) >= 2:
+        w = net_series[-30:] if len(net_series) >= 30 else net_series
+        a, b = w[0], w[-1]
+        da, db = _d(a["date"]), _d(b["date"])
+        span = (db - da).days if (da and db) else 0
+        if span > 0:
+            sr = (b["subs"] - a["subs"]) / span
+            vr = (b["views"] - a["views"]) / span
+            velocity = dict(
+                span=span, subs_day=round(sr, 1), views_day=round(vr),
+                subs_now=b["subs"], views_now=b["views"],
+                subs_30=round(b["subs"] + sr * 30), subs_90=round(b["subs"] + sr * 90),
+                views_30=round(b["views"] + vr * 30), views_90=round(b["views"] + vr * 90),
+            )
+    catmap: dict[str, dict] = {}
+    for c in channels_out:
+        if c["views"] <= 0:
+            continue
+        m = catmap.setdefault(c["cat"], {"cat": c["cat"], "channels": 0, "videos": 0, "views": 0})
+        m["channels"] += 1
+        m["videos"] += c["videos"]
+        m["views"] += c["views"]
+    by_category = sorted(catmap.values(), key=lambda x: x["views"], reverse=True)
+    for m in by_category:
+        m["vpv"] = round(m["views"] / m["videos"]) if m["videos"] else 0
+    capabilities = [
+        "Ideas frescas automáticas (prensa/nichos) + anti-repetición semántica",
+        "Guion con IA (Gemini) — solo datos verificables + disclaimer legal",
+        "Voz neural (Edge-TTS) en ES/EN + música libre de derechos",
+        "Render multi-formato: Shorts, long-form, animación Manim, bar-chart-race, satisfying",
+        "Miniatura + hook en pantalla + imágenes reales (Pexels/Pixabay)",
+        "Subida y programación automática en YouTube (10 canales)",
+        "Cross-post a TikTok, Instagram, Bluesky, Mastodon y Threads",
+        "Analítica diaria, este panel en tiempo real y reauth por Telegram",
+    ]
+
     return dict(
         generated_at=datetime.now(timezone.utc).isoformat(),
         generated_local=datetime.now(_MADRID).strftime("%Y-%m-%d %H:%M"),
@@ -743,6 +802,7 @@ def build() -> dict:
                      top_topics=top_topics, worst_topics=worst_topics),
         ig=ig, crosspost=cross,
         weekday=global_weekday,
+        showcase=showcase, velocity=velocity, by_category=by_category, capabilities=capabilities,
         schedule=dict(recurring=recurring, upcoming=upcoming, history=history[:400]),
         pages_base=PAGES_BASE,
     )

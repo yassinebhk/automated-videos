@@ -329,6 +329,10 @@ const ICON={
   close:'<path d="M6 6l12 12M18 6L6 18"/>',
   activity:'<path d="M3 12h4l2.5-7 5 14 2.5-7H21"/>',
   clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>',
+  rocket:'<path d="M5 15c-1.5 1.5-2 5-2 5s3.5-.5 5-2M9 12l3 3M14.5 5.5C17 3 21 3 21 3s0 4-2.5 6.5L12 16l-4-4 6.5-6.5z"/><circle cx="15" cy="9" r="1.2" fill="currentColor" stroke="none"/>',
+  film2:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 9h18M8 5v14"/>',
+  cost:'<circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2 0 0 1 5 0c0 2-3 1.5-3 3M12 15.5v.5"/>',
+  globe:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/>',
 };
 const HEALTH={al_dia:'Al día',atrasado:'Atrasado',inactivo:'Inactivo',sin_subidas:'Sin subidas',pausado:'En pausa',sin_datos:'Analítica pendiente'};
 const DOW=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
@@ -408,11 +412,64 @@ function areaOne(el,labels,data,color,label){
 function go(sec){STATE.sec=sec;clearCharts();
   document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.sec===sec));
   document.querySelectorAll('section.view').forEach(s=>s.classList.toggle('on',s.id==='v-'+sec));
-  const TL={resumen:'Resumen',canales:'Canales',produccion:'Producción',contenido:'Contenido',redes:'Redes sociales',agenda:'Agenda'};
+  const TL={vision:'Visión',resumen:'Resumen',canales:'Canales',produccion:'Producción',contenido:'Contenido',redes:'Redes sociales',agenda:'Agenda'};
   const tt=document.getElementById('tb-title');if(tt)tt.textContent=TL[sec]||sec;
   try{history.replaceState(null,'','#'+sec)}catch(e){}
   R[sec]();window.scrollTo({top:0,behavior:'instant'});}
 function rerender(){clearCharts();R[STATE.sec]();}
+
+/* ── VISIÓN (showcase ejecutivo) ── */
+function renderVision(){
+  const d=DATA, el=document.getElementById('v-vision');
+  const s=d.showcase||{}, v=d.velocity||{}, cats=d.by_category||[], caps=d.capabilities||[];
+  const tile=(ic,val,lab,sub)=>`<div class="card kpi"><div class="ic">${svg(ic)}</div>
+    <div class="lab">${lab}</div><div class="val">${val}</div>
+    <div class="faint" style="font-size:11px">${sub||''}</div></div>`;
+  const tiles=[
+    tile('film2', fmt(s.content_total), 'Contenido producido', `${fmt(s.videos_yt)} vídeos + ${fmt(s.posts_social)} posts`),
+    tile('eye', short(s.views_yt), 'Visualizaciones YT', `en ${s.days} días`),
+    tile('users', fmt(s.audience), 'Audiencia total', 'subs + seguidores'),
+    tile('play', s.channels, 'Canales de YouTube', `${s.channels_active} activos`),
+    tile('globe', s.networks, 'Plataformas', 'YouTube + 5 redes'),
+    tile('activity', s.per_day, 'Vídeos al día', 'automáticos, sin tocar nada'),
+    tile('share', s.langs, 'Idiomas', 'español + inglés'),
+    tile('cost', '€0', 'Coste de operación', '100% herramientas gratis'),
+  ].join('');
+  const proj = v.span ? `
+    <div style="display:flex;gap:22px;flex-wrap:wrap;margin-bottom:12px;font-family:var(--mono)">
+      <div><div class="num" style="font-size:22px;color:var(--good)">+${v.subs_day}/día</div><div class="faint" style="font-size:11px">suscriptores</div></div>
+      <div><div class="num" style="font-size:22px;color:var(--good)">+${short(v.views_day)}/día</div><div class="faint" style="font-size:11px">visualizaciones</div></div>
+    </div>
+    <p style="margin:0 0 4px;font-size:13px">Si el ritmo actual se mantiene:
+      <b>${fmt(v.subs_30)} subs</b> y <b>${short(v.views_30)} views</b> en 30 días ·
+      <b>${fmt(v.subs_90)} subs</b> y <b>${short(v.views_90)} views</b> en 90.</p>
+    <p class="hint" style="margin:0">Proyección lineal orientativa sobre los últimos ${v.span} días — no es una promesa.</p>`
+    : '<p class="hint">Aún sin histórico suficiente para proyectar.</p>';
+  el.innerHTML=`
+    <div class="sechead" style="margin-top:0"><h2>Una fábrica de contenido que se opera sola</h2>
+      <span class="eyebrow">a coste cero · ${s.days} días en marcha</span></div>
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr))">${tiles}</div>
+
+    <div class="grid g32" style="margin-top:22px">
+      <div class="card pad"><div class="sechead" style="margin:0 0 12px"><h2 style="font-size:15px">Crecimiento y proyección</h2></div>
+        ${proj}<div class="chartbox sm" style="margin-top:12px"><canvas id="vgrowth"></canvas></div></div>
+      <div class="card pad"><div class="sechead" style="margin:0 0 12px"><h2 style="font-size:15px">Rendimiento por nicho</h2><span class="eyebrow">views/vídeo</span></div>
+        <div class="chartbox sm"><canvas id="vcat"></canvas></div></div>
+    </div>
+
+    <div class="sechead"><h2>Qué hace la máquina sola</h2><span class="eyebrow">pipeline de punta a punta</span></div>
+    <div class="card pad"><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:12px 22px">
+      ${caps.map((c,i)=>`<div style="display:flex;gap:12px;align-items:flex-start">
+        <div style="flex:none;width:26px;height:26px;border-radius:8px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-family:var(--mono);font-weight:600;font-size:12px">${i+1}</div>
+        <div style="font-size:13px;line-height:1.5">${c}</div></div>`).join('')}
+    </div></div>
+
+    <div class="sechead"><h2>Conclusiones</h2><span class="eyebrow">datos reales</span></div>
+    <div class="grid insights">${d.insights.map(i=>`<div class="card ins ${i.tone}"><h4>${i.title}</h4><p>${i.body}</p></div>`).join('')}</div>`;
+  heroChart(document.getElementById('vgrowth'),d.net_series.map(p=>p.date),d.net_series.map(p=>p.views),d.net_series.map(p=>p.subs));
+  hbar(document.getElementById('vcat'),cats.slice(0,8).map((m,i)=>({label:m.cat.split(' / ')[0],v:m.vpv,c:CH_COLORS_JS[i%CH_COLORS_JS.length]})));
+}
+const CH_COLORS_JS=['#e63357','#0d9fd8','#1fa463','#c78300','#7c5cff','#e07a3a','#0aa0a0','#c23aad'];
 
 /* ── RESUMEN ── */
 function renderResumen(){
@@ -705,7 +762,7 @@ function histView(d){
         ${h.url?`<span class="linkout">${svg('ext')}</span>`:''}</a>`).join('')}</div></div>`).join('')}`;
 }
 
-const R={resumen:renderResumen,canales:renderCanales,produccion:renderProduccion,contenido:renderContenido,redes:renderRedes,agenda:renderAgenda};
+const R={vision:renderVision,resumen:renderResumen,canales:renderCanales,produccion:renderProduccion,contenido:renderContenido,redes:renderRedes,agenda:renderAgenda};
 
 /* ── theme ── */
 function applyTheme(t){
@@ -720,7 +777,7 @@ function toggleTheme(){const cur=document.documentElement.getAttribute('data-the
 
 /* ── boot ── */
 function shell(){
-  const nav=[['resumen','grid','Resumen'],['canales','play','Canales'],['produccion','activity','Producción'],['contenido','film','Contenido'],['redes','share','Redes'],['agenda','cal','Agenda']];
+  const nav=[['vision','rocket','Visión'],['resumen','grid','Resumen'],['canales','play','Canales'],['produccion','activity','Producción'],['contenido','film','Contenido'],['redes','share','Redes'],['agenda','cal','Agenda']];
   document.getElementById('root').outerHTML=`<div class="app">
     <aside class="rail"><div class="brand"><div class="dot">V</div><div><b>Centro de Mando</b><span>videogen network</span></div></div>
       <nav class="nav">${nav.map(([k,i,l])=>`<button data-sec="${k}">${svg(i)}<span>${l}</span></button>`).join('')}</nav>
@@ -730,11 +787,12 @@ function shell(){
         <div class="sub"><span class="live"></span><span id="tb-upd">en tiempo real</span> · ${DATA.range.days} días de histórico</div></div>
         <div class="tb-right"><button class="iconbtn" id="themebtn"></button></div></div>
       <div class="wrap">
+        <section class="view" id="v-vision"></section>
         <section class="view" id="v-resumen"></section><section class="view" id="v-canales"></section>
         <section class="view" id="v-produccion"></section>
         <section class="view" id="v-contenido"></section><section class="view" id="v-redes"></section>
         <section class="view" id="v-agenda"></section></div></div></div>`;
-  const TL={resumen:'Resumen',canales:'Canales',produccion:'Producción',contenido:'Contenido',redes:'Redes sociales',agenda:'Agenda'};
+  const TL={vision:'Visión',resumen:'Resumen',canales:'Canales',produccion:'Producción',contenido:'Contenido',redes:'Redes sociales',agenda:'Agenda'};
   document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>{document.getElementById('tb-title').textContent=TL[b.dataset.sec];go(b.dataset.sec)});
   document.getElementById('themebtn').onclick=toggleTheme;
   document.getElementById('scrim').onclick=closeDrawer;
@@ -749,7 +807,7 @@ async function boot(){
   catch(e){document.getElementById('root').innerHTML='<div class="loading"><div>No se pudo cargar <b>data.json</b>. Genera con <code>videogen dashboard</code>.</div></div>';return;}
   shell();applyTheme(t);
   const init=(location.hash||'').slice(1);
-  go(R[init]?init:'resumen');startAutoRefresh();
+  go(R[init]?init:'vision');startAutoRefresh();
 }
 function startAutoRefresh(){
   if(window.__DASHBOARD_DATA__)return; // datos incrustados → sin fetch
