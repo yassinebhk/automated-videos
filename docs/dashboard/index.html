@@ -638,22 +638,60 @@ function renderProduccion(){
 }
 
 /* ── CONTENIDO ── */
+function vbar(el,items,color){
+  const o=baseOpts();o.interaction={mode:'index',intersect:false};
+  o.scales={x:{grid:{display:false},ticks:{font:{size:9},maxRotation:0,autoSkip:true,maxTicksLimit:13}},
+            y:{grid:{color:css('--border'),drawBorder:false},ticks:{callback:v=>short(v),font:{size:10}},beginAtZero:true}};
+  const c=new Chart(el,{type:'bar',data:{labels:items.map(i=>i.label),datasets:[{data:items.map(i=>i.v),
+    backgroundColor:color,borderRadius:5,maxBarThickness:30}]},options:o});
+  CHARTS.push(c);return c;
+}
 function renderContenido(){
-  const d=DATA,el=document.getElementById('v-contenido');
+  const d=DATA,el=document.getElementById('v-contenido'),bt=d.content.best_time||{},cs=d.content.case_study,eng=d.content.engagement_top||[];
   const row=(v,i)=>`<a class="row" style="--_c:${v.color}" ${v.url?`href="${v.url}" target="_blank" rel="noopener"`:''}>
     <div class="rk">${i+1}</div><div class="bar"></div>
     <div class="ti"><div class="t">${v.title}</div><div class="m"><span>${v.channel}</span><span>${v.date||''}</span>${v.likes?`<span>♥ ${fmt(v.likes)}</span>`:''}</div></div>
     <div class="vv"><b>${fmt(v.views)}</b><span>views</span></div></a>`;
-  el.innerHTML=`<div class="grid two">
+  const engrow=(v,i)=>`<a class="row" style="--_c:${v.color}" ${v.url?`href="${v.url}" target="_blank" rel="noopener"`:''}>
+    <div class="rk">${i+1}</div><div class="bar"></div>
+    <div class="ti"><div class="t">${v.title}</div><div class="m"><span>${v.channel}</span><span>♥ ${fmt(v.likes)} · ${fmt(v.views)} views</span></div></div>
+    <div class="vv"><b>${v.eng}%</b><span>engagement</span></div></a>`;
+  const csCard=cs?`<div class="card pad" style="border-left:4px solid var(--accent);margin-bottom:16px">
+      <div class="eyebrow">Caso de estudio · vídeo más visto de la red</div>
+      <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:center;margin-top:10px">
+        <div style="flex:1;min-width:240px"><h2 style="font-size:19px">${cs.title}</h2>
+          <div class="faint mono" style="font-size:12px;margin-top:5px">${cs.channel} · ${cs.date||''}</div>
+          <div style="margin-top:9px;display:flex;gap:6px;flex-wrap:wrap">${(cs.keywords||[]).map(k=>`<span class="chip">${k}</span>`).join('')}</div></div>
+        <div style="display:flex;gap:24px;font-family:var(--mono)">
+          <div><div class="num" style="font-size:26px">${fmt(cs.views)}</div><div class="faint" style="font-size:11px">views</div></div>
+          <div><div class="num" style="font-size:26px;color:var(--good)">${cs.eng}%</div><div class="faint" style="font-size:11px">engagement</div></div>
+          <div><div class="num" style="font-size:26px">${fmt(cs.likes)}</div><div class="faint" style="font-size:11px">me gusta</div></div></div>
+        ${cs.url?`<a class="linkout" target="_blank" rel="noopener" href="${cs.url}">ver vídeo ${svg('ext')}</a>`:''}
+      </div></div>`:'';
+  el.innerHTML=`${csCard}
+    <div class="grid two">
       <div><div class="sechead" style="margin-top:0"><h2>Top contenido</h2><span class="eyebrow">toda la red</span></div>
         <div class="card pad ranklist">${d.content.top_overall.map(row).join('')}</div></div>
       <div><div class="sechead" style="margin-top:0"><h2>Menor rendimiento</h2><span class="eyebrow">a revisar</span></div>
         <div class="card pad ranklist">${d.content.worst_overall.map(row).join('')}</div></div></div>
-    <div class="sechead"><h2>Temas que funcionan</h2><span class="eyebrow">palabra clave · vistas medias por vídeo</span></div>
+
+    <div class="sechead"><h2>Mejor momento para publicar</h2><span class="eyebrow">vistas medias por vídeo</span></div>
+    ${(bt.best_weekday||bt.best_hour)?`<p style="margin:0 0 6px;font-size:13.5px">Los vídeos publicados en <b>${bt.best_weekday||'—'}</b> y hacia las <b>${bt.best_hour||'—'}</b> rinden más de media.</p>`:''}
+    <p class="hint" style="margin:0 0 14px">Estimado por la primera aparición en analítica (aprox. en vídeos antiguos). Horario Europa/Madrid.</p>
+    <div class="grid two">
+      <div class="card pad"><div class="eyebrow" style="margin-bottom:12px">Por día de la semana</div><div class="chartbox sm"><canvas id="cday"></canvas></div></div>
+      <div class="card pad"><div class="eyebrow" style="margin-bottom:12px">Por hora del día</div><div class="chartbox sm"><canvas id="chour"></canvas></div></div></div>
+
+    <div class="sechead"><h2>Temas que funcionan</h2><span class="eyebrow">palabra clave · vistas medias</span></div>
     <div class="grid two">
       <div class="card pad"><div class="eyebrow" style="color:var(--good);margin-bottom:14px">▲ Mayor tracción</div><div class="chartbox sm"><canvas id="topkw"></canvas></div></div>
       <div class="card pad"><div class="eyebrow" style="color:var(--warn);margin-bottom:14px">▼ Menor tracción</div><div class="chartbox sm"><canvas id="lowkw"></canvas></div></div></div>
-    <p class="hint" style="margin-top:14px">Análisis léxico de títulos con vistas reales (mín. 3 apariciones). Guía los ángulos de los próximos guiones.</p>`;
+
+    <div class="sechead"><h2>Más engagement</h2><span class="eyebrow">me gusta ÷ visualizaciones · mín. 50 views</span></div>
+    <div class="card pad ranklist">${eng.length?eng.map(engrow).join(''):'<div class="hint">Aún sin suficientes likes registrados.</div>'}</div>
+    <p class="hint" style="margin-top:14px">El engagement (no solo las vistas) marca qué conecta de verdad — aquí lideran los casos de corrupción/true crime.</p>`;
+  vbar(document.getElementById('cday'),(bt.by_weekday||[]).map(w=>({label:w.label,v:w.avg})),css('--accent'));
+  vbar(document.getElementById('chour'),(bt.by_hour||[]).map(h=>({label:h.label,v:h.avg})),css('--accent-2'));
   hbar(document.getElementById('topkw'),d.content.top_topics.slice(0,10).map(t=>({label:t.keyword,v:t.avg_views,c:css('--good')})));
   hbar(document.getElementById('lowkw'),d.content.worst_topics.slice(0,10).map(t=>({label:t.keyword,v:t.avg_views,c:css('--warn')})));
 }
@@ -723,11 +761,20 @@ const DOWES=['dom','lun','mar','mié','jue','vie','sáb'];
 function passFilter(e){return STATE.filters[e.category]&&(STATE.pausedOn||!e.paused)}
 function renderAgenda(){
   const d=DATA,el=document.getElementById('v-agenda');
+  const rec=d.schedule.recurring.filter(r=>!r.paused);
+  const shortsDay=rec.filter(r=>r.category==='content'&&r.days==='Cada día').length;
+  const longWk=rec.filter(r=>r.category==='longform').length;
+  const socialWk=rec.filter(r=>r.category==='social').length;
+  const wkTotal=shortsDay*7+longWk;
+  const st=(v,lab)=>`<div class="card pad" style="padding:14px 16px"><div class="eyebrow">${lab}</div><div class="num" style="font-size:24px;margin-top:6px">${v}</div></div>`;
+  const summary=`<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin:2px 0 4px">
+    ${st(shortsDay+'/día','Shorts programados')}${st(longWk+'/sem','Long-form semanales')}${st(socialWk+'/sem','Acciones sociales')}
+    ${st('~'+wkTotal+'/sem','Vídeos a la semana')}${st(rec.length,'Tareas automáticas')}</div>`;
   const filters=`<div class="filters">${Object.keys(CATLAB).map(k=>`<button class="fchip ${STATE.filters[k]?'on':'off'}" data-f="${k}"><span class="sw" style="background:${CATCOL[k]}"></span>${CATLAB[k]}</button>`).join('')}
     <button class="fchip ${STATE.pausedOn?'on':'off'}" data-p><span class="sw" style="background:var(--warn)"></span>Incluir pausados</button></div>`;
   const tabs=`<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><div class="subtabs">${[['cal','Calendario'],['list','Lista'],['hist','Histórico']].map(([k,l])=>`<button data-av="${k}" class="${STATE.agView===k?'on':''}">${l}</button>`).join('')}</div><span class="eyebrow">horario Europa/Madrid</span></div>`;
   const body=STATE.agView==='cal'?calView(d):STATE.agView==='list'?listView(d):histView(d);
-  el.innerHTML=`<div class="sechead" style="margin-top:0"><h2>Agenda de publicación</h2></div>${tabs}${STATE.agView!=='hist'?filters:''}<div id="agbody">${body}</div>`;
+  el.innerHTML=`<div class="sechead" style="margin-top:0"><h2>Agenda de publicación</h2><span class="eyebrow">todo automático</span></div>${summary}${tabs}${STATE.agView!=='hist'?filters:''}<div id="agbody">${body}</div>`;
   el.querySelectorAll('[data-av]').forEach(b=>b.onclick=()=>{STATE.agView=b.dataset.av;rerender()});
   el.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{STATE.filters[b.dataset.f]^=1;rerender()});
   const pb=el.querySelector('[data-p]');if(pb)pb.onclick=()=>{STATE.pausedOn^=1;rerender()};

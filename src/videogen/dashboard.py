@@ -326,12 +326,17 @@ def build() -> dict:
     for r in video_recs:
         vids_by_pk[r["platform"]].append(r)
 
-    # primera fecha en que se vio cada vídeo ≈ fecha de publicación
+    # primera fecha/hora en que se vio cada vídeo ≈ momento de publicación
     first_date_by_vid: dict[str, str] = {}
+    first_ts_by_vid: dict[str, int] = {}
     for r in sorted(video_recs, key=lambda x: x.get("ts", 0) or 0):
         vid = r.get("video_id")
-        if vid and vid not in first_date_by_vid and r.get("date"):
+        if not vid:
+            continue
+        if vid not in first_date_by_vid and r.get("date"):
             first_date_by_vid[vid] = r["date"]
+        if vid not in first_ts_by_vid and r.get("ts"):
+            first_ts_by_vid[vid] = r["ts"]
 
     today = datetime.now(_MADRID).date()
 
@@ -503,6 +508,60 @@ def build() -> dict:
     all_videos_flat.sort(key=lambda x: x["views"], reverse=True)
     top_overall = all_videos_flat[:12]
     worst_overall = [v for v in reversed(all_videos_flat) if v["views"] >= 0][:12]
+
+    # ── Mejor momento para publicar (día + hora reales, ponderado por views) ──
+    DOW_ES = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"]
+    wk_sum = [0] * 7; wk_cnt = [0] * 7
+    hr_sum = [0] * 24; hr_cnt = [0] * 24
+    for v in all_videos_flat:
+        if v["views"] <= 0:
+            continue
+        vid = v["video_id"]
+        d = first_date_by_vid.get(vid)
+        if d:
+            try:
+                wd = datetime.strptime(d, "%Y-%m-%d").weekday()
+                wk_sum[wd] += v["views"]; wk_cnt[wd] += 1
+            except Exception:
+                pass
+        ts = first_ts_by_vid.get(vid)
+        if ts:
+            try:
+                h = datetime.fromtimestamp(ts, timezone.utc).astimezone(_MADRID).hour
+                hr_sum[h] += v["views"]; hr_cnt[h] += 1
+            except Exception:
+                pass
+    by_weekday = [{"label": DOW_ES[i], "avg": round(wk_sum[i] / wk_cnt[i]) if wk_cnt[i] else 0,
+                   "count": wk_cnt[i]} for i in range(7)]
+    by_hour = [{"label": f"{i:02d}h", "avg": round(hr_sum[i] / hr_cnt[i]) if hr_cnt[i] else 0,
+                "count": hr_cnt[i]} for i in range(24)]
+    _bw = max((x for x in by_weekday if x["count"] >= 2), key=lambda x: x["avg"], default=None)
+    _bh = max((x for x in by_hour if x["count"] >= 2), key=lambda x: x["avg"], default=None)
+    best_time = dict(by_weekday=by_weekday, by_hour=by_hour,
+                     best_weekday=_bw["label"] if _bw else None,
+                     best_hour=_bh["label"] if _bh else None)
+
+    # ── Ranking por ENGAGEMENT (likes/views), no solo por views ──
+    eng_list = []
+    for v in all_videos_flat:
+        if v["views"] >= 50 and v["likes"] > 0:
+            eng_list.append({**v, "eng": round(100 * v["likes"] / v["views"], 2)})
+    engagement_top = sorted(eng_list, key=lambda x: x["eng"], reverse=True)[:10]
+
+    # ── Caso de estudio: el vídeo estrella + por qué funcionó (para demo) ──
+    case_study = None
+    if all_videos_flat:
+        cv = all_videos_flat[0]
+        kws = [w for w in re.findall(r"[a-záéíóúñ0-9]{4,}", (cv["title"] or "").lower())
+               if w not in _STOP][:5]
+        case_study = {**cv, "eng": (round(100 * cv["likes"] / cv["views"], 2) if cv["views"] else 0),
+                      "keywords": kws}
+
+    # ── Volumen publicado por día (últimos 60 días) ──
+    pub_cnt: dict[str, int] = defaultdict(int)
+    for vid, d in first_date_by_vid.items():
+        pub_cnt[d] += 1
+    pub_by_day = [{"date": d, "count": pub_cnt[d]} for d in sorted(pub_cnt)][-60:]
 
     # ── Instagram: ratio real de subidas ──
     ig = dict(total=0, ok=0, fail=0, rate=None, recent=[], by_day=[])
@@ -799,11 +858,13 @@ def build() -> dict:
         net_series=net_series, social_series=social_series,
         channels=channels_out, socials=socials_out,
         content=dict(top_overall=top_overall, worst_overall=worst_overall,
-                     top_topics=top_topics, worst_topics=worst_topics),
+                     top_topics=top_topics, worst_topics=worst_topics,
+                     best_time=best_time, engagement_top=engagement_top, case_study=case_study),
         ig=ig, crosspost=cross,
         weekday=global_weekday,
         showcase=showcase, velocity=velocity, by_category=by_category, capabilities=capabilities,
-        schedule=dict(recurring=recurring, upcoming=upcoming, history=history[:400]),
+        schedule=dict(recurring=recurring, upcoming=upcoming, history=history[:400],
+                      pub_by_day=pub_by_day),
         pages_base=PAGES_BASE,
     )
 
