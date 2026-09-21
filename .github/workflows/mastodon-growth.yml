@@ -2,14 +2,13 @@ name: Mastodon growth loop
 
 # Cada día a 10:00 UTC (=12:00 CEST) — 30 min después del bluesky-growth
 # para escalonar carga y evitar rate-limits simultáneos.
-# Ejecuta el growth loop:
-# - follow por hashtag (max 15/día)
-# - favourite (max 20/día)
-# - reblog a posts con tracción (max 3/día)
+# Ejecuta el growth loop (follow + favourite + reblog por hashtag ES).
+# 2x/día (21/09: estrategia engagement — Mastodon no crecía; +reblogs +hashtags).
 
 on:
   schedule:
-    - cron: "18 13 * * *"   # 1x/día (antes 3x — consolidación 18/09)
+    - cron: "18 10 * * *"   # mañana
+    - cron: "18 18 * * *"   # tarde
   workflow_dispatch: {}
 
 concurrency:

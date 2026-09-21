@@ -177,11 +177,19 @@ def _post_bluesky_thread(posts: list[str]) -> bool:
 
 
 def _post_mastodon_thread(posts: list[str]) -> bool:
+    import random as _r
     import requests as _req
     instance = os.environ.get("MASTODON_INSTANCE", "https://mastodon.social").rstrip("/")
     token = os.environ.get("MASTODON_ACCESS_TOKEN")
     if not token:
         return False
+    # Mastodon NO tiene algoritmo: el descubrimiento es 100% por hashtags. Sin
+    # ellos los posts son invisibles. Añadimos 3 tags ES al último post del hilo.
+    _TAGS = ["#Corrupción", "#TrueCrime", "#España", "#Historia", "#Curiosidades",
+             "#SabíasQue", "#Fraude", "#Política", "#Documental"]
+    posts = list(posts)
+    if posts:
+        posts[-1] = (posts[-1][:440].rstrip() + "\n\n" + " ".join(_r.sample(_TAGS, 3)))[:500]
     try:
         prev_id = None
         for post in posts:

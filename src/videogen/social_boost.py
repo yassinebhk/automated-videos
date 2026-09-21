@@ -210,9 +210,13 @@ def _post_platform(platform: str, text: str) -> bool:
             token = os.environ.get("MASTODON_ACCESS_TOKEN")
             if not token:
                 return False
+            # Hashtags = único descubrimiento en Mastodon (sin algoritmo).
+            _tags = ["#Corrupción", "#TrueCrime", "#España", "#Historia",
+                     "#Curiosidades", "#SabíasQue", "#Fraude", "#Política"]
+            body = (text[:440].rstrip() + "\n\n" + " ".join(random.sample(_tags, 3)))[:500]
             r = _req.post(f"{instance}/api/v1/statuses",
                           headers={"Authorization": f"Bearer {token}"},
-                          data={"status": text[:500], "visibility": "public"},
+                          data={"status": body, "visibility": "public"},
                           timeout=30)
             return r.status_code < 300
         if platform == "threads":

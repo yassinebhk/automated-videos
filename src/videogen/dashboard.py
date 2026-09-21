@@ -503,12 +503,36 @@ def build() -> dict:
         try:
             log = json.loads(igp.read_text(encoding="utf-8"))
             if isinstance(log, list):
-                ok = sum(1 for x in log if x.get("status") == "ok")
-                fail = len(log) - ok
-                ig["total"] = len(log)
+                # Éxito por VÍDEO: cada vídeo genera varios intentos (fail_container_ready
+                # → retry ok). Contar por vídeo (ok si ALGÚN intento salió) refleja la
+                # realidad (~100% con R2), no penaliza los reintentos intermedios.
+                by_vid: dict[str, str] = {}
+                for x in log:
+                    key = x.get("slug") or x.get("title") or x.get("ts")
+                    if by_vid.get(key) != "ok":
+                        by_vid[key] = "ok" if x.get("status") == "ok" else x.get("status")
+                vids = len(by_vid)
+                ok = sum(1 for v in by_vid.values() if v == "ok")
+                fail = vids - ok
+                ig["total"] = vids            # vídeos únicos
+                ig["attempts"] = len(log)     # intentos brutos (incluye reintentos)
                 ig["ok"] = ok
                 ig["fail"] = fail
-                ig["rate"] = round(100 * ok / len(log)) if log else None
+                ig["rate"] = round(100 * ok / vids) if vids else None
+                # Ratio RECIENTE (últimos 14 días) — refleja el estado con R2 + retry,
+                # sin arrastrar los fallos de la era catbox/litterbox previa.
+                cutoff = (datetime.now(timezone.utc) - timedelta(days=14)).strftime("%Y-%m-%d")
+                rv: dict[str, str] = {}
+                for x in log:
+                    if (x.get("ts") or "")[:10] < cutoff:
+                        continue
+                    key = x.get("slug") or x.get("title") or x.get("ts")
+                    if rv.get(key) != "ok":
+                        rv[key] = "ok" if x.get("status") == "ok" else x.get("status")
+                rok = sum(1 for v in rv.values() if v == "ok")
+                ig["total_recent"] = len(rv)
+                ig["ok_recent"] = rok
+                ig["rate_recent"] = round(100 * rok / len(rv)) if rv else None
                 ig["recent"] = [dict(
                     slug=x.get("slug"), title=(x.get("title") or "")[:80],
                     status=x.get("status"), url=x.get("url"),
@@ -630,7 +654,8 @@ def build() -> dict:
         dict(label="Seguidores en redes", value=social_followers, unit="",
              delta=sum((s["delta7"] or 0) for s in socials_out), icon="share"),
         dict(label="Vídeos publicados", value=net_videos, unit="", delta=None, icon="film"),
-        dict(label="Éxito subidas IG", value=ig["rate"], unit="%", delta=None, icon="instagram"),
+        dict(label="Éxito IG (14 días)", value=ig.get("rate_recent", ig["rate"]),
+             unit="%", delta=None, icon="instagram"),
         dict(label="Canales activos", value=len(active_ch),
              unit=f"/{len(channels_out)}", delta=None, icon="grid"),
     ]
@@ -661,10 +686,13 @@ def build() -> dict:
         insights.append(dict(tone="warn", title="Temas de bajo rendimiento",
             body=f"Menos tracción: {kws}. Reducir o replantear estos enfoques."))
     if ig["rate"] is not None:
-        tone = "good" if ig["rate"] >= 80 else ("warn" if ig["rate"] >= 55 else "bad")
-        insights.append(dict(tone=tone, title=f"Instagram: {ig['rate']}% de éxito",
-            body=f"{ig['ok']} publicados / {ig['fail']} fallidos de los últimos {ig['total']} intentos. "
-                 f"Host actual: Cloudflare R2."))
+        rr = ig.get("rate_recent")
+        base = rr if rr is not None else ig["rate"]
+        tone = "good" if base >= 80 else ("warn" if base >= 55 else "bad")
+        insights.append(dict(tone=tone, title=f"Instagram: {base}% de éxito (últimos 14 días)",
+            body=f"{ig.get('ok_recent', ig['ok'])}/{ig.get('total_recent', ig['total'])} vídeos "
+                 f"publicados desde el cambio a Cloudflare R2 + retry. "
+                 f"(Histórico global: {ig['rate']}%, incluye la etapa previa catbox/litterbox.)"))
     paused = [c["name"] for c in channels_out if c["status"] == "paused"]
     if paused:
         insights.append(dict(tone="info", title=f"{len(paused)} canales en pausa (consolidación)",

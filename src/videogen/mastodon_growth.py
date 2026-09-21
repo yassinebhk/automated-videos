@@ -31,9 +31,9 @@ SEED_HANDLES = [
     "cadenaser@mastodon.social",
 ]
 
-MAX_FOLLOWS_PER_RUN = 15
-MAX_FAVOURITES_PER_RUN = 20
-MAX_REBLOGS_PER_RUN = 3
+MAX_FOLLOWS_PER_RUN = 18
+MAX_FAVOURITES_PER_RUN = 25
+MAX_REBLOGS_PER_RUN = 8  # reblog = señal de engagement más fuerte (pone tu cuenta ante otros)
 
 
 def _api(method: str, path: str, token: str, instance: str, **kwargs) -> Any:

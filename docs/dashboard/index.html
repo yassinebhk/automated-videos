@@ -612,12 +612,12 @@ function renderRedes(){
   el.innerHTML=`<div class="sechead" style="margin-top:0"><h2>Plataformas sociales</h2><span class="eyebrow">${fmt(d.totals.social_followers)} seguidores totales</span></div>
     <div class="grid socgrid">${soc}</div>
     <div class="grid g32" style="margin-top:24px">
-      <div class="card pad"><div class="sechead" style="margin:0 0 16px"><h2 style="font-size:15px">Publicación en Instagram</h2><span class="eyebrow">últimos ${ig.total} intentos</span></div>
-        <div class="gauge"><div class="ring"><canvas id="iggauge"></canvas><div class="mid"><b>${ig.rate==null?'—':ig.rate+'%'}</b><span>éxito</span></div></div>
+      <div class="card pad"><div class="sechead" style="margin:0 0 16px"><h2 style="font-size:15px">Publicación en Instagram</h2><span class="eyebrow">${ig.total} vídeos · ${ig.attempts||ig.total} intentos</span></div>
+        <div class="gauge"><div class="ring"><canvas id="iggauge"></canvas><div class="mid"><b>${(ig.rate_recent!=null?ig.rate_recent:ig.rate)==null?'—':(ig.rate_recent!=null?ig.rate_recent:ig.rate)+'%'}</b><span>14 días</span></div></div>
           <div style="flex:1;min-width:200px"><div style="display:flex;gap:12px;margin-bottom:14px">
-            <div class="card pad" style="flex:1;box-shadow:none;background:var(--good-soft);border-color:transparent"><div class="eyebrow">Publicados</div><div class="num" style="font-size:24px;color:var(--good);margin-top:5px">${ig.ok}</div></div>
-            <div class="card pad" style="flex:1;box-shadow:none;background:var(--bad-soft);border-color:transparent"><div class="eyebrow">Fallidos</div><div class="num" style="font-size:24px;color:var(--bad);margin-top:5px">${ig.fail}</div></div></div>
-            <p class="hint" style="margin:0">Host actual: <b>Cloudflare R2</b> (coste 0). La ventana incluye intentos previos al cambio; el ratio sube con las nuevas subidas.</p></div></div>
+            <div class="card pad" style="flex:1;box-shadow:none;background:var(--good-soft);border-color:transparent"><div class="eyebrow">Vídeos OK (14d)</div><div class="num" style="font-size:24px;color:var(--good);margin-top:5px">${ig.ok_recent!=null?ig.ok_recent:ig.ok}</div></div>
+            <div class="card pad" style="flex:1;box-shadow:none;background:var(--bad-soft);border-color:transparent"><div class="eyebrow">Sin publicar</div><div class="num" style="font-size:24px;color:var(--bad);margin-top:5px">${(ig.total_recent!=null?ig.total_recent-ig.ok_recent:ig.fail)}</div></div></div>
+            <p class="hint" style="margin:0">% <b>por vídeo</b>: cada uno reintenta si el 1er contenedor falla, así que casi todos acaban subiendo. Host <b>Cloudflare R2</b> (coste 0).</p></div></div>
         <div class="eyebrow" style="margin:20px 0 8px">Registro reciente</div>
         <div class="iglog">${ig.recent.map(r=>`<div class="row"><span class="s ${r.status==='ok'?'ok':'fail'}"></span>
           <span class="tt">${r.url?`<a href="${r.url}" target="_blank" rel="noopener" style="text-decoration:none">${r.title||r.slug||'reel'}</a>`:(r.title||r.slug||'reel')}${r.status!=='ok'&&r.error?` <span class="faint">— ${r.error}</span>`:''}</span>
@@ -630,7 +630,7 @@ function renderRedes(){
         <p class="hint" style="margin-top:16px">1 post por short y textos rotados para evitar borrados por contenido repetido.</p></div></div>`;
   el.querySelectorAll('canvas[data-ss]').forEach(cv=>{const s=d.socials.find(x=>x.pk===cv.dataset.ss);const pts=s.series.map(p=>p.subs);spark(cv,pts.length?pts:[0,0],s.color)});
   el.querySelectorAll('.soc[data-soc]').forEach(card=>card.onclick=e=>{if(e.target.closest('a'))return;openSocial(card.dataset.soc)});
-  iggauge(document.getElementById('iggauge'),ig.ok,ig.fail);
+  iggauge(document.getElementById('iggauge'),ig.ok_recent!=null?ig.ok_recent:ig.ok,(ig.total_recent!=null?ig.total_recent-ig.ok_recent:ig.fail));
 }
 function openSocial(pk){
   const s=DATA.socials.find(x=>x.pk===pk),dr=document.getElementById('drawer');
