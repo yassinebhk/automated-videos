@@ -99,6 +99,31 @@ def _check_pixabay() -> tuple[bool, str]:
     return False, f"HTTP {r.status_code}: {str(data)[:50]}"
 
 
+def _check_r2() -> tuple[bool, str]:
+    """Uso de R2 (host IG). Alerta si nos acercamos a los 10GB gratis (no debería,
+    con la auto-limpieza de mp4 > 2 días). Si no está configurado → ok (usa catbox)."""
+    acct = os.environ.get("R2_ACCOUNT_ID", "").strip()
+    akey = os.environ.get("R2_ACCESS_KEY_ID", "").strip()
+    skey = os.environ.get("R2_SECRET_ACCESS_KEY", "").strip()
+    bucket = os.environ.get("R2_BUCKET", "").strip()
+    if not all([acct, akey, skey, bucket]):
+        return True, "no configurado (IG usa catbox)"
+    try:
+        import boto3
+        from botocore.config import Config
+        s3 = boto3.client("s3", endpoint_url=f"https://{acct}.r2.cloudflarestorage.com",
+                          aws_access_key_id=akey, aws_secret_access_key=skey,
+                          config=Config(signature_version="s3v4"), region_name="auto")
+        total = n = 0
+        for page in s3.get_paginator("list_objects_v2").paginate(Bucket=bucket):
+            for obj in page.get("Contents", []):
+                total += obj["Size"]; n += 1
+        gb = total / 1e9
+        return (gb < 8.0), f"{gb:.2f}GB / 10GB gratis · {n} objetos"
+    except Exception as e:
+        return False, f"error: {str(e)[:50]}"
+
+
 def _check_freesound() -> tuple[bool, str]:
     key = os.environ.get("FREESOUND_API_KEY", "").strip()
     if not key:
@@ -316,6 +341,7 @@ def check_all() -> dict[str, Any]:
         "Pollinations": _safe(_check_pollinations, "Pollinations"),
         "Pexels":       _safe(_check_pexels, "Pexels"),
         "Freesound(música)": _safe(_check_freesound, "Freesound"),
+        "R2(IG host)":  _safe(_check_r2, "R2"),
     }
     social = {
         "Instagram":    _safe(_check_instagram, "Instagram"),
