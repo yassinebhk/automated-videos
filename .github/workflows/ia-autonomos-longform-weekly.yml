@@ -1,0 +1,19 @@
+name: IA Autónomos long-form weekly (IA Autónomos ES)
+
+# 1 long-form/semana MIÉRCOLES 13:30 UTC (15:30 CEST).
+# Escalonado 90 min tras POV para repartir la carga de Gemini.
+
+on:
+  schedule:
+    - cron: "30 13 * * 3"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  ia_long:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: ia-autonomos-longform
+    secrets: inherit

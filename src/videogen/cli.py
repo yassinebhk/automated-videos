@@ -1163,6 +1163,16 @@ def ia_autonomos_once_cmd():
         raise SystemExit(1)
 
 
+@cli.command(name="ia-autonomos-longform")
+def ia_autonomos_longform_cmd():
+    """Genera + sube 1 long-form 'IA para autónomos ES' al canal YT_IA."""
+    from .ia_autonomos import pipeline
+    result = pipeline.run_longform()
+    print(json.dumps(result, indent=2, ensure_ascii=False))
+    if result.get("status") not in ("ok", "no_secrets"):
+        raise SystemExit(1)
+
+
 @cli.command(name="ai-tools-once")
 def ai_tools_once_cmd():
     """Genera + sube 1 Short EN 'Top 5 AI tools for X' al canal AI Tools Weekly (YT_AITOOLS)."""

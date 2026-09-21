@@ -1,0 +1,19 @@
+name: POV long-form weekly (TiempoAtrás ES)
+
+# 1 long-form/semana MIÉRCOLES 12:00 UTC (14:00 CEST).
+# Miércoles = único día libre de long-form (reparto para no saturar cuota Gemini).
+
+on:
+  schedule:
+    - cron: "0 12 * * 3"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  pov_long:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: pov-longform
+    secrets: inherit

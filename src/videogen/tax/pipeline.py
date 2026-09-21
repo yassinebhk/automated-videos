@@ -118,10 +118,7 @@ def run_longform():
 
 def run_once() -> dict[str, Any]:
     """Genera + sube 1 short fiscal al canal TaxHack."""
-    # ⏸ PAUSADO 18/09 (consolidación media — 2 subs, mediana 9 views tras 31 vídeos).
-    # Reactivar = borrar estas 2 líneas + `gh workflow enable tax-daily/tax-longform-weekly`.
-    print("  tax: ⏸ PAUSADO (consolidación media) — no genera")
-    return {"status": "paused", "channel": "tax"}
+    # Reactivado 21/09 por decisión del usuario (producir en los 10 canales).
     from .. import service
 
     topic = _pick_topic()

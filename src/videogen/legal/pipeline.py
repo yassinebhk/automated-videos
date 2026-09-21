@@ -32,8 +32,5 @@ def run_longform():
 
 
 def run_once():
-    # ⏸ PAUSADO 18/09 (consolidación media — 2 subs, mediana 7 views tras 32 vídeos).
-    # Reactivar = borrar estas 2 líneas + `gh workflow enable legal-daily/legal-longform-weekly`.
-    print("  legal: ⏸ PAUSADO (consolidación media) — no genera")
-    return {"status": "paused", "channel": "legal"}
+    # Reactivado 21/09 por decisión del usuario (producir en los 10 canales).
     return run_channel_once(CONFIG)
