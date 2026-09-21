@@ -559,6 +559,7 @@ class PadelFact(_CardBase):
                      line_spacing=1.05, should_center=True)
         _fit(title, 8.0).move_to(UP * 3.2)
         self.play(Write(title), run_time=0.8)
+        self.wait(1.6)  # beat: frase de intro narrada antes de los bullets
         rows = VGroup()
         for i, ln in enumerate(d.get("lines", [])[:3]):
             dot = Dot(radius=0.13, color=BALL_C)
@@ -566,9 +567,12 @@ class PadelFact(_CardBase):
             row = VGroup(dot, txt).arrange(RIGHT, buff=0.3)
             rows.add(row)
         rows.arrange(DOWN, buff=0.7, aligned_edge=LEFT).move_to(DOWN * 0.5)
+        # Cada bullet se queda ~5s mientras el audio lo explica (antes 1.7s → el
+        # cierre tapaba los bullets a media narración). Los 3 quedan visibles + hold.
         for row in rows:
             self.play(FadeIn(row, shift=RIGHT * 0.3), run_time=0.6)
-            self.wait(1.7)
+            self.wait(5.0)
+        self.wait(2.5)  # hold con los 3 bullets visibles
         self.outro(d.get("punch", ""), cta_text="▶  FOLLOW FOR MORE\nPADEL", hold=2.6)
 
 
@@ -642,9 +646,10 @@ class PadelCompare(_CardBase):
             self.play(*[GrowFromEdge(g[2], LEFT) for g in bars],
                       *[FadeIn(g[0]) for g in bars], *[Create(g[1]) for g in bars],
                       run_time=0.7)
-            self.wait(1.8)
+            self.wait(5.5)  # cada material visible mientras el audio lo explica (antes 1.8s)
             if idx < len(items) - 1:
                 self.play(FadeOut(shape), FadeOut(name), FadeOut(bars), run_time=0.35)
+        self.wait(1.5)
         self.outro(d.get("punch", ""), cta_text="▶  FOLLOW FOR MORE\nPADEL", hold=2.4)
 
 
@@ -672,6 +677,7 @@ class PadelChecklist(_CardBase):
                      line_spacing=1.05, should_center=True)
         _fit(title, 8.0).move_to(UP * 3.3)
         self.play(Write(title), run_time=0.8)
+        self.wait(1.6)  # beat de intro narrada
         rows = VGroup()
         for i, tip in enumerate(d.get("tips", [])[:4], start=1):
             num = Text(str(i), font_size=40, color=COURT_BG, weight=BOLD).set_z_index(2)
@@ -681,9 +687,11 @@ class PadelChecklist(_CardBase):
             row = VGroup(VGroup(badge, num), txt).arrange(RIGHT, buff=0.35)
             rows.add(row)
         rows.arrange(DOWN, buff=0.6, aligned_edge=LEFT).move_to(DOWN * 0.7)
+        # Cada tip visible ~5s mientras se narra + hold final; cierre solo al final.
         for row in rows:
             self.play(FadeIn(row, shift=RIGHT * 0.3), run_time=0.55)
-            self.wait(1.9)
+            self.wait(5.0)
+        self.wait(2.5)
         self.outro(d.get("punch", ""), cta_text="▶  FOLLOW FOR MORE\nPADEL", hold=2.4)
 
 
