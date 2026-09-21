@@ -70,10 +70,18 @@ def run_once() -> dict[str, Any]:
     from . import render, topics
     pool = topics.all_topics()
     by_key = {t["key"]: t for t in pool}
-    key = _pick_key(list(by_key.keys()))
+    # ALTERNAR SIEMPRE: animación de pista (tactic) ↔ tarjeta (fact/compare/checklist).
+    # (petición user 21/09: no solo tarjetas de texto; ir alternando con las animaciones).
+    used = _load_ledger()
+    last_key = max(used, key=used.get) if used else None
+    last_fmt = by_key.get(last_key, {}).get("format", "") if last_key else ""
+    last_was_tactic = (last_fmt == "tactic") or bool(last_key and str(last_key).startswith("tactic_"))
+    want_tactic = not last_was_tactic
+    group = [t for t in pool if (t.get("format") == "tactic") == want_tactic] or pool
+    key = _pick_key([t["key"] for t in group])
     topic = by_key[key]
     fmt = topic.get("format", "tactic")
-    print(f"  padel: topic={key} · format={fmt} ({len(pool)} en pool)")
+    print(f"  padel: topic={key} · format={fmt} · alterna→{'animación' if want_tactic else 'tarjeta'} ({len(pool)} pool)")
 
     ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     slug = f"padel_{key}_{ts}"
