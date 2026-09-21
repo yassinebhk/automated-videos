@@ -33,7 +33,7 @@ from . import (
     visuals,
     voice,
 )
-from .config import APPROVED_DIR, ASSETS_DIR, PENDING_DIR, UPLOADED_DIR, gemini_key
+from .config import APPROVED_DIR, ASSETS_DIR, PENDING_DIR, ROOT, UPLOADED_DIR, gemini_key
 from .models import VoiceTrack
 
 console = Console()
@@ -237,10 +237,22 @@ def reauth_cmd(channel_prefix: str):
             creds = flow.run_local_server(port=0)
             console.print(f"[bold green]✅ OAuth completado[/]")
             console.print(f"[bold yellow]⚠ COPIA este refresh_token al secret GH {channel_prefix}_REFRESH_TOKEN:[/]")
+            console.print(f"[dim]MUY IMPORTANTE: pega en UNA SOLA LÍNEA sin espacios/saltos.[/]")
+            console.print(f"[dim]Longitud esperada: {len(creds.refresh_token)} caracteres.[/]")
             console.print("")
-            console.print(f"[white on blue]{creds.refresh_token}[/]")
+            console.print("──── COPIAR DESDE AQUÍ (línea única): ────")
+            # sys.stdout directo (no rich) para evitar wrapping visual
+            import sys as _sys
+            _sys.stdout.write(creds.refresh_token + "\n")
+            _sys.stdout.flush()
+            console.print("──── HASTA AQUÍ ────")
             console.print("")
             console.print(f"[dim]NO actualizar CLIENT_ID/SECRET (ya son los correctos del canal)[/]")
+            # También lo escribo a un file para eliminar dudas
+            _tmp = ROOT / "output" / f".reauth_token_{channel_prefix}.txt"
+            _tmp.parent.mkdir(parents=True, exist_ok=True)
+            _tmp.write_text(creds.refresh_token, encoding="utf-8")
+            console.print(f"[dim]También guardado en: {_tmp} (haz `cat` para copiar limpio)[/]")
             return
 
         # Modo WaitWhy default (comportamiento original)
