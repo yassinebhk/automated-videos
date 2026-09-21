@@ -18,19 +18,28 @@ NICHE_PATH = PROMPTS_DIR / "niche.md"
 
 IDEAS_SYSTEM = """Eres un estratega de contenido para un canal de SHORTS con DOS vías:
 
-**Vía 1 — CORRUPCIÓN + FRAUDE ECONÓMICO ESPAÑOL** (90% del contenido — ES LO QUE RINDE):
+**Vía 1 — CORRUPCIÓN + FRAUDE ECONÓMICO ESPAÑOL** (~80% del contenido — ES LO QUE RINDE):
 casos con sentencia firme + nombres propios + cifras verificables + IMPUNIDAD.
 Análisis performance 15/09/26: casos como De la Rosa (563 vpd), Mallorca-Ley
 Silencio (746 vpd), Dívar (258 vpd), KIO (77-87 vpd), Faisán (72 vpd), 3% Catalán
 rinden 5× vs cualquier otro sub-tema. Prioridad ABSOLUTA a estos.
 
-**Vía 2 — ACTUALIDAD histórica objetiva** (10% — solo excepcionalmente):
-tono neutro. Ceuta/Melilla, OPEP 1973 rindieron OK pero mucho peor que Vía 1.
-Reducido a mínimo por decisión estratégica user 15/09/26.
+**Vía 2 — CURIOSIDAD CON CIFRA IMPACTANTE** (~20% — el formato de MEJOR mediana histórica del canal):
+preguntas con número que rompen el scroll sobre dinero/economía/datos sorprendentes.
+Los vídeos top del canal de este tipo (¿cuánto gana CR7 por SEGUNDO?, ¿cuánto cuesta
+fabricar un AirPod/iPhone?, por qué los pulpos tienen 3 corazones) rinden MEJOR de mediana
+que casi cualquier caso. Reintroducido 21/09/26 (sustituye a la vía "actualidad", que rendía peor).
+Ejemplos de buen formato:
+- "¿Cuánto gana [famoso] por SEGUNDO? La cifra te va a doler"
+- "¿Cuánto cuesta REALMENTE fabricar un [producto]?"
+- "El país que imprime más dinero del mundo (y qué pasa)"
+- "¿Por qué [dato curioso con número]?"
+Estas ideas NO son casos judiciales → NO llevan "Caso X", NO salen del pool de corrupción,
+Gemini las inventa libremente. Tono objetivo, dato verificable, sin opinión política.
 
-⚠️ REGLA DURA para Vía 2: **PROHIBIDO posicionarse políticamente**. No usar adjetivos ("brutal", "injusto", "criminal") sobre acciones de países o instituciones vivas. Solo verbos neutros ("firmaron", "declararon", "cerraron"). Fuentes: tratados, ONU, BOE, datos oficiales, no opinión de medios partidistas.
+⚠️ REGLA DURA para Vía 2: dato VERIFICABLE + sin posicionarse políticamente. No adjetivos partidistas sobre estados/instituciones vivas.
 
-Cada idea del prompt vendrá etiquetada con **[CRIMEN]** o **[ACTUALIDAD]**. Aplica el framing correcto según la etiqueta.
+Cada idea del prompt vendrá etiquetada con **[CRIMEN]** (Vía 1) o **[ACTUALIDAD]** (Vía 2 curiosidad). Aplica el framing correcto según la etiqueta: [CRIMEN]=revelación/drama/nombres; [ACTUALIDAD]=pregunta-curiosidad neutra con cifra, sin "Caso X".
 
 Te paso el BRIEF del nicho. Genera ideas con nombres CONCRETOS de casos, personas y cifras verificables.
 
@@ -121,10 +130,13 @@ def generate_ideas(n: int = 5, exclude_cases: list[str] | None = None) -> list[s
     pool_text = case_ledger.format_pool_for_prompt(days=180)
     if pool_text:
         exclusion_block = (
-            f"\n\n📋 CASOS DISPONIBLES HOY (pool rotativo — ya excluidos "
-            f"los usados últimos 180 días):\n{pool_text}\n\n"
-            f"Elige UN caso de esta lista. NO propongas casos que no estén aquí. "
-            f"Diversifica: 1 político, 1 financiero, 1 urbanístico, 1 sanitario, 1 histórico."
+            f"\n\n📋 CASOS DE CORRUPCIÓN DISPONIBLES HOY (pool rotativo — ya excluidos "
+            f"los usados últimos 180 días) — SOLO para las ideas [CRIMEN]:\n{pool_text}\n\n"
+            f"Para ideas [CRIMEN]: elige casos de esta lista (NO uses casos que no estén). "
+            f"Diversifica: político, financiero, urbanístico, sanitario.\n"
+            f"MEZCLA OBLIGATORIA: ~80% ideas [CRIMEN] (del pool) + ~20% ideas [ACTUALIDAD] "
+            f"de CURIOSIDAD-CON-CIFRA (Vía 2, inventadas libremente, NO del pool). "
+            f"De las {n} ideas incluye AL MENOS 1-2 de curiosidad-número [ACTUALIDAD]."
         )
     if exclude_cases:
         exclusion_block += (
