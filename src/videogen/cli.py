@@ -198,28 +198,42 @@ def reauth_cmd(channel_prefix: str):
 
     try:
         if channel_prefix:
-            # Multi-canal: borra creds env cache y fuerza nuevo OAuth manual
-            # NO borra TOKEN_FILE (ese solo aplica a WaitWhy default).
-            console.print("[yellow]Modo multi-canal: se abrirá InstalledAppFlow para nueva OAuth[/]")
-            console.print(f"[yellow]Prepara: cuenta Google del canal {channel_prefix} + secret GH {channel_prefix}_REFRESH_TOKEN a actualizar[/]")
-            # Fuerza el flujo interactivo eliminando el refresh_token del env
-            os.environ.pop(f"{channel_prefix}_REFRESH_TOKEN", None)
-        elif upload_youtube.TOKEN_FILE.exists():
+            # Multi-canal: OAuth directo con InstalledAppFlow (no llama a
+            # _get_credentials que exige refresh_token previo — justo lo que
+            # queremos regenerar aquí).
+            console.print("[yellow]Modo multi-canal: OAuth flow directo (client_secret.json local)[/]")
+            console.print(f"[yellow]Prepara: cuenta Google del canal {channel_prefix} para elegir en el navegador[/]")
+            if not upload_youtube.CLIENT_SECRET.exists():
+                console.print(f"[bold red]❌ Falta {upload_youtube.CLIENT_SECRET}[/]")
+                console.print("[red]Descarga OAuth client 'Desktop App' del Google Cloud Console con scopes YouTube Data API v3[/]")
+                raise SystemExit(1)
+            import google_auth_oauthlib.flow
+            flow = google_auth_oauthlib.flow.InstalledAppFlow.from_client_secrets_file(
+                str(upload_youtube.CLIENT_SECRET), upload_youtube.SCOPES,
+            )
+            console.print("[bold cyan]Abriendo navegador — elige la cuenta Google del canal correcto[/]")
+            creds = flow.run_local_server(port=0)
+            console.print(f"[bold green]✅ OAuth completado[/]")
+            console.print(f"[bold yellow]⚠ COPIA este refresh_token al secret GH {channel_prefix}_REFRESH_TOKEN:[/]")
+            console.print("")
+            console.print(f"[white on blue]{creds.refresh_token}[/]")
+            console.print("")
+            console.print(f"[dim]También (por si acaso) actualiza {channel_prefix}_CLIENT_ID y {channel_prefix}_CLIENT_SECRET con los mismos del client_secret.json local:[/]")
+            console.print(f"[dim]  client_id: {creds.client_id}[/]")
+            console.print(f"[dim]  client_secret: {creds.client_secret}[/]")
+            return
+
+        # Modo WaitWhy default (comportamiento original)
+        if upload_youtube.TOKEN_FILE.exists():
             upload_youtube.TOKEN_FILE.unlink()
             console.print(f"  [yellow]Token WaitWhy anterior borrado:[/] {upload_youtube.TOKEN_FILE}")
-
         console.print("[bold cyan]Abriendo navegador para autenticar con Google…[/]")
         creds = upload_youtube._get_credentials()
         console.print(f"[bold green]✅ OAuth completado[/]")
-        if channel_prefix:
-            console.print(f"[bold yellow]⚠ COPIA este refresh_token al secret GH {channel_prefix}_REFRESH_TOKEN:[/]")
-            console.print(f"[white on black]{creds.refresh_token}[/]")
-        else:
-            console.print(f"[green]Guardado en {upload_youtube.TOKEN_FILE}[/]")
-            # Verifica con una llamada real (solo WaitWhy tiene stats fetcher)
-            from . import stats
-            ch = stats.fetch_channel_stats() or {}
-            console.print(f"  Verificado · {ch.get('subscribers',0)} subs · {ch.get('videos',0)} videos")
+        console.print(f"[green]Guardado en {upload_youtube.TOKEN_FILE}[/]")
+        from . import stats
+        ch = stats.fetch_channel_stats() or {}
+        console.print(f"  Verificado · {ch.get('subscribers',0)} subs · {ch.get('videos',0)} videos")
     except Exception as e:
         console.print(f"[bold red]❌ Re-auth falló:[/] {e}")
         raise SystemExit(1)
