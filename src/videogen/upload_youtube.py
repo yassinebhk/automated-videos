@@ -12,6 +12,9 @@ from googleapiclient.http import MediaFileUpload
 
 from .config import SECRETS_DIR
 
+import os as _os_scopes
+
+# Scopes básicos — TODOS los refresh_tokens actuales están autorizados con estos.
 SCOPES = [
     "https://www.googleapis.com/auth/youtube.upload",
     "https://www.googleapis.com/auth/youtube.readonly",
@@ -19,10 +22,15 @@ SCOPES = [
     # de videos propios (necesario para limpiar zombies duplicados y otras
     # operaciones de mantenimiento del canal desde el pipeline).
     "https://www.googleapis.com/auth/youtube.force-ssl",
-    # Analytics (watch-time, views de Shorts 90d) → para el progreso REAL de YPP.
-    # Requiere reautorizar los canales para que el token incluya este scope.
-    "https://www.googleapis.com/auth/yt-analytics.readonly",
 ]
+
+# Analytics scope OPT-IN: incluye watch-time/views 90d (para YPP progress real).
+# Requiere REAUTH de todos los canales (commit aefc60d lo añadió como default y
+# rompió los 9 tokens con invalid_scope 21/09). Ahora es opt-in vía env var:
+#   YT_ANALYTICS_SCOPE=1 → incluye scope (necesita reauth después)
+#   default (0/vacío) → scope OMITIDO, tokens actuales funcionan
+if _os_scopes.environ.get("YT_ANALYTICS_SCOPE", "").strip() in ("1", "true", "yes"):
+    SCOPES.append("https://www.googleapis.com/auth/yt-analytics.readonly")
 CLIENT_SECRET = SECRETS_DIR / "youtube_client_secret.json"
 TOKEN_FILE = SECRETS_DIR / "youtube_token.json"
 
