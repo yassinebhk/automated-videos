@@ -108,6 +108,23 @@ def _pick_topic(cfg: ChannelConfig, kind: str = "short") -> dict | None:
     fresh = [t for t in all_t if not _recently_used(ledger_path, _key(t), cfg.cooldown_days)]
     if not fresh:
         fresh = all_t
+    # Anti-repeat SEMÁNTICO: descarta topics cuyo `titulo` se parezca a algo YA
+    # publicado (no solo por key). Cubre el hueco que dejaba repetir el mismo
+    # tema con otra key o generado por el refresher dinámico.
+    try:
+        from . import dedup_common
+        pk = dedup_common.platform_key_for_prefix(cfg.yt_prefix)
+        recents = dedup_common.recent_titles_from_history(pk, days=max(cfg.cooldown_days, 120))
+        if recents:
+            fresh2 = [t for t in fresh
+                      if not dedup_common.title_is_repeat(t.get("titulo") or t.get("key", ""), recents)]
+            dropped = len(fresh) - len(fresh2)
+            if fresh2:
+                if dropped:
+                    print(f"  {cfg.slug}-{kind}: anti-repeat descartó {dropped} topics ya cubiertos")
+                fresh = fresh2
+    except Exception as e:
+        print(f"  {cfg.slug}-{kind}: dedup título skip ({e})")
     # Balance por audiencia si el pool tiene esa clave
     if any("audiencia" in t for t in fresh):
         by_aud: dict[str, list[dict]] = {}
@@ -120,6 +137,21 @@ def _pick_topic(cfg: ChannelConfig, kind: str = "short") -> dict | None:
 
 def _next_episode_num(cfg: ChannelConfig) -> int:
     return len(_load_ledger(ROOT / "output" / cfg.ledger_filename)) + 1
+
+
+def _avoid_block(cfg: ChannelConfig, n: int = 25) -> str:
+    """Bloque 'NO repitas' con títulos ya publicados del canal (anti-repeat)."""
+    try:
+        from . import dedup_common
+        pk = dedup_common.platform_key_for_prefix(cfg.yt_prefix)
+        block = dedup_common.recent_titles_block(pk, days=150, n=n)
+        if block:
+            return (f" ⛔ PROHIBIDO repetir o parecerse a estos temas YA PUBLICADOS "
+                    f"en el canal: {block}. Elige un ÁNGULO y TÍTULO claramente DISTINTO; "
+                    f"si el tema roza uno de esos, cámbialo por otro.")
+    except Exception:
+        pass
+    return ""
 
 
 def _build_topic_prompt(cfg: ChannelConfig, t: dict) -> str:
@@ -136,6 +168,7 @@ def _build_topic_prompt(cfg: ChannelConfig, t: dict) -> str:
         f"El title DEBE seguir el patrón '[N] [Beneficio concreto] · [Cifra] · #{ep}' (TOP N lista). "
         f"El thumbnail_text DEBE mostrar N grande + CIFRA. "
         f"CIERRE: 'Consulta con un profesional tu caso. Sígueme para más.'"
+        + _avoid_block(cfg)
     )
 
 
@@ -251,6 +284,7 @@ def _build_longform_topic_prompt(cfg: ChannelConfig, t: dict) -> str:
         f"Hook central: {hook}. Cifra clave: {cifra}. "
         f"El title formato: '[Tema completo] EXPLICADO en 7 minutos · [dato clave]'. "
         f"Cierre obligatorio: 'Consulta con un profesional tu caso. Sígueme para más.'"
+        + _avoid_block(cfg)
     )
 
 

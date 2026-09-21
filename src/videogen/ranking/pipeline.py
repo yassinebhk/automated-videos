@@ -50,6 +50,14 @@ def run_longform() -> dict[str, Any]:
         f"TODOS los datos reales y verificables, citando la fuente y el año. "
         f"Title patrón: 'TOP N: {topic['titulo']} · del #N al #1'."
     )
+    try:
+        from .. import dedup_common
+        block = dedup_common.recent_titles_block("youtube_ranking", days=150, n=20)
+        if block:
+            topic_prompt += (f" ⛔ NO repitas rankings ya publicados: {block}. "
+                             f"Si el tema roza uno de esos, cambia a otro ranking distinto.")
+    except Exception:
+        pass
 
     os.environ["SCRIPT_SYSTEM_PROMPT_FILE"] = "ranking_system.md"
     os.environ["YT_CHANNEL_PREFIX"] = "YT_RANKING"
