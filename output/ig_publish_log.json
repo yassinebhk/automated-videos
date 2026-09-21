@@ -2,19 +2,6 @@
   {
     "slug": "harmo_harmo_teal_20260919_155131",
     "title": "Mesmerizing Harmonograph Art #satisfying #shorts",
-    "status": "fail_container_ready",
-    "container_id": "18095892725188569",
-    "public_url": "https://yassinebhk.github.io/automated-videos/reels/harmo_harmo_teal_20260919_155131.mp4",
-    "attempts": 4,
-    "catbox_status": "rc=412 body=Invalid uploader",
-    "status_ext": "ERROR",
-    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
-    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095892725188569'}",
-    "ts": "2026-09-19T16:05:44.197990+00:00"
-  },
-  {
-    "slug": "harmo_harmo_teal_20260919_155131",
-    "title": "Mesmerizing Harmonograph Art #satisfying #shorts",
     "status": "ok",
     "media_id": "17899773018375343",
     "url": "https://instagram.com/reel/17899773018375343",
@@ -1118,5 +1105,13 @@
     "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
     "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18096093806188569'}",
     "ts": "2026-09-21T09:23:54.108672+00:00"
+  },
+  {
+    "slug": "padel_tactic_serve_20260921_094548",
+    "title": "The Smart Serve — Padel Tactics #padel #shorts",
+    "status": "ok",
+    "media_id": "18115709338963517",
+    "url": "https://instagram.com/reel/18115709338963517",
+    "ts": "2026-09-21T09:48:19.422867+00:00"
   }
 ]
