@@ -1,0 +1,19 @@
+name: Ranking long-form weekly (TopRanking ES)
+
+# 1 long-form/semana JUEVES 15:00 UTC (17:00 CEST) — Top-N en cuenta atrás.
+# Jueves para separarlo de POV/IA (miércoles) y repartir la carga de Gemini.
+
+on:
+  schedule:
+    - cron: "0 15 * * 4"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  ranking_long:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: ranking-longform
+    secrets: inherit

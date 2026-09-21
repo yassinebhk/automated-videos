@@ -95,6 +95,7 @@ SCHEDULE_MAP: dict[str, tuple[str, str, str]] = {
     "ai-tools-longform-weekly": ("AI Tools · Long-form", "AI Tools Weekly",  "longform"),
     "pov-longform-weekly":    ("TiempoAtrás · Long-form", "TiempoAtrás ES",  "longform"),
     "ia-autonomos-longform-weekly": ("IA Autónomos · Long-form", "IA Autónomos ES", "longform"),
+    "ranking-longform-weekly": ("TopRanking · Long-form",  "TopRanking ES",    "longform"),
     "weekly-longform":        ("WaitWhy · Long-form",    "WaitWhy",          "longform"),
     "social-boost":           ("Cross-post redes",       "Todos",            "social"),
     "bluesky-growth":         ("Bluesky · growth",       "Bluesky",          "social"),

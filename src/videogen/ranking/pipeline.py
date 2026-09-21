@@ -16,6 +16,67 @@ RANKING_LEDGER = ROOT / "output" / "ranking_ledger.json"
 COOLDOWN_DAYS = 90
 
 
+# ── Long-form (Top-N en cuenta atrás narrada) ──────────────────────────────
+# Reutiliza el render/upload PROBADO (service.generate_long/publish_long, igual
+# que tax/legal/pov) pero con prompt de CUENTA ATRÁS propio y pool de rankings
+# reales curados — NO el prompt genérico "explicación en capítulos" (que choca
+# con el formato countdown) ni los topics dinámicos "análisis" del refresher.
+LONG_COOLDOWN_DAYS = 120
+
+
+def run_longform() -> dict[str, Any]:
+    """Genera + sube 1 long-form (~8 min) Top-N en cuenta atrás al canal YT_RANKING."""
+    import os
+    import random
+    from .. import service
+    from . import topic_pool_long
+    from ..channel_pipeline import _load_ledger, _mark_used, _recently_used, _notify
+
+    ledger = ROOT / "output" / "ranking_ledger.json"
+    pool = topic_pool_long.all_topics()
+    fresh = [t for t in pool if not _recently_used(ledger, t["key"] + "_LONG", LONG_COOLDOWN_DAYS)]
+    if not fresh:
+        fresh = pool
+    topic = random.choice(fresh)
+
+    topic_prompt = (
+        f"[LONG-FORM · CUENTA ATRÁS · Canal TopRanking ES] "
+        f"Tema: {topic['titulo']}. "
+        f"FORMATO OBLIGATORIO = Top-N en cuenta atrás del #N al #1 (sigue la estructura "
+        f"del system prompt: cold open que adelanta el #1 sin revelarlo → contexto con "
+        f"criterio y fuente → cuenta atrás puesto a puesto con su cifra y una curiosidad "
+        f"real → clímax en el #1 → cierre con pódium y CTA). "
+        f"Gancho central: {topic['hook']}. Criterio/cifra de cada puesto: {topic['cifra_ancla']}. "
+        f"TODOS los datos reales y verificables, citando la fuente y el año. "
+        f"Title patrón: 'TOP N: {topic['titulo']} · del #N al #1'."
+    )
+
+    os.environ["SCRIPT_SYSTEM_PROMPT_FILE"] = "ranking_system.md"
+    os.environ["YT_CHANNEL_PREFIX"] = "YT_RANKING"
+    os.environ.setdefault("EDGE_VOICE_ES_RANKING", "es-ES-AlvaroNeural")
+    print(f"  ranking-long: topic={topic['key']} · "
+          f"has_refresh={bool(os.environ.get('YT_RANKING_REFRESH_TOKEN'))}")
+    try:
+        slug = service.generate_long(topic_prompt, target_minutes=8, langs=("es",),
+                                       progress=lambda m: print(f"  {m}"))
+        print("  ranking-long: subiendo a TopRanking ES…")
+        links = service.publish_long(slug, ("es",), privacy="public",
+                                       progress=lambda m: print(f"  {m}"), notify=False)
+        _mark_used(ledger, topic["key"] + "_LONG")
+        url = links.get("es", "?")
+        _notify(f"✅ <b>TopRanking · long-form</b>\nslug: <code>{slug}</code>\n{url}")
+        return {"status": "ok", "slug": slug, "url": url,
+                "topic_key": topic["key"], "kind": "long"}
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        _notify(f"❌ TopRanking long-form falló: {type(e).__name__}: {str(e)[:200]}")
+        return {"status": "gen_fail", "error": str(e), "topic_key": topic["key"]}
+    finally:
+        os.environ.pop("SCRIPT_SYSTEM_PROMPT_FILE", None)
+        os.environ.pop("YT_CHANNEL_PREFIX", None)
+
+
 def _load_ledger() -> dict[str, str]:
     if not RANKING_LEDGER.exists():
         return {}

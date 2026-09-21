@@ -1193,6 +1193,16 @@ def ai_tools_longform_cmd():
         raise SystemExit(1)
 
 
+@cli.command(name="ranking-longform")
+def ranking_longform_cmd():
+    """Genera + sube 1 long-form Top-N (cuenta atrás) al canal TopRanking (YT_RANKING)."""
+    from .ranking import pipeline
+    result = pipeline.run_longform()
+    print(json.dumps(result, indent=2, ensure_ascii=False))
+    if result.get("status") not in ("ok", "no_secrets", "no_topic"):
+        raise SystemExit(1)
+
+
 @cli.command(name="rankings-en-once")
 def rankings_en_once_cmd():
     """Genera + sube 1 bar chart race EN al canal Global Rankings (YT_RANKINGS)."""
