@@ -169,27 +169,65 @@ def cli():
 
 
 @cli.command(name="reauth")
-def reauth_cmd():
-    """Re-autoriza YouTube OAuth (borra token caducado + abre navegador).
+@click.option("--channel", "channel_prefix", type=str, default="",
+              help="Prefix del canal (ej. YT_IA, YT_TAX). Vacío = WaitWhy default")
+def reauth_cmd(channel_prefix: str):
+    """Re-autoriza YouTube OAuth. Abre navegador para autenticar cuenta Google.
 
     Necesario cada ~7 días si el proyecto Google Cloud está en Testing mode
-    (Google revoca refresh tokens). Una vez ejecutado: elige cuenta → acepta.
+    (Google revoca refresh tokens con invalid_grant).
+
+    Uso:
+      videogen reauth                       → WaitWhy default
+      videogen reauth --channel YT_IA       → IA Autónomos
+      videogen reauth --channel YT_TAX      → TaxHack ES
+
+    IMPORTANTE: en el navegador elige la cuenta Google del CANAL correcto
+    (no la cuenta principal). Tras completar: pega el nuevo refresh_token
+    al secret GH correspondiente (YT_IA_REFRESH_TOKEN, YT_TAX_REFRESH_TOKEN, etc).
     """
+    import os
     from . import upload_youtube
-    if upload_youtube.TOKEN_FILE.exists():
-        upload_youtube.TOKEN_FILE.unlink()
-        console.print(f"  [yellow]Token anterior borrado:[/] {upload_youtube.TOKEN_FILE}")
-    console.print("[bold cyan]Abriendo navegador para autenticar con Google…[/]")
+    prev = os.environ.get("YT_CHANNEL_PREFIX", "")
+    if channel_prefix:
+        os.environ["YT_CHANNEL_PREFIX"] = channel_prefix
+        console.print(f"[cyan]Canal: {channel_prefix} (necesitarás elegir la cuenta Google del canal)[/]")
+    else:
+        os.environ.pop("YT_CHANNEL_PREFIX", None)
+        console.print("[cyan]Canal: WaitWhy default[/]")
+
     try:
+        if channel_prefix:
+            # Multi-canal: borra creds env cache y fuerza nuevo OAuth manual
+            # NO borra TOKEN_FILE (ese solo aplica a WaitWhy default).
+            console.print("[yellow]Modo multi-canal: se abrirá InstalledAppFlow para nueva OAuth[/]")
+            console.print(f"[yellow]Prepara: cuenta Google del canal {channel_prefix} + secret GH {channel_prefix}_REFRESH_TOKEN a actualizar[/]")
+            # Fuerza el flujo interactivo eliminando el refresh_token del env
+            os.environ.pop(f"{channel_prefix}_REFRESH_TOKEN", None)
+        elif upload_youtube.TOKEN_FILE.exists():
+            upload_youtube.TOKEN_FILE.unlink()
+            console.print(f"  [yellow]Token WaitWhy anterior borrado:[/] {upload_youtube.TOKEN_FILE}")
+
+        console.print("[bold cyan]Abriendo navegador para autenticar con Google…[/]")
         creds = upload_youtube._get_credentials()
-        console.print(f"[bold green]✅ Nuevo token guardado en[/] {upload_youtube.TOKEN_FILE}")
-        # Verifica con una llamada real
-        from . import stats
-        ch = stats.fetch_channel_stats() or {}
-        console.print(f"  Verificado · {ch.get('subscribers',0)} subs · {ch.get('videos',0)} videos")
+        console.print(f"[bold green]✅ OAuth completado[/]")
+        if channel_prefix:
+            console.print(f"[bold yellow]⚠ COPIA este refresh_token al secret GH {channel_prefix}_REFRESH_TOKEN:[/]")
+            console.print(f"[white on black]{creds.refresh_token}[/]")
+        else:
+            console.print(f"[green]Guardado en {upload_youtube.TOKEN_FILE}[/]")
+            # Verifica con una llamada real (solo WaitWhy tiene stats fetcher)
+            from . import stats
+            ch = stats.fetch_channel_stats() or {}
+            console.print(f"  Verificado · {ch.get('subscribers',0)} subs · {ch.get('videos',0)} videos")
     except Exception as e:
         console.print(f"[bold red]❌ Re-auth falló:[/] {e}")
         raise SystemExit(1)
+    finally:
+        if prev:
+            os.environ["YT_CHANNEL_PREFIX"] = prev
+        else:
+            os.environ.pop("YT_CHANNEL_PREFIX", None)
 
 
 @cli.command(name="doctor")
