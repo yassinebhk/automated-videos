@@ -1,7 +1,9 @@
 """Modelos Pydantic compartidos por el pipeline."""
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+import re
+
+from pydantic import BaseModel, Field, model_validator
 
 
 class ScriptSegment(BaseModel):
@@ -18,12 +20,21 @@ class LocalizedScript(BaseModel):
     lang: str  # "es" | "en"
     title: str
     description: str
-    hashtags: list[str]
+    hashtags: list[str] = Field(default_factory=list)  # opcional: Gemini a veces lo omite → no romper
     thumbnail_text: str
     teaser: ScriptSegment | None = None  # cold-open: ráfaga de payoffs (~5s)
     hook: ScriptSegment
     body: list[ScriptSegment]
     cta: ScriptSegment
+
+    @model_validator(mode="after")
+    def _fallback_hashtags(self):
+        # Si Gemini no devolvió hashtags, deriva unos del título (no dejar el vídeo sin
+        # etiquetas de descubrimiento; antes esto rompía el pipeline entero).
+        if not self.hashtags:
+            words = [w.lower() for w in re.findall(r"[A-Za-zÁÉÍÓÚÑáéíóúñ]{4,}", self.title or "")][:4]
+            self.hashtags = ["#" + w for w in words] or ["#shorts"]
+        return self
 
     def ordered_segments(self) -> list[tuple[str, "ScriptSegment"]]:
         """Segmentos en orden de reproducción con su etiqueta.
@@ -87,7 +98,7 @@ class LongLocalizedScript(BaseModel):
     lang: str
     title: str
     description: str  # se enriquecerá con timestamps automáticos
-    hashtags: list[str]
+    hashtags: list[str] = Field(default_factory=list)  # opcional: Gemini a veces lo omite → no romper
     thumbnail_text: str
     intro: ScriptSegment  # ~30-45s: hook + tesis del vídeo
     chapters: list[LongChapter]  # 3-5 capítulos de ~90-120s
@@ -132,7 +143,7 @@ class TTNativeScript(BaseModel):
     lang: str = "es"
     title: str
     thumbnail_text: str
-    hashtags: list[str]
+    hashtags: list[str] = Field(default_factory=list)
     segments: list[ScriptSegment]
     comment_bait: str  # pregunta corta (4-7 palabras) para overlay final
 
