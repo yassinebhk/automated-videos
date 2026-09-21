@@ -23,8 +23,30 @@ from ..config import ROOT
 from . import manim_scene
 
 DYNAMIC_PATH = ROOT / "output" / "dynamic_topics_padel.json"
-REFRESH_INTERVAL_DAYS = 14
+REFRESH_INTERVAL_DAYS = 7  # semanal (antes 14 → se repetían ideas a las 2 sem)
 CTA = "Follow for more padel."
+
+# Fuentes de pádel para inspiración de temas frescos (foros/prensa del nicho).
+# Si no resuelven, refresh_dynamic cae al conocimiento general de Gemini.
+PADEL_RSS = [
+    "https://www.padelfip.com/feed/",
+    "https://www.relevo.com/rss/padel/",
+    "https://www.padelspain.net/feed/",
+]
+
+
+def _padel_rss_titles(limit: int = 24) -> list[str]:
+    import re as _re
+    import urllib.request as _u
+    out: list[str] = []
+    for url in PADEL_RSS:
+        try:
+            req = _u.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+            data = _u.urlopen(req, timeout=10).read().decode("utf-8", "ignore")
+            out.extend(t.strip() for t in _re.findall(r"<title>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?</title>", data)[1:9])
+        except Exception:
+            continue
+    return [t for t in out if t][:limit]
 
 
 # ─────────────────────── SEED: tácticas (animación a medida) ───────────────────────
@@ -166,7 +188,15 @@ def _refresh_due() -> bool:
 def refresh_dynamic(n: int = 12) -> list[dict] | None:
     """Genera N topics frescos (fact/checklist) vía Gemini. Guarda en disco.
     Solo fact/checklist (bajo riesgo veracidad: curiosidades verificables + consejos)."""
-    existing_keys = [t["key"] for t in _static_pool()] + [t.get("key") for t in _load_dynamic().get("topics", [])]
+    existing = _static_pool() + _load_dynamic().get("topics", [])
+    existing_keys = [t.get("key") for t in existing]
+    existing_titles = [" ".join((t.get("title") or "").split()) for t in existing if t.get("title")]
+    rss = _padel_rss_titles()
+    rss_block = ("\nFresh padel headlines for inspiration (do NOT copy, just spark new angles):\n"
+                 + "\n".join(f"- {t[:110]}" for t in rss[:20])) if rss else ""
+    avoid_block = ("\n\n⛔ ALREADY PUBLISHED — do NOT repeat or resemble these titles "
+                   "(pick clearly different angles):\n"
+                   + "\n".join(f"- {t[:80]}" for t in existing_titles[:60])) if existing_titles else ""
     try:
         from google import genai
         from google.genai import types
@@ -193,7 +223,8 @@ def refresh_dynamic(n: int = 12) -> list[dict] | None:
             f"STRICT TRUTH RULES: only widely-accepted, general padel knowledge. "
             f"NEVER invent brand names, prices, specs, dates you're unsure of, or statistics. "
             f"Coaching tips are fine as general advice. If unsure about a fact, don't include it.\n\n"
-            f"Do NOT repeat these existing ideas (by theme): {', '.join(k for k in existing_keys if k)[:1200]}.\n\n"
+            f"Do NOT repeat these existing ideas (by theme): {', '.join(k for k in existing_keys if k)[:900]}."
+            f"{avoid_block}{rss_block}\n\n"
             f"For each idea output:\n"
             f"- key: unique snake_case slug prefixed with the format, e.g. 'fact_xxx' or 'checklist_xxx'\n"
             f"- format: 'fact' or 'checklist'\n"
@@ -210,6 +241,17 @@ def refresh_dynamic(n: int = 12) -> list[dict] | None:
         )
         data = json.loads((resp.text or "").strip())
         topics = [t for t in data.get("topics", []) if t.get("format") in ("fact", "checklist")]
+        # Filtro anti-repeat por título contra lo ya existente (por si la key es
+        # nueva pero el tema es casi igual).
+        try:
+            from .. import dedup_common
+            b = len(topics)
+            topics = [t for t in topics
+                      if not dedup_common.title_is_repeat(" ".join((t.get("title") or "").split()), existing_titles)]
+            if b - len(topics):
+                print(f"  padel topics: filtró {b-len(topics)} repetidos por título")
+        except Exception:
+            pass
         # normaliza items → lines/tips
         for t in topics:
             its = t.pop("items", [])

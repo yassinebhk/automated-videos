@@ -31,7 +31,7 @@ _TITLE_STOP = {
     # EN
     "the", "of", "to", "in", "for", "a", "an", "and", "your", "you", "how",
     "why", "what", "best", "top", "tools", "tool", "shorts", "short", "video",
-    "videos", "guide", "ways", "tips", "things",
+    "videos", "guide", "ways", "tips", "things", "which", "vs", "padel",
 }
 # ruido a quitar del título antes de tokenizar
 _TITLE_NOISE = re.compile(r"(#\w+|[·|]\s*#?\d+.*$|\d+[\d.,]*\s*(€|euros?|millones?|k|m)\b)", re.I)
@@ -45,8 +45,14 @@ def norm_title(t: str) -> str:
     return re.sub(r"\s+", " ", t).strip()
 
 
+def _stem(w: str) -> str:
+    # singular/plural laxo: racket/rackets, coche/coches, tool/tools → misma raíz
+    return w[:-1] if len(w) > 4 and w.endswith("s") and not w.endswith("ss") else w
+
+
 def title_tokens(t: str) -> set[str]:
-    return {w for w in norm_title(t).split() if len(w) >= 3 and w not in _TITLE_STOP}
+    return {_stem(w) for w in norm_title(t).split()
+            if len(w) >= 3 and w not in _TITLE_STOP}
 
 
 def title_is_repeat(title: str, recent_titles, thr: float = 0.55) -> bool:

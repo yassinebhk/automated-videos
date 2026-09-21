@@ -78,6 +78,25 @@ def run_once() -> dict[str, Any]:
     last_was_tactic = (last_fmt == "tactic") or bool(last_key and str(last_key).startswith("tactic_"))
     want_tactic = not last_was_tactic
     group = [t for t in pool if (t.get("format") == "tactic") == want_tactic] or pool
+    # Anti-repeat SEMÁNTICO: quita del grupo los topics cuyo título/tema se parezca
+    # a algo publicado hace poco (por si el refresher generó una curiosidad casi
+    # igual con otra key). Las tácticas son 8 fijas → rota el menos-reciente igual.
+    try:
+        from .. import dedup_common
+        recent_used_titles = []
+        for k in sorted(used, key=used.get, reverse=True)[:15]:
+            t = by_key.get(k)
+            if t:
+                recent_used_titles.append(_flat(t.get("title") or t.get("name") or k))
+        group2 = [t for t in group
+                  if not dedup_common.title_is_repeat(_flat(t.get("title") or t.get("name") or t["key"]),
+                                                       recent_used_titles)]
+        if group2:
+            if len(group) - len(group2):
+                print(f"  padel: anti-repeat descartó {len(group)-len(group2)} topics parecidos a recientes")
+            group = group2
+    except Exception as e:
+        print(f"  padel: dedup título skip ({e})")
     key = _pick_key([t["key"] for t in group])
     topic = by_key[key]
     fmt = topic.get("format", "tactic")
