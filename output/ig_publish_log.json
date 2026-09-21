@@ -2,19 +2,6 @@
   {
     "slug": "padel_tactic_defense_20260919_195247",
     "title": "Patient Defense — Padel Tactics #padel #shorts",
-    "status": "fail_container_ready",
-    "container_id": "18095915531188569",
-    "public_url": "https://yassinebhk.github.io/automated-videos/reels/padel_tactic_defense_20260919_195247.mp4",
-    "attempts": 4,
-    "catbox_status": "rc=412 body=Invalid uploader",
-    "status_ext": "ERROR",
-    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
-    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095915531188569'}",
-    "ts": "2026-09-19T20:08:18.359098+00:00"
-  },
-  {
-    "slug": "padel_tactic_defense_20260919_195247",
-    "title": "Patient Defense — Padel Tactics #padel #shorts",
     "status": "ok",
     "media_id": "18109727918598302",
     "url": "https://instagram.com/reel/18109727918598302",
@@ -1103,5 +1090,13 @@
     "media_id": "18080416388371248",
     "url": "https://instagram.com/reel/18080416388371248",
     "ts": "2026-09-21T17:12:24.565730+00:00"
+  },
+  {
+    "slug": "top-5-ai-note-taking-tools-1",
+    "title": "Top 5 AI tools for student notes · #1",
+    "status": "ok",
+    "media_id": "18037718486833569",
+    "url": "https://instagram.com/reel/18037718486833569",
+    "ts": "2026-09-21T19:39:41.819531+00:00"
   }
 ]
