@@ -470,7 +470,7 @@ def build() -> dict:
                 video_id=vid, title=_strip_html(r.get("title") or "") or "(sin texto)",
                 views=r.get("views", 0) or 0, likes=r.get("likes", 0) or 0,
                 comments=r.get("comments", 0) or 0, date=r.get("date"),
-                url=_video_url(s["pk"], vid)))
+                url=r.get("permalink") or _video_url(s["pk"], vid)))
         plist.sort(key=lambda x: (x["views"], x["likes"], x["comments"]), reverse=True)
         socials_out.append(dict(
             pk=s["pk"], name=s["name"], handle=s.get("handle"), url=s.get("url"),

@@ -408,8 +408,41 @@ def snapshot_threads() -> list[dict]:
             pass
         rows.append({"platform": "threads", "kind": "channel",
                      "subs": followers, "views": 0, "likes": 0, "source": "api"})
-    except Exception:
-        pass
+        # Posts reales del perfil (antes NO se capturaban → el panel salía vacío).
+        # También sirve para detectar si Meta borra posts (comparar con lo publicado).
+        posts = requests.get(
+            f"{base}/{th_id}/threads",
+            params={"fields": "id,text,timestamp,permalink,media_type",
+                    "limit": 30, "access_token": token}, timeout=20).json().get("data", [])
+        for p in posts:
+            pid = p.get("id")
+            if not pid:
+                continue
+            likes = views = replies = 0
+            try:  # engagement por post (best-effort, no rompe si falta permiso)
+                ins = requests.get(f"{base}/{pid}/insights",
+                                    params={"metric": "likes,views,replies",
+                                            "access_token": token}, timeout=12).json()
+                for m in ins.get("data", []):
+                    val = int((m.get("values") or [{}])[0].get("value")
+                              if m.get("values") else (m.get("total_value") or {}).get("value") or 0)
+                    if m.get("name") == "likes":
+                        likes = val
+                    elif m.get("name") == "views":
+                        views = val
+                    elif m.get("name") == "replies":
+                        replies = val
+            except Exception:
+                pass
+            rows.append({
+                "platform": "threads", "kind": "video", "video_id": pid,
+                "title": (p.get("text") or "")[:80],
+                "permalink": p.get("permalink"),
+                "views": views, "likes": likes, "comments": replies,
+                "date": (p.get("timestamp") or "")[:10], "source": "api",
+            })
+    except Exception as e:
+        print(f"  snapshot threads: {type(e).__name__}: {e}")
     return rows
 
 
