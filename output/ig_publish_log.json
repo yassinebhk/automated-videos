@@ -1,13 +1,5 @@
 [
   {
-    "slug": "plasma_plasma_magma_20260919_114520",
-    "title": "Flowing Plasma Waves #satisfying #shorts",
-    "status": "ok",
-    "media_id": "17987262168025697",
-    "url": "https://instagram.com/reel/17987262168025697",
-    "ts": "2026-09-19T12:05:04.192354+00:00"
-  },
-  {
     "slug": "padel_tactic_drop_shot_20260919_120840",
     "title": "The Drop Shot — Padel Tactics #padel #shorts",
     "status": "fail_container_ready",
@@ -1108,5 +1100,18 @@
     "media_id": "18192478060404051",
     "url": "https://instagram.com/reel/18192478060404051",
     "ts": "2026-09-21T01:27:27.422431+00:00"
+  },
+  {
+    "slug": "bono-alquiler-joven-requirements",
+    "title": "3 Requisitos Bono Alquiler Joven · 250€/mes · #1",
+    "status": "fail_container_ready",
+    "container_id": "18096058652188569",
+    "public_url": "https://yassinebhk.github.io/automated-videos/reels/bono-alquiler-joven-requirements.mp4",
+    "attempts": 4,
+    "catbox_status": "rc=412 body=Invalid uploader",
+    "status_ext": "ERROR",
+    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
+    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18096058652188569'}",
+    "ts": "2026-09-21T01:58:18.348022+00:00"
   }
 ]
