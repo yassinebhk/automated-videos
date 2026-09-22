@@ -468,6 +468,31 @@ def build() -> dict:
             series=series, top_videos=top_videos, worst_videos=worst_videos,
         ))
 
+    # ── Guardarraíl de VERACIDAD: token de un canal apunta a OTRO canal ──
+    # Bug 22/09: YT_TAX_REFRESH_TOKEN autentica contra el canal de WaitWhy → TaxHack
+    # mostraba subs/views de WaitWhy (116 / 105.689) en vez de los suyos reales (~3).
+    # Detección robusta sin depender del token: dos canales con subs Y views idénticos
+    # y > 0 = el mismo canal físico. Marcamos el NO-flagship como `misconfigured`,
+    # ocultamos sus cifras (NO son reales — veracidad obligatoria) y lo sacamos de los
+    # totales de red (si no, WaitWhy se contaría 2×). Cura de fondo = reauth del canal.
+    _primary = next((c for c in channels_out if c.get("flagship")), None)
+    if _primary and (_primary.get("subs") or 0) > 0:
+        _pid = (_primary["subs"], _primary["views"])
+        for c in channels_out:
+            if c is _primary or (c.get("subs") or 0) <= 0:
+                continue
+            if (c["subs"], c["views"]) == _pid:
+                if c["status"] == "active":
+                    net_subs -= c["subs"] or 0
+                    net_views -= c["views"] or 0
+                c["misconfigured"] = True
+                c["warn"] = (f"Token apunta al canal de {_primary['name']} — "
+                             f"cifras NO reales, pendiente de reauth de este canal.")
+                for _f in ("subs", "views", "vpv", "watch_hours", "shorts90",
+                           "eng_rate", "median_views", "best_views",
+                           "delta7_subs", "delta30_subs", "delta7_views", "delta30_views"):
+                    c[_f] = None
+
     # ── plataformas sociales ──
     socials_out = []
     social_followers = 0
