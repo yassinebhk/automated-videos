@@ -34,6 +34,35 @@ if _os_scopes.environ.get("YT_ANALYTICS_SCOPE", "").strip() in ("1", "true", "ye
 CLIENT_SECRET = SECRETS_DIR / "youtube_client_secret.json"
 TOKEN_FILE = SECRETS_DIR / "youtube_token.json"
 
+# Canal PRINCIPAL WaitWhy. Cualquier prefijo SECUNDARIO (YT_TAX, YT_MOTOR…) cuyo
+# token resuelva a ESTE id está mal reautorizado (minteado contra la cuenta de
+# WaitWhy) → NO subimos, para no contaminar el canal insignia (true crime ES) con
+# otro nicho → hunde su Originality Score / alcance (ver memoria contaminación).
+# Los canales que hospedan en WaitWhy A PROPÓSITO (criminopatía) lo hacen con
+# prefijo VACÍO (token principal) → NO pasan por la rama de prefijo → no se ven
+# afectados. Override del id vía env YT_MAIN_CHANNEL_ID. Bug 22/09 (reauth TaxHack
+# en cuenta equivocada → subs 3 pasaron a mostrar los 116 de WaitWhy).
+_WAITWHY_CHANNEL_ID = __import__("os").environ.get("YT_MAIN_CHANNEL_ID", "").strip() or "UC5iNCdnJRkJ"
+
+
+def _assert_not_waitwhy(creds: "Credentials", prefix: str) -> None:
+    """Aborta la subida si el token de un canal secundario resuelve al canal
+    PRINCIPAL WaitWhy. FAIL-OPEN: si la comprobación falla (red/cuota), NO bloquea
+    (mejor subir que romper por un fallo transitorio del chequeo)."""
+    try:
+        yt = googleapiclient.discovery.build(
+            "youtube", "v3", credentials=creds, cache_discovery=False)
+        items = yt.channels().list(part="id", mine=True).execute().get("items", [])
+        cid = items[0]["id"] if items else ""
+    except Exception:
+        return
+    if cid and cid.startswith(_WAITWHY_CHANNEL_ID):
+        raise RuntimeError(
+            f"YT upload OMITIDO: el token de '{prefix}' resuelve al canal PRINCIPAL "
+            f"WaitWhy ({cid[:12]}…) — está reautorizado en la cuenta equivocada. NO subo "
+            f"para no contaminar WaitWhy. Reautoriza '{prefix}' en SU propia cuenta de YouTube."
+        )
+
 
 def _channel_prefix() -> str:
     """Prefijo del canal actual — permite tener múltiples canales YT
@@ -78,6 +107,7 @@ def _get_credentials() -> Credentials:
                 scopes=None,
             )
             creds.refresh(Request())
+            _assert_not_waitwhy(creds, prefix)
             return creds
         print(f"  YT: prefix={prefix} sin creds completas, fallback a token file")
     creds: Credentials | None = None
