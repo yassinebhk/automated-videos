@@ -2,19 +2,6 @@
   {
     "slug": "fractal_julia_b_20260920_004610",
     "title": "Satisfying Infinite Fractal Zoom #satisfying #shorts",
-    "status": "fail_container_ready",
-    "container_id": "18095932178188569",
-    "public_url": "https://yassinebhk.github.io/automated-videos/reels/fractal_julia_b_20260920_004610.mp4",
-    "attempts": 4,
-    "catbox_status": "rc=412 body=Invalid uploader",
-    "status_ext": "ERROR",
-    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
-    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095932178188569'}",
-    "ts": "2026-09-20T01:09:24.529231+00:00"
-  },
-  {
-    "slug": "fractal_julia_b_20260920_004610",
-    "title": "Satisfying Infinite Fractal Zoom #satisfying #shorts",
     "status": "ok",
     "media_id": "17879935392691032",
     "url": "https://instagram.com/reel/17879935392691032",
@@ -1063,5 +1050,13 @@
     "media_id": "18116165089956869",
     "url": "https://instagram.com/reel/18116165089956869",
     "ts": "2026-09-22T17:14:46.940937+00:00"
+  },
+  {
+    "slug": "top-5-ai-tools-brand-image-editing",
+    "title": "Top 5 AI tools for brand image editing · #1",
+    "status": "ok",
+    "media_id": "18105111098622366",
+    "url": "https://instagram.com/reel/18105111098622366",
+    "ts": "2026-09-22T18:19:10.839667+00:00"
   }
 ]
