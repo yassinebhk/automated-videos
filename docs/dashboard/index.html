@@ -514,10 +514,10 @@ function renderResumen(){
     <td><div class="nm"><span class="cdot" style="background:${c.color}"></span>${c.name} ${c.flagship?'★':''} <span class="tag">${c.lang}</span>${c.misconfigured?` <span class="tag" title="${c.warn||''}" style="background:#fee2e2;color:#b91c1c;border-color:#fca5a5">⚠ token</span>`:''}</div>
       <div class="faint mono" style="font-size:10.5px">${c.misconfigured?'⚠ '+(c.warn||''):c.cat}</div></td>
     <td>${healthBadge(c.health)}</td>
-    <td class="r">${fmt(c.subs)}</td><td class="r">${fmt(c.views)}</td><td class="r">${fmt(c.videos)}</td>
-    <td class="r">${c.vpv!=null?fmt(c.vpv):'—'}</td>
-    <td class="r">${fmt(c.likes_total)}</td>
-    <td class="r">${c.eng_rate!=null?c.eng_rate+'%':'—'}</td>
+    <td class="r">${c.misconfigured?'—':fmt(c.subs)}</td><td class="r">${c.misconfigured?'—':fmt(c.views)}</td><td class="r">${c.misconfigured?'—':fmt(c.videos)}</td>
+    <td class="r">${c.misconfigured||c.vpv==null?'—':fmt(c.vpv)}</td>
+    <td class="r">${c.misconfigured?'—':fmt(c.likes_total)}</td>
+    <td class="r">${c.misconfigured||c.eng_rate==null?'—':c.eng_rate+'%'}</td>
     <td class="r">${deltaChip(c.delta7_views)}</td>
     <td class="r faint" style="font-size:11px">${agoTxt(c.days_since)}</td>
     <td style="width:90px"><canvas data-sp="${c.key}" height="26"></canvas></td>
@@ -570,9 +570,9 @@ function renderCanales(){
       ${c.handle?`<a class="linkout" target="_blank" rel="noopener" href="${c.url}">${c.handle} ${svg('ext')}</a>`:'<span class="faint mono" style="font-size:11.5px">sin handle público</span>'}
       <span class="tag">${c.lang}</span></div>
     <div style="padding:0 17px 11px;display:flex;gap:7px;flex-wrap:wrap">${fmtBadge(c.prod?.short,'Shorts')} ${fmtBadge(c.prod?.long,'Long-form')} ${fmtBadge(c.ig,'IG')}${c.yt_host?`<span class="tag">host: ${c.yt_host}</span>`:''}</div>
-    <div class="met"><div><div class="k">Subs</div><div class="v">${fmt(c.subs)}</div></div>
-      <div><div class="k">Views</div><div class="v">${short(c.views)}</div></div>
-      <div><div class="k">Vídeos</div><div class="v">${fmt(c.videos)}</div></div></div>
+    <div class="met"><div><div class="k">Subs</div><div class="v">${c.misconfigured?'—':fmt(c.subs)}</div></div>
+      <div><div class="k">Views</div><div class="v">${c.misconfigured?'—':short(c.views)}</div></div>
+      <div><div class="k">Vídeos</div><div class="v">${c.misconfigured?'—':fmt(c.videos)}</div></div></div>
     ${c.has_analytics?`<div class="spark"><canvas data-sp="${c.key}" height="42"></canvas></div>`:`<div class="spark" style="display:grid;place-items:center"><span class="hint">Analítica desde el próximo snapshot</span></div>`}
     <div style="display:flex;gap:14px;padding:2px 17px 4px;font-family:var(--mono);font-size:11px;color:var(--muted);flex-wrap:wrap">
       <span title="tasa de me gusta">♥ ${c.eng_rate!=null?c.eng_rate+'%':'—'}</span>
@@ -603,10 +603,10 @@ function openChannel(key){
       ${c.url?`<a class="linkout" target="_blank" rel="noopener" href="${c.url}" style="margin-top:9px">${c.handle} ${svg('ext')}</a>`:''}</div>
     <button class="iconbtn" id="dclose">${svg('close')}</button></div>
     <div class="db">${c.misconfigured?`<div style="margin-bottom:14px;padding:12px 15px;background:#fef2f2;border:1px solid #fca5a5;border-radius:11px;color:#b91c1c;font-size:13px;line-height:1.5">⚠ <b>Datos no reales.</b> ${c.warn||''} Las cifras de abajo se ocultan (—) porque el token de este canal apunta a otro. Reautorízalo para ver sus datos verdaderos.</div>`:''}<div class="grid" style="grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px">
-      <div class="card pad"><div class="eyebrow">Suscriptores</div><div class="num" style="font-size:24px;margin:7px 0 5px">${fmt(c.subs)}</div><div style="display:flex;gap:5px">${deltaChip(c.delta7_subs,' 7d')}${deltaChip(c.delta30_subs,' 30d')}</div></div>
-      <div class="card pad"><div class="eyebrow">Views</div><div class="num" style="font-size:24px;margin:7px 0 5px">${fmt(c.views)}</div><div style="display:flex;gap:5px">${deltaChip(c.delta7_views,' 7d')}${deltaChip(c.delta30_views,' 30d')}</div></div>
-      <div class="card pad"><div class="eyebrow">Vídeos</div><div class="num" style="font-size:24px;margin:7px 0 5px">${fmt(c.videos)}</div></div>
-      <div class="card pad"><div class="eyebrow">Views/vídeo</div><div class="num" style="font-size:24px;margin:7px 0 5px">${c.vpv!=null?fmt(c.vpv):'—'}</div></div></div>
+      <div class="card pad"><div class="eyebrow">Suscriptores</div><div class="num" style="font-size:24px;margin:7px 0 5px">${c.misconfigured?'—':fmt(c.subs)}</div><div style="display:flex;gap:5px">${c.misconfigured?'':deltaChip(c.delta7_subs,' 7d')+deltaChip(c.delta30_subs,' 30d')}</div></div>
+      <div class="card pad"><div class="eyebrow">Views</div><div class="num" style="font-size:24px;margin:7px 0 5px">${c.misconfigured?'—':fmt(c.views)}</div><div style="display:flex;gap:5px">${c.misconfigured?'':deltaChip(c.delta7_views,' 7d')+deltaChip(c.delta30_views,' 30d')}</div></div>
+      <div class="card pad"><div class="eyebrow">Vídeos</div><div class="num" style="font-size:24px;margin:7px 0 5px">${c.misconfigured?'—':fmt(c.videos)}</div></div>
+      <div class="card pad"><div class="eyebrow">Views/vídeo</div><div class="num" style="font-size:24px;margin:7px 0 5px">${c.misconfigured||c.vpv==null?'—':fmt(c.vpv)}</div></div></div>
     <div style="display:flex;gap:18px;flex-wrap:wrap;margin-bottom:20px;font-family:var(--mono);font-size:12.5px;color:var(--muted)">
       <span title="me gusta totales">♥ ${fmt(c.likes_total)}</span>
       <span title="tasa de me gusta">Eng ${c.eng_rate!=null?c.eng_rate+'%':'—'}</span>

@@ -488,10 +488,15 @@ def build() -> dict:
                 c["misconfigured"] = True
                 c["warn"] = (f"Token apunta al canal de {_primary['name']} — "
                              f"cifras NO reales, pendiente de reauth de este canal.")
+                # Ponemos a 0 (NO None): los agregados posteriores hacen aritmética
+                # y comparaciones (`views<=0`, `views/videos`, `_prog(subs)`) que
+                # crashean con None. Con 0 quedan a salvo y los filtros `views<=0`
+                # excluyen el canal de by_language/by_category/showcase. El HTML usa
+                # el flag `misconfigured` para mostrar "—" en vez de estos 0.
                 for _f in ("subs", "views", "vpv", "watch_hours", "shorts90",
                            "eng_rate", "median_views", "best_views",
                            "delta7_subs", "delta30_subs", "delta7_views", "delta30_views"):
-                    c[_f] = None
+                    c[_f] = 0
 
     # ── plataformas sociales ──
     socials_out = []
