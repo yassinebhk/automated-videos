@@ -1,9 +1,21 @@
-name: Snapshot métricas (manual)
+name: Snapshot métricas (cada 4h + manual)
 
-# Snapshot de todas las plataformas + regenera el panel, sin mandar el resumen
-# a Telegram. Para refrescar datos on-demand o diagnosticar (p.ej. Threads).
+# Snapshot de todas las plataformas + regenera el panel (docs/dashboard/data.json),
+# sin mandar el resumen a Telegram. El comando `snapshot` hace snapshot_all() y
+# luego dashboard.write() → refresca en un solo paso los NÚMEROS (subs/views) y el
+# render del panel. Antes solo corría a mano → el panel se quedaba ~1×/día (vía
+# daily-summary 07:42) y con el scheduler de GitHub fallando incluso eso se saltaba.
+#
+# Ahora cada 4h (6×/día). Con 6 franjas, aunque el scheduler de GitHub derive o se
+# salte alguna, el panel rara vez pasa de ~4-8h de antigüedad. Lecturas de stats
+# (YT/IG/Threads/Bluesky/Mastodon) son baratas → sin problema de cuota.
+# NOTA: el scheduler interno de GitHub es poco fiable; para disparo garantizado,
+# añadir este workflow_dispatch a cron-job.org (igual que los catchups).
 
 on:
+  schedule:
+    # cada 4h en UTC: 00:10, 04:10, 08:10, 12:10, 16:10, 20:10
+    - cron: "10 */4 * * *"
   workflow_dispatch: {}
 
 permissions:
