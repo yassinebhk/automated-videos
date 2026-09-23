@@ -512,21 +512,40 @@ def build() -> dict:
         for r in chan_by_pk.get(s["pk"], []):
             if r.get("likes"):
                 likes = max(likes, r.get("likes", 0) or 0)
-        # top posts por engagement (views, si no likes, si no comentarios)
-        plist = []
+        # Posts para las listas. Dedup por TÍTULO: un mismo vídeo puede registrarse
+        # con 2 video_id distintos (re-subida o doble snapshot) → antes salía
+        # duplicado en la lista. Nos quedamos con el registro de MÁS views.
+        # first_ts = primera vez que vimos el post (para recencia real; el campo
+        # `date` es solo día → no distingue posts del mismo día).
+        raw_posts = vids_by_pk.get(s["pk"], [])
+        first_ts: dict[str, int] = {}
+        for r in raw_posts:
+            vid = r.get("video_id"); ts = r.get("ts") or 0
+            if vid and ts and (vid not in first_ts or ts < first_ts[vid]):
+                first_ts[vid] = ts
+        by_title: dict[str, dict] = {}
         for vid, r in vmap.items():
-            plist.append(dict(
-                video_id=vid, title=_strip_html(r.get("title") or "") or "(sin texto)",
+            title = _strip_html(r.get("title") or "") or "(sin texto)"
+            item = dict(
+                video_id=vid, title=title,
                 views=r.get("views", 0) or 0, likes=r.get("likes", 0) or 0,
                 comments=r.get("comments", 0) or 0, date=r.get("date"),
-                url=r.get("permalink") or _video_url(s["pk"], vid)))
-        plist.sort(key=lambda x: (x["views"], x["likes"], x["comments"]), reverse=True)
+                first_ts=first_ts.get(vid, 0),
+                url=r.get("permalink") or _video_url(s["pk"], vid))
+            key = title.strip().lower()
+            if key not in by_title or item["views"] > by_title[key]["views"]:
+                by_title[key] = item
+        plist = list(by_title.values())
+        # "más alcance" = por views; "recientes" = por recencia real (first_ts),
+        # con la fecha como desempate. Al ser listas ordenadas por criterios
+        # distintos sobre la MISMA lista deduplicada, ya no salen idénticas.
+        top_posts = sorted(plist, key=lambda x: (x["views"], x["likes"], x["comments"]), reverse=True)[:8]
+        recent_posts = sorted(plist, key=lambda x: (x["first_ts"], x.get("date") or ""), reverse=True)[:8]
         socials_out.append(dict(
             pk=s["pk"], name=s["name"], handle=s.get("handle"), url=s.get("url"),
             color=s["color"], followers=followers, posts=posts, likes=likes,
             delta7=_delta(series, "subs", 7), delta30=_delta(series, "subs", 30),
-            series=series, top_posts=plist[:8], recent_posts=sorted(
-                plist, key=lambda x: x.get("date") or "", reverse=True)[:8],
+            series=series, top_posts=top_posts, recent_posts=recent_posts,
         ))
 
     # ── análisis de temas (mejores / peores) ──
