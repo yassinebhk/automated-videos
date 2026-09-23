@@ -64,7 +64,7 @@
       ]
     },
     "roldan": {
-      "count": 3,
+      "count": 4,
       "history": [
         {
           "ts": "2026-08-24T07:57:23.248688+00:00",
@@ -77,6 +77,10 @@
         {
           "ts": "2026-09-15T23:08:14.622911+00:00",
           "topic": "Luis Roldán: cómo el director de la Guardia Civil robó 1.500 millones de pesetas y huyó a Laos"
+        },
+        {
+          "ts": "2026-09-23T11:33:07.850713+00:00",
+          "topic": "[CRIMEN] Luis Roldán: cómo el director de la Guardia Civil robó 1.500 millones de pesetas, huyó a Laos y acabó cumpliendo condena por malversación."
         }
       ]
     },
