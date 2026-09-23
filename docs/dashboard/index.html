@@ -761,21 +761,19 @@ function renderRedes(){
   const it=d.interaction||{};
   const dg=d.rrss_digest||{platforms:[]};
   const dgTiles=[
-    ['Publicaciones', fmt(dg.posts||0)],
-    ['Views ganadas', (dg.views>0?'+':'')+short(dg.views||0)],
-    ['Seguidores', (dg.followers>0?'+':'')+fmt(dg.followers||0)],
-    ['Me gusta', fmt(dg.likes||0)],
-  ].map(([l,v])=>`<div class="card pad" style="flex:1;min-width:130px"><div class="eyebrow">${l}</div><div class="num" style="font-size:26px;margin-top:5px">${v}</div></div>`).join('');
+    ['Seguidores (24h)', (dg.followers>0?'+':'')+fmt(dg.followers||0)],
+    ['Views (24h)', (dg.views>0?'+':'')+short(dg.views||0)],
+    ['Me gusta (total)', fmt(dg.likes_total||0)],
+  ].map(([l,v])=>`<div class="card pad" style="flex:1;min-width:150px"><div class="eyebrow">${l}</div><div class="num" style="font-size:26px;margin-top:5px">${v}</div></div>`).join('');
   const dgRows=(dg.platforms||[]).map(p=>`<div style="display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap;padding:9px 0;border-bottom:1px solid var(--line,#e8e8ee)">
     <span class="cdot" style="background:${p.color}"></span><b style="min-width:74px">${p.name}</b>
-    <span class="faint mono" style="font-size:12px">${fmt(p.posts)} post</span>
-    <span class="faint mono" style="font-size:12px">${p.views?(p.views>0?'+':'')+short(p.views)+' views':'—'}</span>
-    <span class="faint mono" style="font-size:12px">${p.followers?((p.followers>0?'+':'')+p.followers+' seg'):'—'}</span>
-    <span class="faint mono" style="font-size:12px">${p.likes?'♥ '+fmt(p.likes):''}</span>
-    <span style="flex:1;min-width:120px;font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.best?'· '+p.best.title:''}</span></div>`).join('');
-  el.innerHTML=`<div class="sechead" style="margin-top:0"><h2>Resumen del último día</h2><span class="eyebrow">${dg.date||''} · todas las RRSS</span></div>
+    <span class="faint mono" style="font-size:12px;min-width:66px" title="seguidores 24h">${p.followers?((p.followers>0?'+':'')+p.followers+' seg'):'±0 seg'}</span>
+    <span class="faint mono" style="font-size:12px;min-width:82px" title="views 24h">${p.views?((p.views>0?'+':'')+short(p.views)+' views'):'— views'}</span>
+    <span class="faint mono" style="font-size:12px;min-width:52px" title="me gusta totales">${p.likes?'♥ '+fmt(p.likes):''}</span>
+    <span style="flex:1;min-width:120px;font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="mejor post por alcance">${p.best?'· '+p.best.title:''}</span></div>`).join('');
+  el.innerHTML=`<div class="sechead" style="margin-top:0"><h2>Resumen del último día</h2><span class="eyebrow">${dg.date||''} · deltas 24h · todas las RRSS</span></div>
     <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px">${dgTiles}</div>
-    <div class="card pad" style="margin-bottom:28px">${dgRows||'<span class="faint">Sin actividad registrada en el último día</span>'}</div>
+    <div class="card pad" style="margin-bottom:28px">${dgRows||'<span class="faint">Sin actividad</span>'}</div>
     <div class="sechead"><h2>Plataformas sociales</h2><span class="eyebrow">${fmt(d.totals.social_followers)} seguidores totales</span></div>
     <div class="grid socgrid">${soc}</div>
     <div class="grid g32" style="margin-top:24px">
