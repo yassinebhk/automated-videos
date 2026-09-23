@@ -2,19 +2,6 @@
   {
     "slug": "top-5-ai-desktop-search-agents",
     "title": "Top 5 AI tools for desktop search · #1",
-    "status": "fail_container_ready",
-    "container_id": "18095946863188569",
-    "public_url": "https://yassinebhk.github.io/automated-videos/reels/top-5-ai-desktop-search-agents.mp4",
-    "attempts": 4,
-    "catbox_status": "rc=412 body=Invalid uploader",
-    "status_ext": "ERROR",
-    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
-    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095946863188569'}",
-    "ts": "2026-09-20T03:41:36.421760+00:00"
-  },
-  {
-    "slug": "top-5-ai-desktop-search-agents",
-    "title": "Top 5 AI tools for desktop search · #1",
     "status": "ok",
     "media_id": "18048629711809584",
     "url": "https://instagram.com/reel/18048629711809584",
@@ -1030,5 +1017,13 @@
     "status": "fail_publish",
     "container_id": "18096380060188569",
     "ts": "2026-09-23T13:58:01.930450+00:00"
+  },
+  {
+    "slug": "padel_tactic_drop_shot_20260923_141733",
+    "title": "The Drop Shot — Padel Tactics #padel #shorts",
+    "status": "ok",
+    "media_id": "17985955248117704",
+    "url": "https://instagram.com/reel/17985955248117704",
+    "ts": "2026-09-23T14:19:58.595473+00:00"
   }
 ]
