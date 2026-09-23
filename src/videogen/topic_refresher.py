@@ -39,40 +39,46 @@ def _covered_block(covered) -> str:
             "(usa temas y ÁNGULOS COMPLETAMENTE distintos, no variaciones):\n" + body + "\n")
 
 
-# Feeds RSS específicos por nicho (para inspiración de topics reales)
+# Feeds RSS específicos por nicho (para inspiración de topics reales).
+# ⚠️ 23/09/26: revalidados TODOS con UA Mozilla/5.0. Los anteriores (agenciatributaria,
+# cincodias/*, boe, motor.es, autopista, ine, elpais/*, 20minutos/laboral·sucesos)
+# devolvían 404 → el sourcing de temas frescos estaba MUERTO en todos los nichos.
+# Estos 12 responden 200 con ≥16 items. Revalidar cada varios meses (los medios ES
+# reestructuran sus rutas RSS a menudo).
 NICHE_RSS = {
     "tax": [
-        "https://sede.agenciatributaria.gob.es/Sede/rss/novedades-rss.html",
-        "https://cincodias.elpais.com/rss/economia/pymes.xml",
+        "https://www.expansion.com/rss/economia.xml",
+        "https://www.abc.es/rss/2.0/economia/",
     ],
     "legal": [
-        "https://www.20minutos.es/rss/laboral/",
-        "https://cincodias.elpais.com/rss/legal/laboral.xml",
+        "https://www.expansion.com/rss/juridico.xml",
+        "https://www.20minutos.es/rss/empleo/",
     ],
     "ayudas": [
-        "https://www.boe.es/rss/ultimas-disposiciones.php",
+        "https://www.20minutos.es/rss/nacional/",
+        "https://www.abc.es/rss/2.0/espana/",
     ],
     "motor": [
-        "https://www.motor.es/rss/noticias/",
-        "https://www.autopista.es/rss/",
+        "https://www.20minutos.es/rss/motor/",
+        "https://www.diariomotor.com/feed/",
     ],
     "pov": [
-        # RSS históricos ES/general para inspiración eventos poco conocidos
-        "https://www.elmundo.es/rss/cultura.xml",
-        "https://elpais.com/rss/cultura.xml",
+        # cultura/historia ES para inspiración de eventos poco conocidos
+        "https://www.abc.es/rss/2.0/cultura/",
+        "https://www.20minutos.es/rss/cultura/",
     ],
     "ranking": [
-        # RSS datos económicos/estadísticos
-        "https://www.bde.es/wbe/es/publicaciones/analisis-economico-investigacion/",
-        "https://www.ine.es/rss/rss_ine.xml",
+        # datos económicos/estadísticos
+        "https://www.expansion.com/rss/economia.xml",
+        "https://www.eldiario.es/rss/economia/",
     ],
     "trabajos": [
-        "https://www.ine.es/rss/rss_ine.xml",
-        "https://cincodias.elpais.com/rss/economia/trabajo.xml",
+        "https://www.20minutos.es/rss/empleo/",
+        "https://www.eldiario.es/rss/economia/",
     ],
     "criminopatia": [
-        "https://www.20minutos.es/rss/sucesos/",
-        "https://elpais.com/rss/sociedad.xml",
+        "https://www.lavanguardia.com/rss/sucesos.xml",
+        "https://www.20minutos.es/rss/nacional/",
     ],
 }
 
