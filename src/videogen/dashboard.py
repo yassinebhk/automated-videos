@@ -541,10 +541,20 @@ def build() -> dict:
         # distintos sobre la MISMA lista deduplicada, ya no salen idénticas.
         top_posts = sorted(plist, key=lambda x: (x["views"], x["likes"], x["comments"]), reverse=True)[:8]
         recent_posts = sorted(plist, key=lambda x: (x["first_ts"], x.get("date") or ""), reverse=True)[:8]
+        # ── métricas del ÚLTIMO DÍA (para el resumen diario de RRSS) ──
+        # ventana ~30h (snapshots cada ~5h) para no perder posts del día por el desfase.
+        _day_cut = datetime.now(timezone.utc).timestamp() - 30 * 3600
+        today = [p for p in plist if p.get("first_ts") and p["first_ts"] >= _day_cut]
+        best_today = max(today, key=lambda x: x["views"], default=None)
         socials_out.append(dict(
             pk=s["pk"], name=s["name"], handle=s.get("handle"), url=s.get("url"),
             color=s["color"], followers=followers, posts=posts, likes=likes,
             delta7=_delta(series, "subs", 7), delta30=_delta(series, "subs", 30),
+            posts_1d=len(today), views_1d=_delta(series, "views", 1),
+            foll_1d=_delta(series, "subs", 1),
+            likes_today=sum(p["likes"] for p in today),
+            best_today=({"title": best_today["title"], "views": best_today["views"],
+                         "url": best_today["url"]} if best_today else None),
             series=series, top_posts=top_posts, recent_posts=recent_posts,
         ))
 
@@ -1124,9 +1134,24 @@ def build() -> dict:
         social_7d=sum((s.get("delta7") or 0) for s in socials_out),
     )
 
+    # ── Resumen del ÚLTIMO DÍA · RRSS (overview de todas las redes) ──
+    _sd = [s["series"][-1]["date"] for s in socials_out if s.get("series")]
+    rrss_digest = dict(
+        date=(max(_sd) if _sd else datetime.now(_MADRID).strftime("%Y-%m-%d")),
+        posts=sum(s.get("posts_1d", 0) for s in socials_out),
+        views=sum((s.get("views_1d") or 0) for s in socials_out),
+        followers=sum((s.get("foll_1d") or 0) for s in socials_out),
+        likes=sum(s.get("likes_today", 0) for s in socials_out),
+        platforms=[dict(name=s["name"], color=s["color"], pk=s["pk"],
+                        posts=s.get("posts_1d", 0), views=s.get("views_1d"),
+                        followers=s.get("foll_1d"), likes=s.get("likes_today", 0),
+                        best=s.get("best_today")) for s in socials_out],
+    )
+
     return dict(
         generated_at=datetime.now(timezone.utc).isoformat(),
         generated_local=datetime.now(_MADRID).strftime("%Y-%m-%d %H:%M"),
+        rrss_digest=rrss_digest,
         range=rng, kpis=kpis, insights=insights,
         totals=dict(yt_subs=net_subs, yt_views=net_views, videos=net_videos,
                     social_followers=social_followers),
