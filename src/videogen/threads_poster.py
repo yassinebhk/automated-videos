@@ -63,7 +63,8 @@ def _publish_thread(access_token: str, user_id: str, container_id: str) -> Optio
 
 
 def post_short_to_threads(video_title: str, video_url: str,
-                          teaser: str = "", dry_run: bool = False) -> dict[str, Any] | None:
+                          teaser: str = "", dry_run: bool = False,
+                          niche: str = "") -> dict[str, Any] | None:
     """Publica un thread (post + reply) en Threads. Devuelve dict o None."""
     # THREADS_TOKEN es el nombre nuevo (setup 2025 con "Generate Token" en
     # el panel developer). THREADS_ACCESS_TOKEN es el legacy — mantenemos
@@ -76,7 +77,7 @@ def post_short_to_threads(video_title: str, video_url: str,
 
     from . import social_post
     main_text, reply_text = social_post.build_viral_post(
-        video_title, video_url, teaser=teaser, cross_platform=""
+        video_title, video_url, teaser=teaser, cross_platform="", niche=niche
     )
     # Threads permite 500 chars — nuestro main ya está dentro
     main_text = main_text[:500]

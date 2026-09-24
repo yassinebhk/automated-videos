@@ -19,7 +19,8 @@ from typing import Any
 
 
 def post_short_to_mastodon(video_title: str, video_url: str,
-                            teaser: str = "", dry_run: bool = False) -> dict[str, Any] | None:
+                            teaser: str = "", dry_run: bool = False,
+                            niche: str = "") -> dict[str, Any] | None:
     """Postea un toot a Mastodon + reply thread con contexto extra."""
     instance = os.environ.get("MASTODON_INSTANCE", "https://mastodon.social").rstrip("/")
     token = os.environ.get("MASTODON_ACCESS_TOKEN")
@@ -32,7 +33,7 @@ def post_short_to_mastodon(video_title: str, video_url: str,
     bsky = os.environ.get("BLUESKY_HANDLE", "")
     cross = f"@{bsky} en Bluesky" if bsky else ""
     main_text, reply_text = social_post.build_viral_post(
-        video_title, video_url, teaser=teaser, cross_platform=cross
+        video_title, video_url, teaser=teaser, cross_platform=cross, niche=niche
     )
     # Mastodon acepta hasta 500 chars — usamos el build_viral pero ampliamos
     main_text = main_text[:499]

@@ -203,7 +203,7 @@ def _crosspost(cfg: ChannelConfig, slug: str, url: str, topic: dict) -> dict[str
     if url and url != "?":
         from .crosspost_full import _ig_allowed
         affine = _ig_allowed(cfg.slug)  # nichos afines a true crime ES
-        # REBALANCEO 24/09 (datos 7d: Bluesky +13 seg, Mastodon -1 y ♥25/339 posts,
+        # REBALANCEO 24/09 (datos 7d: Bluesky +13 seg, Mastodon −1 y ♥25/339 posts,
         # Threads 0 seg y ♥2/184 posts): Bluesky rinde → sigue para TODOS los canales.
         # Mastodon/Threads rendían ~0 con todo el volumen mezclado → SOLO canales
         # afines (WaitWhy/criminopatía/legal/ayudas/pov/trabajos), como IG. Así baja
@@ -220,7 +220,7 @@ def _crosspost(cfg: ChannelConfig, slug: str, url: str, topic: dict) -> dict[str
                 import importlib
                 mod = importlib.import_module(poster_mod)
                 fn = getattr(mod, f"post_short_to_{name}")
-                r = fn(title, url, teaser=teaser)
+                r = fn(title, url, teaser=teaser, niche=cfg.slug)
                 result[icon] = bool(r)
             except Exception as e:
                 print(f"  {cfg.slug} {name} fail: {e}")

@@ -20,7 +20,8 @@ from typing import Any
 
 
 def post_short_to_bluesky(video_title: str, video_url: str,
-                          teaser: str = "", dry_run: bool = False) -> dict[str, Any] | None:
+                          teaser: str = "", dry_run: bool = False,
+                          niche: str = "") -> dict[str, Any] | None:
     """Postea un enlace al Short en Bluesky. Devuelve dict con detalles o None."""
     handle = os.environ.get("BLUESKY_HANDLE")
     password = os.environ.get("BLUESKY_APP_PASSWORD")
@@ -35,7 +36,7 @@ def post_short_to_bluesky(video_title: str, video_url: str,
     if masto and os.environ.get("MASTODON_ACCESS_TOKEN"):
         cross = f"@automated_videos@{masto.replace('https://','')}"
     main_text, reply_text = social_post.build_viral_post(
-        video_title, video_url, teaser=teaser, cross_platform=cross
+        video_title, video_url, teaser=teaser, cross_platform=cross, niche=niche
     )
 
     if dry_run:
