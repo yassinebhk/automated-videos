@@ -124,6 +124,63 @@ def fetch_watch_metrics(channel_prefix: str = "") -> dict:
     return out
 
 
+def fetch_traffic_sources(channel_prefix: str = "", days: int = 28) -> dict:
+    """Fuentes de tráfico de las views (YouTube Analytics) → mide el funnel RRSS→YT.
+    `EXT_URL` = clics desde enlaces EXTERNOS (Bluesky/Mastodon/Threads llevan link
+    clicable; IG/TikTok esconden el link → no generan referral, solo marca).
+    Requiere scope `yt-analytics.readonly` → {} graceful si el canal no está reautorizado."""
+    import os
+    from datetime import date, timedelta
+    from googleapiclient.discovery import build
+    from google.oauth2.credentials import Credentials
+    from .upload_youtube import _get_credentials, TOKEN_FILE
+    tag = channel_prefix or "main"
+    try:
+        if channel_prefix:
+            prev = os.environ.get("YT_CHANNEL_PREFIX", "")
+            os.environ["YT_CHANNEL_PREFIX"] = channel_prefix
+            try:
+                creds = _get_credentials()
+            finally:
+                if prev:
+                    os.environ["YT_CHANNEL_PREFIX"] = prev
+                else:
+                    os.environ.pop("YT_CHANNEL_PREFIX", None)
+        else:
+            if not TOKEN_FILE.exists():
+                return {}
+            # scopes=None → usa los del token file (incluye analytics si se reautorizó).
+            creds = Credentials.from_authorized_user_file(str(TOKEN_FILE), None)
+        ya = build("youtubeAnalytics", "v2", credentials=creds)
+    except Exception as e:
+        print(f"  traffic {tag}: auth fail {type(e).__name__}: {str(e)[:80]}")
+        return {}
+    today = date.today(); start = str(today - timedelta(days=days))
+    out: dict = {"days": days}
+    try:
+        r = ya.reports().query(ids="channel==MINE", startDate=start, endDate=str(today),
+                               metrics="views", dimensions="insightTrafficSourceType",
+                               sort="-views").execute()
+        by_src = {str(row[0]): int(row[1] or 0) for row in (r.get("rows") or [])}
+        total = sum(by_src.values())
+        ext = by_src.get("EXT_URL", 0)
+        out.update(total_views=total, by_source=by_src, external_views=ext,
+                   external_pct=(round(100 * ext / total, 1) if total else 0))
+    except Exception as e:
+        print(f"  traffic {tag}: fail {str(e)[:90]} (¿falta scope yt-analytics.readonly?)")
+        return {}
+    # Drill EXT_URL → qué dominios (bsky.app, mastodon.social, threads.net…)
+    try:
+        r2 = ya.reports().query(ids="channel==MINE", startDate=start, endDate=str(today),
+                                metrics="views", dimensions="insightTrafficSourceDetail",
+                                filters="insightTrafficSourceType==EXT_URL",
+                                maxResults=10, sort="-views").execute()
+        out["external_detail"] = {str(row[0]): int(row[1] or 0) for row in (r2.get("rows") or [])}
+    except Exception:
+        pass
+    return out
+
+
 def fetch_channel_stats(channel_prefix: str = "") -> dict | None:
     """Stats del canal: suscriptores, views totales, nº de videos.
 

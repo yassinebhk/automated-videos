@@ -1767,6 +1767,44 @@ def snapshot_cmd():
     print("✓ panel regenerado")
 
 
+@cli.command(name="traffic-report")
+@click.option("--days", default=28, show_default=True, help="Ventana de días.")
+def traffic_report_cmd(days: int):
+    """Funnel RRSS→YouTube: fuentes de tráfico por canal. EXT_URL = clics desde
+    enlaces EXTERNOS (Bluesky/Mastodon/Threads llevan link clicable; IG/TikTok no).
+    Mide si las RRSS traen tráfico real a YouTube. Requiere reauth con scope
+    yt-analytics.readonly (canales sin reauth salen 'sin datos', graceful)."""
+    import os
+    import requests
+    from . import stats
+    from .healthcheck import YT_CHANNELS
+    lines = []
+    for prefix, name in YT_CHANNELS:
+        d = stats.fetch_traffic_sources(prefix, days=days)
+        if not d or not d.get("total_views"):
+            print(f"  {name}: sin datos (¿reauth analytics pendiente?)")
+            continue
+        ext = d.get("external_pct", 0); extv = d.get("external_views", 0)
+        det = d.get("external_detail", {})
+        top = ", ".join(f"{k}:{v}" for k, v in list(det.items())[:3])
+        line = f"{name}: {d['total_views']} views · EXT {ext}% ({extv})" + (f" · {top}" if top else "")
+        print("  " + line)
+        lines.append(line)
+    tok = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
+    chat = os.environ.get("TELEGRAM_CHAT_ID", "").strip()
+    if tok and chat and lines:
+        txt = (f"📊 <b>Funnel RRSS→YouTube ({days}d)</b>\n"
+               f"EXT_URL = clics desde enlaces externos (Bluesky/Mastodon/Threads)\n\n"
+               + "\n".join("• " + l for l in lines))
+        try:
+            requests.post(f"https://api.telegram.org/bot{tok}/sendMessage",
+                          json={"chat_id": chat, "text": txt, "parse_mode": "HTML"}, timeout=15)
+        except Exception as e:
+            print("  telegram fail:", e)
+    if not lines:
+        print("Ningún canal con scope analytics todavía → reautoriza para activar la medición del funnel.")
+
+
 @cli.command(name="dashboard")
 @click.option("--serve", "serve_", is_flag=True,
               help="Abre el panel en LOCAL (localhost) en vez de solo regenerar el JSON.")

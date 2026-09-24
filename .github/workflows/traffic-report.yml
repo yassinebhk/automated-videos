@@ -1,0 +1,18 @@
+name: Funnel RRSS→YouTube (traffic report)
+
+# Mide de dónde vienen las views de cada canal (YouTube Analytics). EXT_URL = clics
+# desde enlaces externos (Bluesky/Mastodon/Threads). Manda el resumen a Telegram.
+# Requiere que los canales estén reautorizados con el scope yt-analytics.readonly.
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  traffic:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: traffic-report
+    secrets: inherit
