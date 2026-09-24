@@ -316,11 +316,15 @@
       ]
     },
     "erial": {
-      "count": 1,
+      "count": 2,
       "history": [
         {
           "ts": "2026-09-15T07:40:18.735435+00:00",
           "topic": "Caso Erial 2015: la trama de corrupción que desvió fondos públicos en Valencia y sus consecuencias judiciales."
+        },
+        {
+          "ts": "2026-09-24T09:03:47.415708+00:00",
+          "topic": "Caso Erial: la corrupción en Valencia probada en los tribunales con 6 millones en mordidas"
         }
       ]
     },
