@@ -870,6 +870,29 @@ def engagement_cmd(dry_run: bool, max_total: int):
     print(f"  engagement pass: {result}")
 
 
+@cli.command(name="ig-engagement")
+@click.option("--dry-run", is_flag=True, help="No postea, solo enseña qué haría")
+@click.option("--max", "max_total", type=int, default=15,
+              help="Max replies por pase (default 15, tope duro 30)")
+def ig_engagement_cmd(dry_run: bool, max_total: int):
+    """Auto-reply a comentarios de reels IG (@waitwhy_) últimas 48h.
+    Solo cuenta principal. Anti-spam: 3/reel, ledger persistente."""
+    from . import ig_engagement
+    max_total = min(max_total, 30)
+    result = ig_engagement.run_ig_engagement_pass(max_total=max_total, dry_run=dry_run)
+    print(f"  ig engagement pass: {result}")
+
+
+@cli.command(name="threads-engagement")
+@click.option("--dry-run", is_flag=True, help="No postea, solo enseña qué haría")
+def threads_engagement_cmd(dry_run: bool):
+    """Auto-reply Threads SOLO a menciones directas (@waitwhy_).
+    Máx 5/día. Modo defensivo — Threads es hipersensible al spam."""
+    from . import threads_engagement
+    result = threads_engagement.run_threads_engagement_pass(dry_run=dry_run)
+    print(f"  threads engagement pass: {result}")
+
+
 @cli.command(name="bluesky-growth")
 def bluesky_growth_cmd():
     """Ejecuta el growth loop de Bluesky (follows + likes + reposts)."""

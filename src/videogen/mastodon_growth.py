@@ -95,6 +95,39 @@ def _reblog(status_id: str, token: str, instance: str) -> bool:
         return False
 
 
+def _my_followers(token: str, instance: str, limit: int = 80) -> list[dict]:
+    """Devuelve mis followers (accounts). Máx `limit` (por ahora, sin paginación)."""
+    try:
+        me = _me(token, instance)
+        return _api("GET", f"/api/v1/accounts/{me['id']}/followers",
+                    token, instance, params={"limit": min(limit, 80)})
+    except Exception as e:
+        print(f"  masto-followback: get_followers fail {e}")
+        return []
+
+
+def follow_back_new_followers(dry_run: bool = False, max_backs: int = 15) -> dict[str, Any]:
+    """Follow-back: sigue a mis followers a los que aún no sigo."""
+    instance = os.environ.get("MASTODON_INSTANCE", "https://mastodon.social").rstrip("/")
+    token = os.environ.get("MASTODON_ACCESS_TOKEN")
+    if not token:
+        return {"error": "no token"}
+    already = _my_follows(token, instance)
+    followers = _my_followers(token, instance)
+    pending = [f for f in followers if f.get("id") and f["id"] not in already][:max_backs]
+    done = []
+    for acc in pending:
+        aid = acc["id"]
+        if dry_run:
+            print(f"  masto-followback DRY: follow-back @{acc.get('acct')}")
+            done.append(acc.get("acct"))
+        elif _follow(aid, token, instance):
+            done.append(acc.get("acct"))
+            print(f"  masto-followback: followed @{acc.get('acct')}")
+    return {"followed_back": done, "count": len(done),
+            "followers_seen": len(followers)}
+
+
 def run_growth_loop(dry_run: bool = False) -> dict[str, Any]:
     instance = os.environ.get("MASTODON_INSTANCE", "https://mastodon.social").rstrip("/")
     token = os.environ.get("MASTODON_ACCESS_TOKEN")
@@ -111,6 +144,9 @@ def run_growth_loop(dry_run: bool = False) -> dict[str, Any]:
 
     already_following = _my_follows(token, instance)
     print(f"  currently following: {len(already_following)}")
+
+    # Fase 0: follow-back (nuevos followers que aún no sigo)
+    followback_result = follow_back_new_followers(dry_run=dry_run)
 
     followed = []
     favourited = []
@@ -170,4 +206,5 @@ def run_growth_loop(dry_run: bool = False) -> dict[str, Any]:
         "followed": followed, "follow_count": len(followed),
         "favourited_count": len(favourited),
         "reblogged_count": len(reblogged),
+        "followbacks": followback_result,
     }

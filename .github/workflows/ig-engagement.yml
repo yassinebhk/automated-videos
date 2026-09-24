@@ -1,0 +1,25 @@
+name: IG engagement pass (auto-reply reels 48h)
+
+# Auto-reply a comentarios de reels @waitwhy_ (últimas 3-72h).
+# API v21 NO expone like a comentarios → solo reply.
+# Anti-spam duro: 3/reel, 15/pase, ledger persistente, templates rotativos.
+# Dry-run manual: `videogen ig-engagement --dry-run` (local).
+
+on:
+  schedule:
+    - cron: "37 */4 * * *"   # cada 4h a los 37min (offset vs YT engagement)
+  workflow_dispatch: {}
+
+concurrency:
+  group: videogen-ig-engagement
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  engage:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: ig-engagement
+    secrets: inherit

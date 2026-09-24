@@ -1,0 +1,24 @@
+name: Threads engagement (reply menciones @waitwhy_)
+
+# DEFENSIVO: solo reply a menciones directas. Máx 5/día.
+# Threads es hipersensible al spam (memoria: Meta borró posts 16/09
+# por texto repetido). NUNCA fanout, NUNCA comentar threads ajenos.
+
+on:
+  schedule:
+    - cron: "51 */6 * * *"   # cada 6h (menos frecuente por hipersensibilidad Meta)
+  workflow_dispatch: {}
+
+concurrency:
+  group: videogen-threads-engagement
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  engage:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: threads-engagement
+    secrets: inherit
