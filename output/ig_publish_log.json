@@ -1,18 +1,5 @@
 [
   {
-    "slug": "top-4-jobs-destroyed-by-ai",
-    "title": "TOP 4 trabajos destruidos · 85M puestos · #1",
-    "status": "fail_container_ready",
-    "container_id": "18095983592188569",
-    "public_url": "https://yassinebhk.github.io/automated-videos/reels/top-4-jobs-destroyed-by-ai.mp4",
-    "attempts": 4,
-    "catbox_status": "rc=412 body=Invalid uploader",
-    "status_ext": "ERROR",
-    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
-    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18095983592188569'}",
-    "ts": "2026-09-20T11:12:57.845677+00:00"
-  },
-  {
     "slug": "sort_sort_turbo_20260920_112217",
     "title": "Oddly Satisfying Sorting #satisfying #shorts",
     "status": "fail_container_ready",
@@ -996,5 +983,13 @@
     "media_id": "18372062830215171",
     "url": "https://instagram.com/reel/18372062830215171",
     "ts": "2026-09-24T18:35:02.101225+00:00"
+  },
+  {
+    "slug": "fractal_julia_a_20260924_212905",
+    "title": "Satisfying Infinite Fractal Zoom #satisfying #shorts",
+    "status": "ok",
+    "media_id": "18352245859302197",
+    "url": "https://instagram.com/reel/18352245859302197",
+    "ts": "2026-09-24T21:47:19.566984+00:00"
   }
 ]
