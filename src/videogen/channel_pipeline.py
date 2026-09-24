@@ -201,11 +201,21 @@ def _crosspost(cfg: ChannelConfig, slug: str, url: str, topic: dict) -> dict[str
 
     # BS/MA/TH SÍ requieren URL — skip si vacía
     if url and url != "?":
-        for name, poster_mod, icon in [
-            ("bluesky", "videogen.bluesky_poster", "🦋"),
-            ("mastodon", "videogen.mastodon_poster", "🐘"),
-            ("threads", "videogen.threads_poster", "🧵"),
-        ]:
+        from .crosspost_full import _ig_allowed
+        affine = _ig_allowed(cfg.slug)  # nichos afines a true crime ES
+        # REBALANCEO 24/09 (datos 7d: Bluesky +13 seg, Mastodon -1 y ♥25/339 posts,
+        # Threads 0 seg y ♥2/184 posts): Bluesky rinde → sigue para TODOS los canales.
+        # Mastodon/Threads rendían ~0 con todo el volumen mezclado → SOLO canales
+        # afines (WaitWhy/criminopatía/legal/ayudas/pov/trabajos), como IG. Así baja
+        # el volumen inútil y se reinvierte el esfuerzo en las redes que sí funcionan.
+        nets = [("bluesky", "videogen.bluesky_poster", "🦋")]
+        if affine:
+            nets += [("mastodon", "videogen.mastodon_poster", "🐘"),
+                     ("threads", "videogen.threads_poster", "🧵")]
+        else:
+            result["🐘"] = result["🧵"] = False
+            print(f"  {cfg.slug} mastodon/threads: SKIP (no afín — rebalanceo 24/09)")
+        for name, poster_mod, icon in nets:
             try:
                 import importlib
                 mod = importlib.import_module(poster_mod)

@@ -7,8 +7,7 @@ name: Mastodon growth loop
 
 on:
   schedule:
-    - cron: "18 10 * * *"   # mañana
-    - cron: "18 18 * * *"   # tarde
+    - cron: "18 10 * * *"   # 1x/día (rebalanceo 24/09: rendía ~0 → bajamos volumen)
   workflow_dispatch: {}
 
 concurrency:
