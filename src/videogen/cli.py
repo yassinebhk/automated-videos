@@ -1057,23 +1057,29 @@ def yt_cookies_check_cmd():
 
 @cli.command(name="ig-clean")
 @click.option("--filter", "filter_", type=str, default="",
-              help="Substring del slug/canal a borrar (ej. 'padel', 'fractal'). Vacío = TODOS")
+              help="Substring(s) del slug a borrar. Coma = OR (ej. 'padel,fractal,motor')")
+@click.option("--not-whitelisted", is_flag=True,
+              help="Borra reels cuyo slug NO empiece por ningún prefijo whitelist "
+                   "(waitwhy/criminopatia/legal/ayudas/pov/trabajos)")
 @click.option("--older-than-days", type=int, default=0,
               help="Solo borra reels de hace >N días (0 = todos)")
 @click.option("--dry-run", is_flag=True, help="Solo lista, no borra")
 @click.option("--yes", is_flag=True, help="Confirma sin preguntar")
-def ig_clean_cmd(filter_: str, older_than_days: int, dry_run: bool, yes: bool):
+def ig_clean_cmd(filter_: str, not_whitelisted: bool, older_than_days: int,
+                 dry_run: bool, yes: bool):
     """Borra reels IG del log local via DELETE /{media_id}.
 
     Ejemplos:
-      videogen ig-clean --filter padel --dry-run  → lista candidatos padel
-      videogen ig-clean --filter padel --yes      → borra todos los padel
-      videogen ig-clean --older-than-days 7 --yes → borra >7 días
-      videogen ig-clean --yes                     → borra TODO (peligro)
+      videogen ig-clean --filter padel --dry-run                → lista padel
+      videogen ig-clean --filter tax,legal,motor --yes          → borra 3 nichos
+      videogen ig-clean --not-whitelisted --dry-run             → lista fuera-whitelist
+      videogen ig-clean --not-whitelisted --yes                 → limpieza histórica
+      videogen ig-clean --older-than-days 7 --yes               → borra >7 días
 
     Sólo borra reels registrados en output/ig_publish_log.json como
     'ok' (con media_id). Actualiza el log tras cada borrado.
     """
+    from .crosspost_full import IG_WHITELIST_PREFIXES
     from datetime import datetime, timezone, timedelta
     from .instagram_poster import IG_LOG_PATH, delete_ig_reel
 
@@ -1104,9 +1110,15 @@ def ig_clean_cmd(filter_: str, older_than_days: int, dry_run: bool, yes: bool):
     if older_than_days > 0:
         cutoff = datetime.now(timezone.utc) - timedelta(days=older_than_days)
 
+    filter_tokens = [t.strip().lower() for t in filter_.split(",") if t.strip()] if filter_ else []
+    wl_lower = tuple(p.lower() for p in IG_WHITELIST_PREFIXES)
+
     candidates = []
     for e in ok_entries:
-        if filter_ and filter_.lower() not in e.get("slug", "").lower():
+        slug_l = (e.get("slug") or "").lower()
+        if filter_tokens and not any(t in slug_l for t in filter_tokens):
+            continue
+        if not_whitelisted and slug_l.startswith(wl_lower):
             continue
         if cutoff:
             try:
