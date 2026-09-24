@@ -223,11 +223,15 @@
       ]
     },
     "faisan": {
-      "count": 1,
+      "count": 2,
       "history": [
         {
           "ts": "2026-09-01T11:01:50.985391+00:00",
           "topic": "[CRIMEN] El Caso Faisán: cómo la Policía permitió la fuga de ETA en 2004 y 10 años después fueron condenados"
+        },
+        {
+          "ts": "2026-09-24T12:05:39.305627+00:00",
+          "topic": "El caso Faisán: la filtración policial a ETA juzgada y condenada en 2013"
         }
       ]
     },
