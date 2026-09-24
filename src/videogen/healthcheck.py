@@ -249,11 +249,14 @@ YT_CHANNELS = [
 ]
 
 
-def send_reauth_all() -> int:
-    """Fuerza el envío de los botones de reautorización de TODOS los canales
+def send_reauth_all(only: list[str] | None = None) -> int:
+    """Fuerza el envío de los botones de reautorización de los canales indicados
     (aunque el token esté válido). Útil para añadir un scope nuevo, p.ej.
-    yt-analytics.readonly para el watch-time de YPP."""
-    return _send_reauth_buttons({name: {"ok": False} for _p, name in YT_CHANNELS})
+    yt-analytics.readonly. `only` = lista de nombres (ej. ['WaitWhy']); None = todos."""
+    chans = YT_CHANNELS
+    if only:
+        chans = [(p, n) for (p, n) in YT_CHANNELS if n in only]
+    return _send_reauth_buttons({name: {"ok": False} for _p, name in chans})
 
 
 def _check_youtube_channel(prefix: str, name: str) -> tuple[bool, str]:

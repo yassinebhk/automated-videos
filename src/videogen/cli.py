@@ -1747,12 +1747,14 @@ def backfill_once_cmd(per_platform: int, platforms: str):
 
 
 @cli.command(name="reauth-buttons")
-def reauth_buttons_cmd():
-    """Envía a Telegram los botones de reautorización de TODOS los canales YT
-    (aunque el token siga válido) — para añadir el permiso de analítica (watch-time)."""
+@click.option("--only", default="", help="Solo estos canales (nombres separados por coma), ej. 'WaitWhy'.")
+def reauth_buttons_cmd(only: str):
+    """Envía a Telegram los botones de reautorización de los canales YT (aunque el
+    token siga válido) — para añadir el permiso de analítica. --only filtra por nombre."""
     from . import healthcheck
-    n = healthcheck.send_reauth_all()
-    print(f"reauth buttons enviados: {n}")
+    names = [s.strip() for s in only.split(",") if s.strip()] or None
+    n = healthcheck.send_reauth_all(only=names)
+    print(f"reauth buttons enviados: {n}" + (f" (solo {names})" if names else ""))
     if not n:
         raise SystemExit(1)
 

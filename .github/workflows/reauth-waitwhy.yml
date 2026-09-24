@@ -1,0 +1,17 @@
+name: Reauth WaitWhy (solo)
+
+# Manda a Telegram SOLO el botón de reauth de WaitWhy (para probar el scope
+# yt-analytics.readonly tras el redeploy del webhook). Uno solo, sin liarse con 11.
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  reauth:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: reauth-buttons --only WaitWhy
+    secrets: inherit
