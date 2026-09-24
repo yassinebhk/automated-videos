@@ -856,6 +856,20 @@ def first_comment_catchup_cmd():
     print(f"  first-comment catchup: {result}")
 
 
+@cli.command(name="engagement")
+@click.option("--dry-run", is_flag=True, help="No postea, solo enseña qué haría")
+@click.option("--max", "max_total", type=int, default=15,
+              help="Max replies por pase (default 15, tope duro 30 para no spam)")
+def engagement_cmd(dry_run: bool, max_total: int):
+    """Auto-reply a comentarios de videos publicados 6-72h atrás.
+    Palanca YPP: cada reply del creador → notify al viewer → CTR de vuelta.
+    Anti-spam: max 3 replies/video, ledger persistente, templates rotativos."""
+    from . import engagement
+    max_total = min(max_total, 30)
+    result = engagement.run_engagement_pass(max_total=max_total, dry_run=dry_run)
+    print(f"  engagement pass: {result}")
+
+
 @cli.command(name="bluesky-growth")
 def bluesky_growth_cmd():
     """Ejecuta el growth loop de Bluesky (follows + likes + reposts)."""

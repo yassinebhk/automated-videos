@@ -1,0 +1,32 @@
+name: Engagement pass (auto-reply comentarios 6-72h)
+
+# Palanca YPP: reply del creador → notify al viewer → CTR de vuelta.
+# Anti-spam duro (crítico — YT banea por spam):
+#   - max 3 replies/video, max 15 replies/pase
+#   - ventana comentarios: 6h-72h atrás (ni recién publicado ni antiguo)
+#   - ledger persistente (no reintenta el mismo thread)
+#   - templates rotativos (nunca literal duplicado)
+#   - solo comentarios >=2 palabras, no del canal
+#
+# Cadencia: cada 4h → ~6 pases/día × 15 = 90 replies/día MAX. En la práctica
+# mucho menos: la mayoría de videos ya tienen todos sus threads respondidos.
+# Dry-run manual: `videogen engagement --dry-run` (local).
+
+on:
+  schedule:
+    - cron: "23 */4 * * *"   # cada 4h a los 23min
+  workflow_dispatch: {}
+
+concurrency:
+  group: videogen-engagement
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  engage:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: engagement
+    secrets: inherit
