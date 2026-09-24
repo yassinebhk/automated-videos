@@ -147,20 +147,23 @@ def fetch_traffic_sources(channel_prefix: str = "", days: int = 28) -> dict:
                 else:
                     os.environ.pop("YT_CHANNEL_PREFIX", None)
         else:
-            # Canal principal (WaitWhy). En CI el token vive en ENV (YT_REFRESH_TOKEN),
-            # no en fichero → antes devolvía {} en silencio. Fallback a env.
+            # Canal principal (WaitWhy). PREFERIMOS ENV con scopes=None: el token file que
+            # reconstruye CI hardcodea solo [upload, readonly] (_videogen-job.yml) → nunca
+            # traería analytics aunque el refresh_token SÍ lo tenga concedido. Con el
+            # refresh_token crudo y scopes=None, Google devuelve TODOS los scopes concedidos
+            # (incluido yt-analytics.readonly si se reautorizó). Fichero solo fallback local.
             from google.auth.transport.requests import Request as _Req
             rt = os.environ.get("YT_REFRESH_TOKEN")
             cid = os.environ.get("YT_CLIENT_ID"); csec = os.environ.get("YT_CLIENT_SECRET")
-            if TOKEN_FILE.exists():
-                creds = Credentials.from_authorized_user_file(str(TOKEN_FILE), None)
-            elif rt and cid and csec:
+            if rt and cid and csec:
                 creds = Credentials(token=None, refresh_token=rt, client_id=cid,
                                     client_secret=csec,
                                     token_uri="https://oauth2.googleapis.com/token", scopes=None)
                 creds.refresh(_Req())
+            elif TOKEN_FILE.exists():
+                creds = Credentials.from_authorized_user_file(str(TOKEN_FILE), None)
             else:
-                print(f"  traffic {tag}: sin token (ni fichero ni YT_REFRESH_TOKEN en env)")
+                print(f"  traffic {tag}: sin token (ni YT_REFRESH_TOKEN en env ni fichero)")
                 return {}
         ya = build("youtubeAnalytics", "v2", credentials=creds)
     except Exception as e:
