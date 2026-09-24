@@ -404,23 +404,31 @@ def snapshot_threads() -> list[dict]:
     rows: list[dict] = []
     base = "https://graph.threads.net/v1.0"
     try:
-        # Followers via insights (no está en user obj)
-        followers = 0
+        # Followers via insights. Requiere scope threads_manage_insights (el token
+        # generado en el panel developer NO lo trae por defecto → devuelve error →
+        # dashboard sale followers=0 engañando). Si no lo obtenemos, NO añadimos row
+        # channel (mejor N/A que 0 mentiroso).
+        followers: int | None = None
+        insights_ok = False
         try:
             ins = requests.get(f"{base}/{th_id}/threads_insights",
                                 params={"metric": "followers_count", "access_token": token},
                                 timeout=15).json()
             if isinstance(ins, dict) and ins.get("error"):
-                print(f"  snapshot threads insights ERROR: {str(ins['error'])[:200]} "
-                      f"(¿falta scope threads_manage_insights?)")
-            for m in ins.get("data", []):
-                if m.get("name") == "followers_count":
-                    followers = int((m.get("total_value") or {}).get("value") or 0)
-                    break
-        except Exception:
-            pass
-        rows.append({"platform": "threads", "kind": "channel",
-                     "subs": followers, "views": 0, "likes": 0, "source": "api"})
+                err_txt = str(ins["error"])[:200]
+                print(f"  snapshot threads FOLLOWERS_COUNT missing (scope threads_manage_insights): {err_txt}")
+                print(f"  → Fix: regenerar THREADS_TOKEN con el scope threads_manage_insights añadido")
+            else:
+                for m in ins.get("data", []):
+                    if m.get("name") == "followers_count":
+                        followers = int((m.get("total_value") or {}).get("value") or 0)
+                        insights_ok = True
+                        break
+        except Exception as e:
+            print(f"  snapshot threads insights exception: {type(e).__name__}: {e}")
+        if insights_ok and followers is not None:
+            rows.append({"platform": "threads", "kind": "channel",
+                         "subs": followers, "views": 0, "likes": 0, "source": "api"})
         # Posts reales del perfil (antes NO se capturaban → el panel salía vacío).
         # También sirve para detectar si Meta borra posts (comparar con lo publicado).
         posts_raw = requests.get(

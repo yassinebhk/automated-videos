@@ -1,0 +1,30 @@
+name: Bluesky reply-boost (dato + fuente en threads trending)
+
+# Reply-boost a threads trending ES sobre corrupción/true crime.
+# ⚠️ MAX 3/día (Bluesky sensible a spam volumen)
+# ⚠️ Solo cuentas <5000 followers (no periodistas famosos)
+# ⚠️ Solo posts >=8 likes (con tracción real)
+# ⚠️ Templates aportan dato citable + fuente (no promoción cruda)
+#
+# Cron cada 12h → max 6 pases/día × cap 3 = 3/día realista.
+# Live por defecto (safe: --dry-run manual). El módulo lleva sus propias
+# salvaguardas + ledger persistente.
+
+on:
+  schedule:
+    - cron: "17 8,20 * * *"   # 08:17 y 20:17 UTC (mañana ES + noche ES)
+  workflow_dispatch: {}
+
+concurrency:
+  group: videogen-bsky-boost
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  boost:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: bsky-reply-boost --live
+    secrets: inherit

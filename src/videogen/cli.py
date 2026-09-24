@@ -893,6 +893,17 @@ def threads_engagement_cmd(dry_run: bool):
     print(f"  threads engagement pass: {result}")
 
 
+@cli.command(name="bsky-reply-boost")
+@click.option("--live", is_flag=True,
+              help="Postear de verdad. Sin este flag = dry-run (safe).")
+def bsky_reply_boost_cmd(live: bool):
+    """Reply-boost Bluesky a threads trending ES (true crime/corrupción).
+    MAX 3/día, cuentas <5k followers, posts >=8 likes, aportando dato + fuente."""
+    from . import bluesky_reply_boost
+    result = bluesky_reply_boost.run_bsky_reply_boost(dry_run=not live)
+    print(f"  bsky reply-boost pass: {result}")
+
+
 @cli.command(name="bluesky-growth")
 def bluesky_growth_cmd():
     """Ejecuta el growth loop de Bluesky (follows + likes + reposts)."""
