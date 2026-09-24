@@ -147,10 +147,21 @@ def fetch_traffic_sources(channel_prefix: str = "", days: int = 28) -> dict:
                 else:
                     os.environ.pop("YT_CHANNEL_PREFIX", None)
         else:
-            if not TOKEN_FILE.exists():
+            # Canal principal (WaitWhy). En CI el token vive en ENV (YT_REFRESH_TOKEN),
+            # no en fichero → antes devolvía {} en silencio. Fallback a env.
+            from google.auth.transport.requests import Request as _Req
+            rt = os.environ.get("YT_REFRESH_TOKEN")
+            cid = os.environ.get("YT_CLIENT_ID"); csec = os.environ.get("YT_CLIENT_SECRET")
+            if TOKEN_FILE.exists():
+                creds = Credentials.from_authorized_user_file(str(TOKEN_FILE), None)
+            elif rt and cid and csec:
+                creds = Credentials(token=None, refresh_token=rt, client_id=cid,
+                                    client_secret=csec,
+                                    token_uri="https://oauth2.googleapis.com/token", scopes=None)
+                creds.refresh(_Req())
+            else:
+                print(f"  traffic {tag}: sin token (ni fichero ni YT_REFRESH_TOKEN en env)")
                 return {}
-            # scopes=None → usa los del token file (incluye analytics si se reautorizó).
-            creds = Credentials.from_authorized_user_file(str(TOKEN_FILE), None)
         ya = build("youtubeAnalytics", "v2", credentials=creds)
     except Exception as e:
         print(f"  traffic {tag}: auth fail {type(e).__name__}: {str(e)[:80]}")
