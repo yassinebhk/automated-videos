@@ -197,11 +197,12 @@ def _render_bar_chart_race(dataset: dict, out_video: Path,
     fig, ax = plt.subplots(figsize=(fig_w, fig_h), dpi=dpi)
     fig.patch.set_facecolor("#111827")
     ax.set_facecolor("#111827")
-    # Fix nombres cortados: margen izquierdo generoso para dar espacio a
-    # etiquetas largas ("Universidad Politécnica", "Banco Santander"…).
-    # Antes: matplotlib default left=0.125 → texto ha="right" se salía y era
-    # recortado por el bounding box de la figura.
-    fig.subplots_adjust(left=0.32, right=0.94, top=0.90, bottom=0.06)
+    # Ancho útil: 68% del figure (left=0.28 → deja espacio a nombres izquierda;
+    # right=0.96 → deja aire mínimo a la derecha para que las etiquetas de valor
+    # no se salgan pero sin recortar el título). El título va con fig.suptitle
+    # (span figure completo) para NO respetar los márgenes del axes.
+    # top=0.90 → chart ocupa más área (menos hueco en blanco entre suptitle y barras).
+    fig.subplots_adjust(left=0.28, right=0.96, top=0.90, bottom=0.06)
 
     # Total frames = duration_seconds × 15fps (menor fps ok para bar race)
     fps = 15
@@ -225,9 +226,43 @@ def _render_bar_chart_race(dataset: dict, out_video: Path,
     max_year = max(years) if years else datetime.now(timezone.utc).year
     source_short = (dataset.get("source_note") or "").strip()[:60]
 
+    # Unidad corta para la etiqueta de barras: si es una frase larga
+    # ("millones habitantes área metropolitana", "millones de dólares"),
+    # abrevia a algo compacto que quepa junto a la cifra. La forma completa
+    # se muestra debajo del título como subtítulo del chart.
+    _SHORT_UNIT_MAP = {
+        "millones habitantes área metropolitana": "M hab.",
+        "millones de habitantes": "M hab.",
+        "millones habitantes": "M hab.",
+        "millones de euros": "M€",
+        "millones de dólares": "M$",
+        "miles de millones": "MM",
+        "medallas": "🏅",
+        "hab.": "hab.",
+    }
+    def _short_unit(u: str) -> str:
+        if not u:
+            return ""
+        ul = u.strip().lower()
+        if ul in _SHORT_UNIT_MAP:
+            return _SHORT_UNIT_MAP[ul]
+        # Auto-abreviar: si es corto (<=6 chars) o ya es símbolo → tal cual
+        if len(u) <= 6:
+            return u
+        # Sino, primera palabra + inicial siguiente (ej. "millones habitantes" → "M hab")
+        parts = u.split()
+        if len(parts) >= 2 and parts[0].lower().startswith("mill"):
+            return "M " + parts[1][:4] + ("." if len(parts[1]) > 4 else "")
+        return parts[0][:6]
+    unidad_short = _short_unit(unidad)
+    unidad_full = unidad  # para el subtítulo permanente si es distinta
+
     def draw_intro(fi: int):
         """Frame intro: título grande centrado con fade-in."""
         ax.clear()
+        # ax.clear() no borra fig.suptitle → limpiar explícitamente
+        # para que el título del chart no aparezca sobre el intro/outro.
+        fig.suptitle("")
         ax.set_xlim(0, 10); ax.set_ylim(0, 10)
         ax.axis("off")
         # Fade in en los primeros 15 frames (1s)
@@ -258,6 +293,7 @@ def _render_bar_chart_race(dataset: dict, out_video: Path,
     def draw_outro(fi: int):
         """Frame outro: CTA suscribirse."""
         ax.clear()
+        fig.suptitle("")  # limpiar el título del chart phase
         ax.set_xlim(0, 10); ax.set_ylim(0, 10)
         ax.axis("off")
         alpha = min(1.0, fi / 10)
@@ -305,24 +341,50 @@ def _render_bar_chart_race(dataset: dict, out_video: Path,
 
         bars = ax.barh(y_pos, vals, color=colors, edgecolor="white", linewidth=1.5)
         # Nombres a la izquierda: truncar >22 chars con "…" + fontsize dinámico
-        # para que quepa completo aunque el nombre sea largo.
         max_name_chars = 22
         for i, (name, val) in enumerate(zip(names, vals)):
             y = y_pos[i]
             display_name = name if len(name) <= max_name_chars else name[:max_name_chars - 1] + "…"
-            # Fontsize dinámico: 14 default, baja a 11 si nombre largo
             name_fs = 14 if len(display_name) <= 14 else (12 if len(display_name) <= 18 else 11)
             ax.text(-max(vals) * 0.02, y, display_name, va="center", ha="right",
                      color="white", fontsize=name_fs, fontweight="bold")
-            ax.text(val + max(vals) * 0.01, y,
-                     f"{val:,.0f}{unidad}", va="center", ha="left",
-                     color="white", fontsize=12)
+            # Cifra + unidad corta con espacio. Si el bar es corto y hay
+            # sitio a la derecha, texto FUERA del bar; si es largo, texto
+            # DENTRO del bar (color negro para contraste) para no salirse.
+            label_txt = f"{val:,.0f} {unidad_short}".strip()
+            if val < max(vals) * 0.75:
+                # Fuera del bar (a la derecha)
+                ax.text(val + max(vals) * 0.012, y, label_txt,
+                         va="center", ha="left",
+                         color="white", fontsize=12, fontweight="bold")
+            else:
+                # Dentro del bar (extremo derecho, ha="right" con offset negativo)
+                ax.text(val - max(vals) * 0.012, y, label_txt,
+                         va="center", ha="right",
+                         color="#111827", fontsize=12, fontweight="bold")
 
-        # Título arriba
+        # Título: fig.suptitle (span figure completo, NO respeta márgenes axes)
         year_display = years[year_idx] + int((years[min(year_idx+1, len(years)-1)] - years[year_idx]) * progress)
-        ax.set_title(f"{dataset.get('titulo_video', 'TOP 10')}\n{year_display}",
-                      color="white", fontsize=18, fontweight="bold", pad=20)
-        ax.set_xlim(0, max(vals) * 1.3)
+        base_title = dataset.get("titulo_video", "TOP 10")
+        # Anti-duplicado: si el título YA menciona el año (los bundled data
+        # llevan "· 2024" hardcoded), NO añadimos otra línea con el año.
+        year_str = str(year_display)
+        if year_str in base_title or f"({year_str})" in base_title:
+            full_title = base_title
+        else:
+            full_title = f"{base_title} · {year_display}"
+        # Fontsize adaptativo por longitud del título (evita cortes por ancho fig)
+        _tl = len(full_title)
+        title_fs = 20 if _tl <= 40 else (16 if _tl <= 60 else 13)
+        fig.suptitle(full_title,
+                      color="white", fontsize=title_fs, fontweight="bold", y=0.965)
+        # Subtítulo con la unidad completa (si la corta difiere), pegado al suptitle
+        if unidad_full and unidad_full != unidad_short and len(unidad_full) > 6:
+            ax.text(0.5, 1.01, f"({unidad_full})", transform=ax.transAxes,
+                     ha="center", va="bottom", color="#94a3b8",
+                     fontsize=10, style="italic")
+        # xlim con margen 60% (era 30%) para el texto de valor a la derecha
+        ax.set_xlim(0, max(vals) * 1.6)
         ax.set_yticks([])
         ax.spines["top"].set_visible(False)
         ax.spines["right"].set_visible(False)
