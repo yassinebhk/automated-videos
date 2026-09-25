@@ -412,6 +412,7 @@ def publish(
     scripts = script.load_scripts(d)
     links: dict[str, str] = {}
     ids: dict[str, str] = {}
+    variants: dict[str, str] = {}  # lang → 'A'|'B' (AB test SEO títulos)
     for lang in langs:
         loc = getattr(scripts, lang)
         vid = d / f"video_{lang}_vertical.mp4"
@@ -422,7 +423,19 @@ def publish(
         # Sanitize y fallback título (bugs 11/09 motor: title vacío o solo
         # caracteres inválidos → YT 400 invalidTitle).
         import re as _re
+        import hashlib as _hl
+        # AB test SEO: si hay title_alt, round-robin determinístico por slug.
+        # variant "A" = title principal (storyteller), "B" = title_alt (SEO puro).
+        # Log en youtube.json para correlacionar con analytics.
+        title_alt = (getattr(loc, "title_alt", "") or "").strip()
+        title_variant = "A"
         raw_title = (loc.title or "").strip()
+        if title_alt and len(_re.sub(r'[^\w]', '', title_alt, flags=_re.UNICODE)) >= 5:
+            # Hash slug → 0/1 estable (mismo slug siempre elige lo mismo si reintenta)
+            h = int(_hl.md5(slug.encode("utf-8")).hexdigest()[:2], 16)
+            if h % 2 == 1:
+                raw_title = title_alt
+                title_variant = "B"
         # Quitar chars problemáticos YT (<, >, control chars)
         safe_title = _re.sub(r'[<>\x00-\x1f]', '', raw_title).strip()
         # Contar chars alfanuméricos reales
@@ -434,7 +447,7 @@ def publish(
                 safe_title = slug.replace('-', ' ').title() or "Nuevo video"
             progress(f"[{lang}] ⚠ title inválido ('{raw_title[:40]}'), fallback: '{safe_title[:80]}'")
         else:
-            progress(f"[{lang}] title: '{safe_title[:80]}'")
+            progress(f"[{lang}] title[{title_variant}]: '{safe_title[:80]}'")
         # Trunca a 100 chars (límite YT)
         safe_title = safe_title[:100]
         video_id = upload_youtube.upload_video(
@@ -449,7 +462,19 @@ def publish(
         url = f"https://youtube.com/shorts/{video_id}"
         links[lang] = url
         ids[lang] = video_id
+        variants[lang] = title_variant
         progress(f"[{lang}] ✓ {url}")
+
+        # Playlist automática por case_key (solo ES: case_ledger es ES).
+        # Retroactivo: si el case ya tiene >=3 videos, crea la playlist ahora.
+        if lang == "es":
+            try:
+                from . import playlists_manager
+                pl_res = playlists_manager.sync_video_to_playlist(video_id, safe_title)
+                if "playlist_id" in pl_res and "added" in pl_res:
+                    progress(f"[{lang}] playlist «{pl_res.get('case_key')}»: +{pl_res.get('added',0)} → {pl_res.get('total_in_playlist',0)} videos")
+            except Exception as _pe:
+                progress(f"[{lang}] playlist sync skip: {type(_pe).__name__}: {_pe}")
 
         # Thumbnail viral custom: extrae frame + overlay cifra amarilla + shock rojo.
         # Para canales fiscales/finanzas (YT_CHANNEL_PREFIX=YT_TAX), añade
@@ -474,6 +499,8 @@ def publish(
         existing = json.loads(yt_path.read_text(encoding="utf-8"))
     existing.update(links)
     existing["_ids"] = {**existing.get("_ids", {}), **ids}
+    if variants:
+        existing["_title_variants"] = {**existing.get("_title_variants", {}), **variants}
     yt_path.write_text(json.dumps(existing, ensure_ascii=False, indent=2), encoding="utf-8")
 
     # Mover a uploaded/
@@ -609,6 +636,7 @@ def publish_long(
     scripts = script.load_long_scripts(d)
     links: dict[str, str] = {}
     ids: dict[str, str] = {}
+    variants: dict[str, str] = {}  # AB test títulos (long-form)
     for lang in langs:
         loc = getattr(scripts, lang)
         vid = d / f"video_long_{lang}.mp4"
@@ -616,12 +644,23 @@ def publish_long(
             progress(f"[{lang}] sin long-form, omitido")
             continue
         progress(f"[{lang}] Subiendo long-form a YouTube…")
+        # AB test title (mismo esquema que shorts): 50/50 hash slug
+        import hashlib as _hl
+        import re as _re
+        title_alt = (getattr(loc, "title_alt", "") or "").strip()
+        title_use = loc.title
+        title_variant = "A"
+        if title_alt and len(_re.sub(r'[^\w]', '', title_alt, flags=_re.UNICODE)) >= 5:
+            h = int(_hl.md5(slug.encode("utf-8")).hexdigest()[:2], 16)
+            if h % 2 == 1:
+                title_use = title_alt
+                title_variant = "B"
         court = getattr(loc, "court_source", None)
         video_id = upload_youtube.upload_video(
             vid,
-            title=loc.title,
+            title=title_use,
             description=_enrich_description_seo(
-                loc.description, loc.title, loc.hashtags,
+                loc.description, title_use, loc.hashtags,
                 is_short=False, court=court,
             ),
             tags=[h.lstrip("#") for h in loc.hashtags],
@@ -632,12 +671,15 @@ def publish_long(
         url = f"https://youtu.be/{video_id}"
         links[lang] = url
         ids[lang] = video_id
-        progress(f"[{lang}] ✓ {url}")
+        variants[lang] = title_variant
+        progress(f"[{lang}] ✓ {url} [title:{title_variant}]")
 
     yt_path = d / "youtube_long.json"
     existing = json.loads(yt_path.read_text(encoding="utf-8")) if yt_path.exists() else {}
     existing.update(links)
     existing["_ids"] = {**existing.get("_ids", {}), **ids}
+    if variants:
+        existing["_title_variants"] = {**existing.get("_title_variants", {}), **variants}
     yt_path.write_text(json.dumps(existing, ensure_ascii=False, indent=2), encoding="utf-8")
 
     dst = UPLOADED_DIR / slug

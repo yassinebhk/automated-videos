@@ -1,0 +1,25 @@
+name: Playlists catchup (sync case_key → YT playlists)
+
+# Sincroniza retroactivamente videos uploaded/ a sus playlists YT por
+# case_key. Crea playlists nuevas cuando un caso alcanza 3+ videos.
+# Palanca boost algoritmo YT (binge-watching sugerido interno).
+# Idempotente (ledger).
+
+on:
+  schedule:
+    - cron: "43 5 * * 1"   # lunes 05:43 UTC (semanal, low-traffic hour)
+  workflow_dispatch: {}
+
+concurrency:
+  group: videogen-playlists
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  catchup:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: playlists-catchup
+    secrets: inherit

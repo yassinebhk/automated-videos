@@ -122,6 +122,11 @@ REGLA DE ORO: **datos verificables, ángulo polarizante**. NUNCA mentir sobre lo
 
 6. **Title**: 50-60 chars max. Curiosity-driven. Avoid clickbait clichés ("YOU WON'T BELIEVE"). Format: question or surprising claim. Examples: "¿Por qué los pulpos tienen 3 corazones?", "The Real Reason Octopuses Have 3 Hearts".
 
+   **`title_alt` (obligatorio en ES cuando aplique)**: SEGUNDO título candidato, ~50-60 chars, con foco keyword-SEO DISTINTO del `title` principal. El pipeline elige entre `title`/`title_alt` en round-robin 50/50 para AB testing (curiosity vs SEO puro).
+     - Si `title` es curiosity/hook ("¿Cómo robó de la Rosa 300M€?"), entonces `title_alt` debe ser SEO-first ("Caso KIO explicado · #47 · 300M€").
+     - Si `title` ya es SEO (`Caso X — dato · #N`), entonces `title_alt` puede ser curiosity ("¿El fraude que se enterró? · #N").
+     - Ambos deben respetar el patrón de serie si aplica y ser válidos como título independiente.
+
    **SERIE + SEO — OBLIGATORIO cuando el topic empieza con "[Episodio #N ...]"**:
    - `title` (ES): patrón `Caso [NombreConocido] — [gancho] · #N` de 50-60 chars.
      El motivo: `Caso [Nombre]` es la keyword que la gente TIPEA en Google. Ejemplos:
@@ -188,6 +193,7 @@ Return ONLY valid JSON matching this schema (no markdown fences, no commentary):
   "es": {
     "lang": "es",
     "title": "...",
+    "title_alt": "...",
     "description": "...",
     "hashtags": ["#curiosidades", "..."],
     "thumbnail_text": "...",
@@ -201,6 +207,7 @@ Return ONLY valid JSON matching this schema (no markdown fences, no commentary):
   "en": {
     "lang": "en",
     "title": "...",
+    "title_alt": "...",
     "description": "...",
     "hashtags": ["#curiosities", "..."],
     "thumbnail_text": "...",

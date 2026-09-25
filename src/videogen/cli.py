@@ -904,6 +904,15 @@ def bsky_reply_boost_cmd(live: bool):
     print(f"  bsky reply-boost pass: {result}")
 
 
+@cli.command(name="playlists-catchup")
+def playlists_catchup_cmd():
+    """Sincroniza retroactivamente todos los videos uploaded/ a sus playlists
+    de case_key. Crea playlists YT para casos con >=3 videos. Idempotente."""
+    from . import playlists_manager
+    result = playlists_manager.catchup_all_cases()
+    print(f"  playlists catchup: {result}")
+
+
 @cli.command(name="bluesky-growth")
 def bluesky_growth_cmd():
     """Ejecuta el growth loop de Bluesky (follows + likes + reposts)."""

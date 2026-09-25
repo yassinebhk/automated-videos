@@ -19,6 +19,10 @@ class LocalizedScript(BaseModel):
 
     lang: str  # "es" | "en"
     title: str
+    # AB test SEO: título alternativo con foco keyword-search puro. Opcional.
+    # Ej: title="¿Cómo robó de la Rosa 300M€?" · title_alt="Caso KIO explicado · #47".
+    # Service.py elige 50/50 según hash(slug) determinístico y loguea la variante.
+    title_alt: str = ""
     description: str
     hashtags: list[str] = Field(default_factory=list)  # opcional: Gemini a veces lo omite → no romper
     thumbnail_text: str
