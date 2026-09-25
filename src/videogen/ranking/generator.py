@@ -260,20 +260,41 @@ def _render_bar_chart_race(dataset: dict, out_video: Path,
     def draw_intro(fi: int):
         """Frame intro: título grande centrado con fade-in."""
         ax.clear()
-        # ax.clear() no borra fig.suptitle → limpiar explícitamente
-        # para que el título del chart no aparezca sobre el intro/outro.
+        # ax.clear() no borra fig.suptitle → limpiar explícitamente.
         fig.suptitle("")
+        # Intro/outro necesitan que el axes ocupe TODO el figure para que
+        # (5,5) sea el centro visual real. En el chart usamos márgenes
+        # asimétricos (left=0.28) para los nombres izquierda; aquí no.
+        fig.subplots_adjust(left=0.02, right=0.98, top=0.98, bottom=0.02)
         ax.set_xlim(0, 10); ax.set_ylim(0, 10)
         ax.axis("off")
         # Fade in en los primeros 15 frames (1s)
         alpha = min(1.0, fi / 15)
-        # Título grande (word-wrap manual — matplotlib no lo hace)
-        lines = _wrap_text(titulo_video, 22)
-        y_start = 5 + (len(lines) - 1) * 0.6
+        # Wrap ancho + fontsize adaptativo por longitud (evitan que quede
+        # una línea acabando en "·" o que "2024" quede sola por ancho corto).
+        _tl = len(titulo_video)
+        if _tl <= 30:
+            wrap_w, fs, line_sep = 30, 34, 1.0
+        elif _tl <= 50:
+            wrap_w, fs, line_sep = 30, 28, 0.9
+        elif _tl <= 70:
+            wrap_w, fs, line_sep = 32, 24, 0.8
+        else:
+            wrap_w, fs, line_sep = 34, 20, 0.7
+        lines = _wrap_text(titulo_video, wrap_w)
+        # Compactación: si la última línea queda muy corta (ej "2024"),
+        # intenta fusionarla con la anterior si cabe.
+        if len(lines) >= 2 and len(lines[-1]) <= 6:
+            joined = lines[-2] + " " + lines[-1]
+            if len(joined) <= wrap_w + 6:
+                lines = lines[:-2] + [joined]
+        y_start = 5 + (len(lines) - 1) * (line_sep / 2)
         for i, line in enumerate(lines):
-            ax.text(5, y_start - i * 1.2, line, ha="center", va="center",
+            # Quita "·" colgante al final de línea (queda feo)
+            line = line.rstrip(" ·")
+            ax.text(5, y_start - i * line_sep, line, ha="center", va="center",
                      color=(1, 1, 1, alpha),
-                     fontsize=32, fontweight="bold")
+                     fontsize=fs, fontweight="bold")
         # Subtítulo abajo
         if fi > 20:
             sub_alpha = min(1.0, (fi - 20) / 15)
@@ -293,7 +314,9 @@ def _render_bar_chart_race(dataset: dict, out_video: Path,
     def draw_outro(fi: int):
         """Frame outro: CTA suscribirse."""
         ax.clear()
-        fig.suptitle("")  # limpiar el título del chart phase
+        fig.suptitle("")
+        # Full-figure axes también en outro (mismo motivo que intro).
+        fig.subplots_adjust(left=0.02, right=0.98, top=0.98, bottom=0.02)
         ax.set_xlim(0, 10); ax.set_ylim(0, 10)
         ax.axis("off")
         alpha = min(1.0, fi / 10)
@@ -320,6 +343,8 @@ def _render_bar_chart_race(dataset: dict, out_video: Path,
         # Fase chart race
         chart_fi = frame_idx - intro_frames
         ax.clear()
+        # Restaurar layout asimétrico del chart (intro/outro lo ponían full-figure).
+        fig.subplots_adjust(left=0.28, right=0.96, top=0.90, bottom=0.06)
         year_idx = min(chart_fi // frames_per_year, len(years) - 1)
         # Interpolación lineal entre year_idx y year_idx+1 (si existe)
         progress = (chart_fi % frames_per_year) / frames_per_year
