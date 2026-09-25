@@ -771,11 +771,30 @@ function renderRedes(){
     <span class="faint mono" style="font-size:12px;min-width:82px" title="views 24h">${p.views?((p.views>0?'+':'')+short(p.views)+' views'):'— views'}</span>
     <span class="faint mono" style="font-size:12px;min-width:52px" title="me gusta totales">${p.likes?'♥ '+fmt(p.likes):''}</span>
     <span style="flex:1;min-width:120px;font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="mejor post por alcance">${p.best?'· '+p.best.title:''}</span></div>`).join('');
+  // Funnel RRSS→YouTube (de dónde vienen las views)
+  const ft=d.funnel_traffic||{channels:[]};
+  const ftTop=Object.entries(ft.top_sources||{}).map(([k,v])=>`<span class="tag">${k}: ${fmt(v)}</span>`).join(' ');
+  const ftRows=(ft.channels||[]).map(c=>`<div style="display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap;padding:9px 0;border-bottom:1px solid var(--line,#e8e8ee)">
+    <span class="cdot" style="background:${c.color}"></span><b style="min-width:120px">${c.name}</b>
+    <span class="faint mono" style="font-size:12px;min-width:86px" title="views ${ft.window_days}d">${short(c.total)} views</span>
+    <span class="mono" style="font-size:12px;min-width:118px;color:${c.ext_pct>0?'var(--good)':'var(--muted)'}" title="tráfico externo">EXT ${c.ext_pct!=null?c.ext_pct+'%':'—'} (${fmt(c.ext_views||0)})</span>
+    <span style="flex:1;min-width:140px;font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${Object.entries(c.top||{}).slice(0,3).map(([k,v])=>k+':'+v).join(' · ')}</span></div>`).join('');
+  const funnelBlock=`<div class="sechead"><h2>Funnel RRSS → YouTube</h2><span class="eyebrow">de dónde vienen las views · ${ft.window_days||28}d</span></div>
+    <div class="card pad" style="margin-bottom:28px">${ft.total_views?`
+      <div style="display:flex;gap:26px;flex-wrap:wrap;margin-bottom:16px;font-family:var(--mono)">
+        <div><div class="num" style="font-size:28px">${short(ft.total_views)}</div><div class="faint" style="font-size:11px">views (${ft.window_days}d)</div></div>
+        <div><div class="num" style="font-size:28px;color:${ft.external_pct>1?'var(--good)':'var(--bad,#dc2626)'}">${ft.external_pct}%</div><div class="faint" style="font-size:11px">tráfico externo (RRSS/enlaces)</div></div>
+        <div style="flex:1;min-width:200px"><div class="faint" style="font-size:11px;margin-bottom:5px">principales fuentes externas</div>${ftTop||'<span class="faint">—</span>'}</div>
+      </div>
+      ${ftRows}
+      <p class="faint" style="font-size:11.5px;margin-top:12px;line-height:1.5">EXT = clics desde enlaces EXTERNOS a YouTube. IG/TikTok esconden el link → no rastreable. Un EXT bajo significa que el crosspost a redes casi no trae tráfico a YT: las views vienen del propio descubrimiento de YouTube (búsqueda + sugeridos + browse).</p>`
+      :'<span class="faint">Pendiente del próximo snapshot (requiere canales reautorizados con el scope de analytics).</span>'}</div>`;
   el.innerHTML=`<div class="sechead" style="margin-top:0"><h2>Resumen del último día</h2><span class="eyebrow">${dg.date||''} · deltas 24h · todas las RRSS</span></div>
     <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px">${dgTiles}</div>
     <div class="card pad" style="margin-bottom:28px">${dgRows||'<span class="faint">Sin actividad</span>'}</div>
     <div class="sechead"><h2>Plataformas sociales</h2><span class="eyebrow">${fmt(d.totals.social_followers)} seguidores totales</span></div>
     <div class="grid socgrid">${soc}</div>
+    ${funnelBlock}
     <div class="grid g32" style="margin-top:24px">
       <div class="card pad"><div class="sechead" style="margin:0 0 12px"><h2 style="font-size:15px">Crecimiento de seguidores por red</h2></div>
         <div class="chartbox sm"><canvas id="socgrowth"></canvas></div></div>

@@ -375,9 +375,11 @@ def build() -> dict:
         latest = series[-1] if series else {}
         subs = latest.get("subs", 0)
         views = latest.get("views", 0)
-        # nº vídeos + watch-metrics: del último snapshot que los traiga
+        # nº vídeos + watch-metrics + funnel (fuentes tráfico): último snapshot que los traiga
         videos = 0
         watch_hours = shorts90 = None
+        ext_pct = ext_views = traffic_28d = None
+        traffic_top = None
         for r in sorted(chan_by_pk.get(pk, []), key=lambda x: x.get("ts", 0) or 0):
             if r.get("videos"):
                 videos = r["videos"]
@@ -385,6 +387,9 @@ def build() -> dict:
                 watch_hours = r["watch_hours"]
             if r.get("shorts_views_90d") is not None:
                 shorts90 = r["shorts_views_90d"]
+            if r.get("ext_pct") is not None:
+                ext_pct = r["ext_pct"]; ext_views = r.get("ext_views", 0)
+                traffic_28d = r.get("traffic_28d", 0); traffic_top = r.get("traffic_top") or {}
         if not videos and pk:
             videos = len({r.get("video_id") for r in vids_by_pk.get(pk, []) if r.get("video_id")})
 
@@ -454,6 +459,8 @@ def build() -> dict:
             flagship=ch.get("flagship", False), color=color,
             ig=(ch["key"] in IG_WHITELIST), yt_host=YT_HOST_REDIRECT.get(ch["key"]),
             watch_hours=watch_hours, shorts90=shorts90,
+            ext_pct=ext_pct, ext_views=ext_views, traffic_28d=traffic_28d,
+            traffic_top=traffic_top,
             subs=subs, views=views, videos=videos,
             has_analytics=bool(series),
             likes_total=likes_total, eng_rate=eng_rate,
@@ -1146,10 +1153,31 @@ def build() -> dict:
                         likes=s.get("likes", 0), best=s.get("best_post")) for s in socials_out],
     )
 
+    # ── Funnel RRSS→YouTube: de dónde vienen las views (YouTube Analytics, 28d) ──
+    # ext = tráfico EXTERNO (enlaces desde RRSS/mensajería). Mide si el crosspost
+    # trae tráfico real a YT. Solo canales reautorizados con yt-analytics.readonly.
+    _tv = [c for c in channels_out if c.get("traffic_28d")]
+    _agg: dict[str, int] = defaultdict(int)
+    for c in _tv:
+        for k, v in (c.get("traffic_top") or {}).items():
+            _agg[k] += v
+    _tot = sum(c["traffic_28d"] for c in _tv)
+    _ext = sum((c.get("ext_views") or 0) for c in _tv)
+    funnel_traffic = dict(
+        window_days=28, total_views=_tot, external_views=_ext,
+        external_pct=(round(100 * _ext / _tot, 2) if _tot else 0),
+        top_sources=dict(sorted(_agg.items(), key=lambda x: -x[1])[:8]),
+        channels=sorted(
+            [dict(name=c["name"], color=c["color"], ext_pct=c.get("ext_pct"),
+                  ext_views=c.get("ext_views"), total=c.get("traffic_28d"),
+                  top=c.get("traffic_top") or {}) for c in _tv],
+            key=lambda x: x["total"] or 0, reverse=True),
+    )
+
     return dict(
         generated_at=datetime.now(timezone.utc).isoformat(),
         generated_local=datetime.now(_MADRID).strftime("%Y-%m-%d %H:%M"),
-        rrss_digest=rrss_digest,
+        rrss_digest=rrss_digest, funnel_traffic=funnel_traffic,
         range=rng, kpis=kpis, insights=insights,
         totals=dict(yt_subs=net_subs, yt_views=net_views, videos=net_videos,
                     social_followers=social_followers),

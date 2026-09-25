@@ -89,6 +89,24 @@ def load_history(days: int = 30, platform: str | None = None) -> list[dict]:
 
 
 # ─────────────────────────────── snapshots ─────────────────────────────────
+def _traffic_fields(prefix: str = "") -> dict:
+    """Fuentes de tráfico compactas para la fila de canal (funnel RRSS→YT).
+    ext_pct = % de views que vienen de enlaces EXTERNOS (RRSS/mensajería). Graceful."""
+    try:
+        t = stats.fetch_traffic_sources(prefix)
+    except Exception:
+        return {}
+    if not t or not t.get("total_views"):
+        return {}
+    det = t.get("external_detail") or {}
+    return {
+        "ext_pct": t.get("external_pct", 0),
+        "ext_views": t.get("external_views", 0),
+        "traffic_28d": t.get("total_views", 0),
+        "traffic_top": dict(list(det.items())[:4]),
+    }
+
+
 def snapshot_youtube() -> list[dict]:
     """Captura el estado actual de YT (canal + por vídeo) vía API."""
     rows: list[dict] = []
@@ -105,6 +123,7 @@ def snapshot_youtube() -> list[dict]:
             crow.update(stats.fetch_watch_metrics())
         except Exception:
             pass
+        crow.update(_traffic_fields(""))
         rows.append(crow)
     for v in (stats.fetch_youtube_stats() or []):
         rows.append({
@@ -138,6 +157,7 @@ def _snapshot_channel_generic(yt_prefix: str, platform_key: str) -> list[dict]:
                 crow.update(stats.fetch_watch_metrics(yt_prefix))
             except Exception:
                 pass
+            crow.update(_traffic_fields(yt_prefix))
             rows.append(crow)
         for v in (stats.fetch_youtube_stats(channel_prefix=yt_prefix) or []):
             rows.append({
