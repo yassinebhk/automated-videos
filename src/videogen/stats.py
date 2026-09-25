@@ -314,6 +314,7 @@ def fetch_youtube_stats(channel_prefix: str = "") -> list[dict]:
                 "views": int(st.get("viewCount", 0)),
                 "likes": int(st.get("likeCount", 0)),
                 "comments": int(st.get("commentCount", 0)),
+                "published": (item["snippet"].get("publishedAt") or "")[:10],
                 "url": f"https://youtube.com/shorts/{item['id']}",
             })
     results.sort(key=lambda x: x["views"], reverse=True)

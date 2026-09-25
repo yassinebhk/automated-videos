@@ -133,6 +133,7 @@ def snapshot_youtube() -> list[dict]:
             "title": (v.get("title") or "")[:80],
             "views": int(v.get("views", 0)),
             "likes": int(v.get("likes", 0)),
+            "published": v.get("published"),
             "source": "api",
         })
     return rows
@@ -167,6 +168,7 @@ def _snapshot_channel_generic(yt_prefix: str, platform_key: str) -> list[dict]:
                 "title": (v.get("title") or "")[:80],
                 "views": int(v.get("views", 0)),
                 "likes": int(v.get("likes", 0)),
+                "published": v.get("published"),
                 "source": "api",
             })
     except Exception as e:
@@ -233,7 +235,7 @@ def snapshot_instagram() -> list[dict]:
         })
         media = requests.get(
             f"{base}/{ig_id}/media",
-            params={"fields": "id,caption,like_count,comments_count,media_type",
+            params={"fields": "id,caption,like_count,comments_count,media_type,timestamp",
                     "limit": 20, "access_token": token},
             timeout=15,
         ).json().get("data", [])
@@ -245,6 +247,7 @@ def snapshot_instagram() -> list[dict]:
                 "views": 0,  # views requiere /insights por media, coste extra
                 "likes": int(m.get("like_count") or 0),
                 "comments": int(m.get("comments_count") or 0),
+                "published": (m.get("timestamp") or "")[:10],
                 "source": "api",
             })
     except Exception:
@@ -485,7 +488,8 @@ def snapshot_threads() -> list[dict]:
                 "title": (p.get("text") or "")[:80],
                 "permalink": p.get("permalink"),
                 "views": views, "likes": likes, "comments": replies,
-                "date": (p.get("timestamp") or "")[:10], "source": "api",
+                "date": (p.get("timestamp") or "")[:10],
+                "published": (p.get("timestamp") or "")[:10], "source": "api",
             })
     except Exception as e:
         print(f"  snapshot threads: {type(e).__name__}: {e}")
@@ -526,6 +530,13 @@ def snapshot_tiktok() -> list[dict]:
             "source": "api",
         })
         for v in videos_all:
+            _ct = v.get("create_time")
+            _pub = ""
+            if _ct:
+                try:
+                    _pub = datetime.utcfromtimestamp(int(_ct)).strftime("%Y-%m-%d")
+                except Exception:
+                    _pub = ""
             rows.append({
                 "platform": "tiktok", "kind": "video",
                 "video_id": v.get("id"), "slug": None,
@@ -533,6 +544,7 @@ def snapshot_tiktok() -> list[dict]:
                 "views": int(v.get("view_count") or 0),
                 "likes": int(v.get("like_count") or 0),
                 "comments": int(v.get("comment_count") or 0),
+                "published": _pub,
                 "source": "api",
             })
     except Exception:
@@ -541,7 +553,7 @@ def snapshot_tiktok() -> list[dict]:
 
 
 def tiktok_all_videos(hdr: dict,
-                      fields: str = "id,title,view_count,like_count,comment_count,share_count",
+                      fields: str = "id,title,view_count,like_count,comment_count,share_count,create_time",
                       cap_pages: int = 15) -> list[dict]:
     """Pagina /v2/video/list/ con cursor hasta agotar (has_more) o el cap.
     Devuelve todos los vídeos (newest-first)."""
@@ -589,6 +601,8 @@ def snapshot_bluesky() -> list[dict]:
             pp = i.post
             if pp.author.did != p.did:
                 continue
+            _bpub = (getattr(pp.record, "created_at", None)
+                     or getattr(pp, "indexed_at", "") or "")
             rows.append({
                 "platform": "bluesky", "kind": "video",
                 "video_id": pp.uri.split("/")[-1], "slug": None,
@@ -596,6 +610,7 @@ def snapshot_bluesky() -> list[dict]:
                 "views": 0,
                 "likes": int(pp.like_count or 0),
                 "comments": int(pp.reply_count or 0),
+                "published": str(_bpub)[:10],
                 "source": "api",
             })
     except Exception:
@@ -628,6 +643,7 @@ def snapshot_mastodon() -> list[dict]:
                 "views": 0,
                 "likes": int(t.get("favourites_count") or 0),
                 "comments": int(t.get("replies_count") or 0),
+                "published": (t.get("created_at") or "")[:10],
                 "source": "api",
             })
     except Exception:

@@ -329,6 +329,7 @@ def build() -> dict:
     # primera fecha/hora en que se vio cada vídeo ≈ momento de publicación
     first_date_by_vid: dict[str, str] = {}
     first_ts_by_vid: dict[str, int] = {}
+    pub_by_vid: dict[str, str] = {}  # fecha de publicación REAL (de la API); fallback a first-seen
     for r in sorted(video_recs, key=lambda x: x.get("ts", 0) or 0):
         vid = r.get("video_id")
         if not vid:
@@ -337,6 +338,12 @@ def build() -> dict:
             first_date_by_vid[vid] = r["date"]
         if vid not in first_ts_by_vid and r.get("ts"):
             first_ts_by_vid[vid] = r["ts"]
+        if r.get("published"):
+            pub_by_vid[vid] = r["published"]
+
+    def _pub_date(vid):
+        """Mejor fecha disponible: publicación real (API) → primera vez vista → None."""
+        return pub_by_vid.get(vid) or first_date_by_vid.get(vid)
 
     today = datetime.now(_MADRID).date()
 
@@ -401,7 +408,7 @@ def build() -> dict:
             vv = r.get("views", 0) or 0
             item = dict(video_id=vid, title=title or "(sin título)", views=vv,
                         likes=r.get("likes", 0) or 0, comments=r.get("comments", 0) or 0,
-                        date=r.get("date"), url=_video_url(pk, vid))
+                        date=_pub_date(vid) or r.get("date"), url=_video_url(pk, vid))
             vlist.append(item)
             all_videos_flat.append({**item, "channel": ch["name"], "color": color, "cat": ch["cat"]})
             # análisis de temas (solo canales con tracción real)
@@ -473,6 +480,8 @@ def build() -> dict:
             delta7_subs=_delta(series, "subs", 7), delta30_subs=_delta(series, "subs", 30),
             delta7_views=d7v, delta30_views=_delta(series, "views", 30),
             series=series, top_videos=top_videos, worst_videos=worst_videos,
+            all_videos=[{k: v[k] for k in ("video_id", "title", "views", "likes", "date", "url")}
+                        for v in sorted(vlist, key=lambda x: (x.get("date") or ""), reverse=True)][:300],
         ))
 
     # ── Guardarraíl de VERACIDAD: token de un canal apunta a OTRO canal ──
@@ -536,7 +545,8 @@ def build() -> dict:
             item = dict(
                 video_id=vid, title=title,
                 views=r.get("views", 0) or 0, likes=r.get("likes", 0) or 0,
-                comments=r.get("comments", 0) or 0, date=r.get("date"),
+                comments=r.get("comments", 0) or 0,
+                date=r.get("published") or _pub_date(vid) or r.get("date"),
                 first_ts=first_ts.get(vid, 0),
                 url=r.get("permalink") or _video_url(s["pk"], vid))
             key = title.strip().lower()
@@ -562,6 +572,8 @@ def build() -> dict:
             best_post=({"title": _best["title"], "views": _best["views"],
                         "url": _best["url"]} if _best else None),
             series=series, top_posts=top_posts, recent_posts=recent_posts,
+            all_posts=[{k: p.get(k) for k in ("video_id", "title", "views", "likes", "date", "url")}
+                       for p in sorted(plist, key=lambda x: (x.get("date") or ""), reverse=True)][:300],
         ))
 
     # ── análisis de temas (mejores / peores) ──
