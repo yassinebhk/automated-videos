@@ -32,7 +32,7 @@ class RankingBranding:
     outro_line2: str = "Suscríbete para más rankings"
     outro_brand: str = "📊 TopRanking ES"
     source_label: str = "Fuente"
-    disclaimer: str = "⚠️ Datos aproximados de fuentes oficiales · verifica antes de citarlos."
+    disclaimer: str = "📌 Datos de fuentes públicas (World Bank / IMF / Forbes / Statista / prensa oficial). Rango temporal indicado en el video."
     hashtags: str = "#ranking #top10 #datos #españa #curiosidades #estadisticas #Shorts"
     tags: list = field(default_factory=lambda: ["ranking", "top10", "datos", "estadisticas", "españa"])
 
@@ -60,10 +60,16 @@ def _wrap_text(text: str, max_chars_per_line: int) -> list[str]:
 def _generate_dataset_with_gemini(topic: dict, n_items: int = 10,
                                     n_years: int = 10, lang: str = "es") -> dict | None:
     """Gemini genera dataset REAL basado en fuente citada del topic.
-    Devuelve {'years': [2000,...], 'items': ['USA','China',...],
-             'data': [[val_2000_USA, val_2000_China,...], [...]] }"""
+
+    ⚠️ Este path SOLO se ejecuta si NO hay dataset bundled/cached. Y solo se
+    admite si el LLM devuelve ALTA CONFIANZA — sin datos verificables, el
+    módulo prefiere devolver None (skip video) a publicar cifras inventadas.
+    Ver historia veracidad: fuimos permisivos ("USA UN VALOR PRUDENTE
+    aproximado") → user detectó datos fake → cambio a estricto 25/09/26.
+    """
     try:
         from ..llm_fallback import generate_json
+        current_year = datetime.now(timezone.utc).year
         schema = {
             "type": "object",
             "properties": {
@@ -76,37 +82,63 @@ def _generate_dataset_with_gemini(topic: dict, n_items: int = 10,
                     "items": {"type": "array", "items": {"type": "number"}},
                 },
                 "cierre_dato": {"type": "string"},
+                # Confianza autoevaluada del LLM. Si <0.7 → skip (no publicar).
+                "confidence": {"type": "number"},
+                # URL/nombre de la fuente que respalda cada dato. Requerido.
+                "source_note": {"type": "string"},
             },
-            "required": ["titulo_video", "unidad", "years", "items", "data"],
+            "required": ["titulo_video", "unidad", "years", "items", "data",
+                          "confidence", "source_note"],
         }
 
         prompt = (
             f"Genera dataset REAL para bar chart race del topic:\n"
             f"- Tema: {topic['titulo']}\n"
             f"- Fuente base: {topic['fuente']}\n"
-            f"- Dataset hint: {topic['dataset_hint']}\n\n"
-            f"REGLAS VERACIDAD (crítico):\n"
-            f"- Datos REALES verificables en la fuente indicada\n"
-            f"- Si un dato exacto no lo conoces, USA UN VALOR PRUDENTE\n"
-            f"  aproximado y márcalo como aproximación en cierre_dato\n"
-            f"- NO inventar países/entidades que no existan\n"
-            f"- Cifras coherentes con orden de magnitud real\n\n"
+            f"- Dataset hint: {topic['dataset_hint']}\n"
+            f"- Año actual: {current_year} (los años del ranking DEBEN llegar hasta {current_year} o {current_year - 1} si el dato oficial no está publicado aún)\n\n"
+            f"REGLAS VERACIDAD (ESTRICTAS — el user detectó datos fake):\n"
+            f"- Datos VERIFICABLES en la fuente citada. Si no lo son, RECHAZA la tarea.\n"
+            f"- PROHIBIDO inventar cifras aunque suenen plausibles. Riesgo legal real.\n"
+            f"- PROHIBIDO valores 'prudentes aproximados'. Solo datos que puedas defender.\n"
+            f"- Si no puedes generar los 10 items × {n_years} años con datos reales,\n"
+            f"  devuelve confidence <0.5 y explica en source_note por qué. El pipeline\n"
+            f"  lo detectará y descartará el video en vez de publicar mentiras.\n"
+            f"- confidence: 0.0-1.0 tu autoevaluación honesta (¿defenderías estas cifras\n"
+            f"  frente a un periodista o un juez? si no → <0.7).\n"
+            f"- source_note: fuente concreta (ej. 'World Bank NY.GDP.MKTP.CD 2024',\n"
+            f"  'Forbes 2025 Billionaires List', 'IMDb Box Office Top 2024').\n"
+            f"- NO inventar países/entidades que no existan.\n\n"
             f"FORMATO:\n"
-            f"- years: {n_years} valores INT (ej. 2000, 2005, 2010, ..., 2025)\n"
-            f"- items: {n_items} nombres cortos (país, marca, persona, etc.)\n"
-            f"- data: matriz {n_years}×{n_items} con valores numéricos\n"
+            f"- years: hasta {n_years} valores INT llegando a {current_year} o {current_year - 1}.\n"
+            f"  Ej. si n_years=10 y year actual={current_year}: [{current_year - 9}, ..., {current_year}]\n"
+            f"- items: {n_items} nombres cortos (país, marca, persona, etc.) MÁX 22 CHARS\n"
+            f"  (etiquetas más largas se cortan en el bar chart)\n"
+            f"- data: matriz N×{n_items} con valores numéricos reales\n"
             f"- unidad: '€', '$B', 'millones', 'medallas' etc\n"
-            f"- titulo_video: título SEO YT max 80 chars\n"
-            f"- cierre_dato: frase cierre con dato clave y fuente\n"
+            f"- titulo_video: título SEO YT max 80 chars, DEBE mencionar {current_year} o el año más reciente cubierto\n"
+            f"- cierre_dato: frase cierre con dato clave, año y fuente EXPLÍCITA\n"
             f"\nIDIOMA de titulo_video/unidad/cierre_dato: "
             f"{'ENGLISH' if lang == 'en' else 'ESPAÑOL'} "
             f"(los nombres de items/entidades van en su forma internacional habitual).\n"
         )
-        # Con fallback Gemini→Groq
-        data = generate_json(prompt, schema=schema, max_tokens=4000, temperature=0.4)
+        # Temperature bajo → menos alucinación. Antes 0.4, ahora 0.15.
+        data = generate_json(prompt, schema=schema, max_tokens=4000, temperature=0.15)
         if not data:
             print(f"  ranking: ambos LLMs fallaron")
             return None
+        # Gate anti-fake: si el LLM se autoevalúa <0.7 → SKIP (no publicar).
+        # Preferimos saltar el video a publicar cifras inventadas.
+        conf = float(data.get("confidence", 0.0) or 0.0)
+        source_note = (data.get("source_note") or "").strip()
+        if conf < 0.7:
+            print(f"  ranking: ⚠️ SKIP — LLM confidence={conf:.2f} < 0.7. "
+                  f"source_note='{source_note[:120]}'")
+            return None
+        if not source_note or len(source_note) < 12:
+            print(f"  ranking: ⚠️ SKIP — sin source_note fiable ('{source_note[:80]}')")
+            return None
+        print(f"  ranking: LLM dataset aceptado (conf={conf:.2f}, source='{source_note[:80]}')")
         # Validación + reparación defensiva (LLM a veces devuelve mismatch)
         years = data.get("years", [])
         items = data.get("items", [])
@@ -165,6 +197,11 @@ def _render_bar_chart_race(dataset: dict, out_video: Path,
     fig, ax = plt.subplots(figsize=(fig_w, fig_h), dpi=dpi)
     fig.patch.set_facecolor("#111827")
     ax.set_facecolor("#111827")
+    # Fix nombres cortados: margen izquierdo generoso para dar espacio a
+    # etiquetas largas ("Universidad Politécnica", "Banco Santander"…).
+    # Antes: matplotlib default left=0.125 → texto ha="right" se salía y era
+    # recortado por el bounding box de la figura.
+    fig.subplots_adjust(left=0.32, right=0.94, top=0.90, bottom=0.06)
 
     # Total frames = duration_seconds × 15fps (menor fps ok para bar race)
     fps = 15
@@ -184,6 +221,9 @@ def _render_bar_chart_race(dataset: dict, out_video: Path,
     item_colors = {it: palette[i % len(palette)] for i, it in enumerate(items)}
 
     titulo_video = dataset.get("titulo_video", "TOP 10")
+    # Año más reciente del dataset (para el disclaimer visible en intro)
+    max_year = max(years) if years else datetime.now(timezone.utc).year
+    source_short = (dataset.get("source_note") or "").strip()[:60]
 
     def draw_intro(fi: int):
         """Frame intro: título grande centrado con fade-in."""
@@ -202,10 +242,18 @@ def _render_bar_chart_race(dataset: dict, out_video: Path,
         # Subtítulo abajo
         if fi > 20:
             sub_alpha = min(1.0, (fi - 20) / 15)
-            ax.text(5, 2, branding.intro_subtitle,
+            ax.text(5, 2.3, branding.intro_subtitle,
                      ha="center", va="center",
                      color=(0.9, 0.9, 0.9, sub_alpha),
                      fontsize=14, style="italic")
+            # Transparencia: año más reciente del dataset + fuente cortada
+            data_line = f"Datos hasta {max_year}"
+            if source_short:
+                data_line += f" · {source_short}"
+            ax.text(5, 1.4, data_line,
+                     ha="center", va="center",
+                     color=(1.0, 0.85, 0.35, sub_alpha),
+                     fontsize=11)
 
     def draw_outro(fi: int):
         """Frame outro: CTA suscribirse."""
@@ -256,11 +304,16 @@ def _render_bar_chart_race(dataset: dict, out_video: Path,
         colors = [item_colors[n] for n in names]
 
         bars = ax.barh(y_pos, vals, color=colors, edgecolor="white", linewidth=1.5)
-        # Nombres a la izquierda
+        # Nombres a la izquierda: truncar >22 chars con "…" + fontsize dinámico
+        # para que quepa completo aunque el nombre sea largo.
+        max_name_chars = 22
         for i, (name, val) in enumerate(zip(names, vals)):
             y = y_pos[i]
-            ax.text(-max(vals) * 0.02, y, name, va="center", ha="right",
-                     color="white", fontsize=14, fontweight="bold")
+            display_name = name if len(name) <= max_name_chars else name[:max_name_chars - 1] + "…"
+            # Fontsize dinámico: 14 default, baja a 11 si nombre largo
+            name_fs = 14 if len(display_name) <= 14 else (12 if len(display_name) <= 18 else 11)
+            ax.text(-max(vals) * 0.02, y, display_name, va="center", ha="right",
+                     color="white", fontsize=name_fs, fontweight="bold")
             ax.text(val + max(vals) * 0.01, y,
                      f"{val:,.0f}{unidad}", va="center", ha="left",
                      color="white", fontsize=12)
@@ -337,6 +390,15 @@ def generate_ranking_video(topic: dict, out_dir: Path, duration_seconds: int = 5
         from . import datasets_fetcher
         dataset = datasets_fetcher.load_cached(dkey, max_age_days=30)
         if dataset:
+            # Warn si el dataset tiene años viejos (>2 años sin refrescar).
+            # Los bundled data se refrescan manual → algunos apuntan hasta 2023/2024
+            # y son publicados en 2026 → user se queja con razón. Alerta en log
+            # para que el catchup semanal regenere el bundled desde su fuente.
+            _yrs = dataset.get("years") or []
+            _cur = datetime.now(timezone.utc).year
+            if _yrs and max(_yrs) < _cur - 1:
+                print(f"  ranking: ⚠️ bundled '{dkey}' llega solo hasta {max(_yrs)} "
+                      f"(hoy es {_cur}). Considera regenerar el bundled con datos frescos.")
             print(f"  ranking: ✅ dataset REAL cargado desde cache ({dkey})")
         else:
             print(f"  ranking: ⚠️ dataset_key={dkey} sin cache — intentando fetch on-demand")
