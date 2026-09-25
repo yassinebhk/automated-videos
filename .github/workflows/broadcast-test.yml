@@ -1,0 +1,17 @@
+name: Broadcast test (canal Telegram)
+
+# Manda un mensaje de prueba al canal de difusión (TELEGRAM_BROADCAST_CHANNEL) para
+# verificar que el bot es admin y la config es correcta. Uso puntual.
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: broadcast-test
+    secrets: inherit

@@ -1920,6 +1920,16 @@ def traffic_report_cmd(days: int):
         print("Ningún canal con scope analytics todavía → reautoriza para activar la medición del funnel.")
 
 
+@cli.command(name="broadcast-test")
+def broadcast_test_cmd():
+    """Manda un mensaje de prueba al canal de difusión Telegram (verifica config +
+    que el bot es admin)."""
+    from . import social_broadcast
+    ok = social_broadcast.broadcast_test()
+    if not ok:
+        raise SystemExit(1)
+
+
 @cli.command(name="dashboard")
 @click.option("--serve", "serve_", is_flag=True,
               help="Abre el panel en LOCAL (localhost) en vez de solo regenerar el JSON.")
