@@ -66,6 +66,7 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN:    ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID:      ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_BROADCAST_CHANNEL: ${{ secrets.TELEGRAM_BROADCAST_CHANNEL }}
           GEMINI_API_KEY:        ${{ secrets.GEMINI_API_KEY }}
           GROQ_API_KEY:          ${{ secrets.GROQ_API_KEY }}
           OPENROUTER_API_KEY:    ${{ secrets.OPENROUTER_API_KEY }}
@@ -188,6 +189,7 @@ jobs:
           {
             printf 'TELEGRAM_BOT_TOKEN=%s\n'    "$TELEGRAM_BOT_TOKEN"
             printf 'TELEGRAM_CHAT_ID=%s\n'      "$TELEGRAM_CHAT_ID"
+            [ -n "$TELEGRAM_BROADCAST_CHANNEL" ] && printf 'TELEGRAM_BROADCAST_CHANNEL=%s\n' "$TELEGRAM_BROADCAST_CHANNEL"
             printf 'GEMINI_API_KEY=%s\n'        "$GEMINI_API_KEY"
             [ -n "$GROQ_API_KEY" ] && printf 'GROQ_API_KEY=%s\n' "$GROQ_API_KEY"
             [ -n "$OPENROUTER_API_KEY" ] && printf 'OPENROUTER_API_KEY=%s\n' "$OPENROUTER_API_KEY"
