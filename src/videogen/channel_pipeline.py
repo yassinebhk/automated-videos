@@ -284,6 +284,44 @@ def _send_tt_video(cfg: ChannelConfig, slug: str, title: str, url: str) -> None:
         print(f"  {cfg.slug}: TT tg video fail — {e}")
 
 
+def _teaser_from_longform(cfg: ChannelConfig, slug: str, topic: dict, url: str) -> None:
+    """Palanca B (tráfico externo): tras subir un long-form, genera el 1er clip
+    atomizado (hook con overlay "VÍDEO COMPLETO EN YT") y lo publica como teaser en
+    IG (si el canal es afín) + lo manda a Telegram para subida manual a TikTok.
+    TOTALMENTE aislado: cualquier fallo aquí NO afecta a la subida ya completada."""
+    if not url or url == "?":
+        return
+    try:
+        from . import atomize
+        from .crosspost_full import _ig_allowed
+        from .notify_batch import send_video_for_tiktok
+        title = topic.get("titulo", "") or slug
+        clips = atomize.atomize_long(
+            slug, lang="es",
+            handle=getattr(cfg, "handle", "") or "",
+            channel=cfg.display_name,
+            progress=lambda m: print(f"  teaser: {m}"),
+        )
+        if not clips:
+            return
+        teaser = clips[0]  # 1er capítulo = mejor gancho / cliffhanger
+        cap = f"{title[:120]}\n\n▶️ Vídeo COMPLETO en YouTube · canal {cfg.display_name}"
+        if _ig_allowed(cfg.slug):
+            try:
+                from . import instagram_poster
+                instagram_poster.post_reel_to_instagram(
+                    title, url, teaser, f"{slug}_teaser", teaser=cap)
+            except Exception as e:
+                print(f"  teaser ig fail: {type(e).__name__}: {str(e)[:100]}")
+        try:
+            send_video_for_tiktok(teaser, cfg.display_name, title, url)
+        except Exception as e:
+            print(f"  teaser tt fail: {type(e).__name__}: {str(e)[:100]}")
+        _notify(f"🎬 Teaser long-form → IG/TikTok ({len(clips)} clips) · {cfg.display_name}")
+    except Exception as e:
+        print(f"  teaser long-form skip: {type(e).__name__}: {str(e)[:120]}")
+
+
 def _build_longform_topic_prompt(cfg: ChannelConfig, t: dict) -> str:
     """Topic para long-form (~7 min). Amplía scope: 1 tema profundo con
     subcasos/ejemplos, no lista superficial. Se acompaña de mismo prompt
@@ -343,6 +381,11 @@ def run_channel_longform_once(cfg: ChannelConfig, target_minutes: int = 7) -> di
         url = links.get("es", "?")
         _notify(f"✅ <b>{cfg.display_name} · long-form</b>\n"
                 f"slug: <code>{slug}</code>\n{url}")
+        # ── TEASER → RRSS (palanca B, tráfico externo): el long-form NO se crospostea
+        # entero (aburre); publicamos el 1er clip atomizado (hook, ya lleva overlay
+        # "VÍDEO COMPLETO EN YT") a IG (si afín) + Telegram→TikTok manual. Crea
+        # curiosidad = motivo real para ir a YouTube. Aislado: nunca rompe la subida.
+        _teaser_from_longform(cfg, slug, topic, url)
         return {"status": "ok", "slug": slug, "url": url,
                 "topic_key": topic["key"], "kind": "long"}
     except Exception as e:

@@ -212,7 +212,16 @@ def upload_video(
         if status:
             pct = int(status.progress() * 100)
             print(f"  YT upload: {pct}%")
-    return response["id"]
+    vid = response["id"]
+    # Difusión al canal de Telegram (palanca tráfico externo). Solo público (no
+    # programado). Graceful: no hace nada si TELEGRAM_BROADCAST_CHANNEL no está.
+    if privacy == "public" and not publish_at:
+        try:
+            from . import social_broadcast
+            social_broadcast.broadcast_new_video(title, vid, _channel_prefix())
+        except Exception as e:
+            print(f"  broadcast: skip ({type(e).__name__})")
+    return vid
 
 
 def set_thumbnail(video_id: str, thumbnail_path: Path) -> bool:
