@@ -1,0 +1,17 @@
+name: Broadcast setup (SEO canal + seed)
+
+# Configura el canal de difusión Telegram: nombre+descripción con keywords ES +
+# siembra los últimos vídeos de WaitWhy (evita canal vacío). Uso puntual.
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  setup:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: broadcast-setup
+    secrets: inherit

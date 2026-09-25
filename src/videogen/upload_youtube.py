@@ -193,6 +193,15 @@ def upload_video(
         status["privacyStatus"] = "private"
         status["publishAt"] = publish_at
 
+    # Funnel YouTube → Telegram: link del canal de difusión en la 1ª línea de la
+    # descripción (recomendación research: arriba del "mostrar más"). Solo si está
+    # configurado y no está ya puesto. Da una razón para saltar (casos + fuentes).
+    _tg = _os_scopes.environ.get("TELEGRAM_BROADCAST_CHANNEL", "").strip()
+    if _tg and "t.me/" not in (description or ""):
+        _h = _tg.lstrip("@")
+        description = (f"📲 Todos los vídeos, casos ampliados y fuentes → "
+                       f"https://t.me/{_h}\n\n" + (description or ""))
+
     body = {
         "snippet": {
             "title": title[:100],

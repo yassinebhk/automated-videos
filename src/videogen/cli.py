@@ -1930,6 +1930,17 @@ def broadcast_test_cmd():
         raise SystemExit(1)
 
 
+@cli.command(name="broadcast-setup")
+@click.option("--seed", default=10, show_default=True, help="Nº de vídeos a sembrar.")
+def broadcast_setup_cmd(seed: int):
+    """Configura el canal de difusión: nombre+descripción SEO (keywords ES) + siembra
+    los últimos vídeos de WaitWhy para que no esté vacío. Uso puntual."""
+    from . import social_broadcast
+    social_broadcast.setup_channel_seo()
+    n = social_broadcast.seed_channel(limit=seed)
+    print(f"broadcast-setup: seed {n} vídeos")
+
+
 @cli.command(name="dashboard")
 @click.option("--serve", "serve_", is_flag=True,
               help="Abre el panel en LOCAL (localhost) en vez de solo regenerar el JSON.")

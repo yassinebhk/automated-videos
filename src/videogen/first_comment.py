@@ -91,9 +91,14 @@ def _build_shock_comment(video_title: str = "", video_desc: str = "",
         ])
 
     if is_short:
+        # Shorts: sin link (YouTube filtra comentarios con enlaces en Shorts).
         return f"{opener}\n\n{cta}\n\n{hook}"
+    # Long-form: hay espacio y menos filtrado → añadimos el Telegram si está.
+    import os as _os
+    _tg = _os.environ.get("TELEGRAM_BROADCAST_CHANNEL", "").strip()
+    tg_line = f"\n📲 Casos ampliados + fuentes: t.me/{_tg.lstrip('@')}" if _tg else ""
     return (f"{opener} Los detalles reales, verificados con fuentes públicas, "
-            f"están en el vídeo.\n\n{cta}\n\n{hook}")
+            f"están en el vídeo.\n\n{cta}{tg_line}\n\n{hook}")
 
 
 # Fallback si no hay title (llamada legacy) — más agresivos que los antiguos.
