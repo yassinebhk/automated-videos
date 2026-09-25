@@ -1,0 +1,25 @@
+name: Rankings datasets refresh (World Bank)
+
+# Refresca semanalmente los datasets World Bank de rankings (36 topics
+# con dataset_key wb_*). Regenera output/ranking_datasets/*.json con
+# datos hasta el año anterior al actual (WB publica con delay). Los
+# bundled_data/*.json quedan como fallback si el fetch falla.
+
+on:
+  schedule:
+    - cron: "31 4 * * 2"   # martes 04:31 UTC (semanal, low-traffic)
+  workflow_dispatch: {}
+
+concurrency:
+  group: videogen-rankings-refresh
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: rankings-refresh
+    secrets: inherit

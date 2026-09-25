@@ -913,6 +913,50 @@ def playlists_catchup_cmd():
     print(f"  playlists catchup: {result}")
 
 
+@cli.command(name="rankings-refresh")
+@click.option("--to-year", type=int, default=0,
+              help="Año fin (default = año actual - 1, WB publica con delay)")
+def rankings_refresh_cmd(to_year: int):
+    """Refresca datasets World Bank de rankings a año actual.
+
+    Itera sobre todos los `dataset_key` que empiecen por `wb_` en topic_pool
+    y refetch con to_year actualizado. Guarda en output/ranking_datasets/.
+    Los bundled_data/*.json quedan como fallback si el fetch falla."""
+    import re as _re
+    from datetime import datetime as _dt, timezone as _tz
+    from .ranking import topic_pool
+    from .ranking import datasets_fetcher
+
+    year_end = to_year or (_dt.now(_tz.utc).year - 1)
+    topics = topic_pool.all_topics()
+    wb_topics = [t for t in topics
+                 if isinstance(t.get("dataset_key"), str) and t["dataset_key"].startswith("wb_")]
+    console.print(f"[cyan]Refrescando {len(wb_topics)} datasets WB → hasta año {year_end}[/]")
+    ok = fail = 0
+    for t in wb_topics:
+        dkey_old = t["dataset_key"]
+        # wb_NY_GDP_MKTP_CD_2000_2024 → indicator=NY.GDP.MKTP.CD, from=2000, to=2024
+        m = _re.match(r"wb_(.+)_(\d{4})_(\d{4})", dkey_old)
+        if not m:
+            console.print(f"  [yellow]skip malformed[/] {dkey_old}")
+            continue
+        indicator = m.group(1).replace("_", ".")
+        from_year = int(m.group(2))
+        try:
+            result = datasets_fetcher.fetch_worldbank_top(
+                indicator, from_year=from_year, to_year=year_end, top_n=10)
+            if result:
+                console.print(f"  [green]✓[/] {indicator} · {from_year}-{max(result['years'])} · {len(result['items'])} items")
+                ok += 1
+            else:
+                console.print(f"  [red]✗[/] {indicator} fetch returned None")
+                fail += 1
+        except Exception as e:
+            console.print(f"  [red]✗[/] {indicator}: {type(e).__name__}: {e}")
+            fail += 1
+    console.print(f"\n[bold]{ok} ok · {fail} fail[/]")
+
+
 @cli.command(name="bluesky-growth")
 def bluesky_growth_cmd():
     """Ejecuta el growth loop de Bluesky (follows + likes + reposts)."""
