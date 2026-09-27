@@ -343,9 +343,10 @@ jobs:
             [ -d output/ranking_datasets ] && git add output/ranking_datasets/ || true
             git commit -m "stats+docs: snapshot $(date -u +%FT%H:%MZ) [skip ci]" || true
             # Rebase para tolerar race con otro workflow que también commiteó.
-            for i in 1 2 3; do
+            for i in 1 2 3 4 5; do
               git pull --rebase origin main && git push origin HEAD:main && break
-              echo "push retry $i falló, reintentando en 3s..."
+              echo "push retry $i falló, abortando rebase y reintentando..."
+              git rebase --abort 2>/dev/null || true
               sleep 3
             done
           fi

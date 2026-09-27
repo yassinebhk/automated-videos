@@ -131,6 +131,7 @@ jobs:
   rankings_en_short:
     if: ${{ always() && (inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue') }}
     needs: [ai_tools_short]
+    continue-on-error: true  # canal pre-cableado sin canal YT propio → fallo esperado, no ensucia el run
     uses: ./.github/workflows/_videogen-job.yml
     with:
       command: rankings-en-once
@@ -139,6 +140,7 @@ jobs:
   trabajos_short:
     if: ${{ always() && (inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue') }}
     needs: [rankings_en_short]
+    continue-on-error: true  # canal pre-cableado sin canal YT propio → fallo esperado, no ensucia el run
     uses: ./.github/workflows/_videogen-job.yml
     with:
       command: trabajos-once
@@ -147,6 +149,7 @@ jobs:
   criminopatia_short:
     if: ${{ always() && (inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue') }}
     needs: [trabajos_short]
+    continue-on-error: true  # canal pre-cableado sin canal YT propio → fallo esperado, no ensucia el run
     uses: ./.github/workflows/_videogen-job.yml
     with:
       command: criminopatia-once
@@ -155,6 +158,7 @@ jobs:
   satisfying_short:
     if: ${{ always() && (inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue') }}
     needs: [criminopatia_short]
+    continue-on-error: true  # canal pre-cableado sin canal YT propio → fallo esperado, no ensucia el run
     uses: ./.github/workflows/_videogen-job.yml
     with:
       command: satisfying-once
@@ -163,6 +167,7 @@ jobs:
   padel_short:
     if: ${{ always() && (inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue') }}
     needs: [satisfying_short]
+    continue-on-error: true  # canal pre-cableado sin canal YT propio → fallo esperado, no ensucia el run
     uses: ./.github/workflows/_videogen-job.yml
     with:
       command: padel-once

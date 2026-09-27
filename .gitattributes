@@ -1,0 +1,3 @@
+# stats_history.jsonl es append-only → merge=union evita conflictos cuando dos
+# workflows commitean a la vez (git conserva ambas líneas, sin unmerged files).
+output/stats_history.jsonl merge=union
