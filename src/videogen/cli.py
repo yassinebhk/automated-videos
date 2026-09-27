@@ -1511,8 +1511,11 @@ def rankings_en_once_cmd():
     from .rankings_en import pipeline
     result = pipeline.run_once()
     print(json.dumps(result, indent=2, ensure_ascii=False))
+    # Canal EN pre-cableado sin canal YT propio (usa host fallback). Su fallo NO debe
+    # tumbar el catchup que incluye canales reales → soft-fail (exit 0, avisado en log).
     if result.get("status") not in ("ok", "paused"):
-        raise SystemExit(1)
+        print(f"⚠️ rankings-en no-fatal: status={result.get('status')} "
+              f"(canal pre-cableado, no rompe el run)")
 
 
 @cli.command(name="trabajos-once")
@@ -1541,8 +1544,10 @@ def satisfying_once_cmd():
     from .satisfying import pipeline
     result = pipeline.run_once()
     print(json.dumps(result, indent=2, ensure_ascii=False))
+    # Canal pre-cableado sin canal YT propio → soft-fail (no tumba el catchup).
     if result.get("status") not in ("ok", "skip_daily_cap"):
-        raise SystemExit(1)
+        print(f"⚠️ satisfying no-fatal: status={result.get('status')} "
+              f"(canal pre-cableado, no rompe el run)")
 
 
 @cli.command(name="padel-once")
