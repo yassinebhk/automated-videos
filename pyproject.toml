@@ -35,6 +35,13 @@ chatterbox = [
     "torch>=2.0.0",
     "torchaudio>=2.0.0",
 ]
+# Whisper refine — timestamps word-level reales para captions estilo TikTok.
+# Solo se carga si WHISPER_REFINE=1 en runtime (import lazy en voice.py).
+# faster-whisper es 4× más rápido que openai-whisper original, misma calidad.
+# Instalar: pip install -e '.[whisper]'
+whisper = [
+    "faster-whisper>=1.0.0",
+]
 
 [project.scripts]
 videogen = "videogen.cli:cli"

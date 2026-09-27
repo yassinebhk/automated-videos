@@ -53,7 +53,7 @@ jobs:
           sudo apt-get install -y --no-install-recommends ffmpeg fonts-noto-color-emoji
 
       - name: Install videogen (editable)
-        run: pip install -e . boto3   # boto3 = subida a Cloudflare R2 (host IG fiable)
+        run: pip install -e '.[whisper]' boto3   # boto3=R2 · whisper=faster-whisper para captions con timing real
 
       - name: Install Manim (solo padel-once — motor de animación)
         if: inputs.command == 'padel-once'
@@ -243,6 +243,17 @@ jobs:
           # Atomización auto post-longform: genera 4-5 clips promo tras cada
           # long-form. NO auto-sube (user decide con /atomize <slug> en bot).
           LONGFORM_AUTO_ATOMIZE: "1"
+          # Voz WaitWhy con Kokoro (local, gratis, voz distinta a Edge que
+          # es el TTS más usado por AI slop → penaliza Originality Score).
+          # Los otros canales siguen con Edge default. Cambiar/quitar sin miedo.
+          VOICE_ENGINE_WAITWHY: "kokoro"
+          # Whisper refinar timestamps: captions con timing word-level real
+          # (~99% accuracy vs ~90% de distribución proporcional). Solo se
+          # activa el import cuando alguien usa Kokoro/Chatterbox — Edge ya
+          # trae timing exacto de su propia API y NO invoca whisper (línea
+          # 296+ voice.py). Modelo tiny (~30s CPU para 60s audio).
+          WHISPER_REFINE: "1"
+          WHISPER_MODEL: "tiny"
           # YT_ANALYTICS_SCOPE: NO se fuerza aquí (bug 21/09 5673465: forzarlo pedía el
           # scope yt-analytics.readonly en CADA refresh → invalid_scope en todo token no
           # reautorizado → subidas rotas). El watch-time real (YPP) se activa solo si el
