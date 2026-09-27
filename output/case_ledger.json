@@ -191,7 +191,7 @@
       ]
     },
     "blesa": {
-      "count": 2,
+      "count": 3,
       "history": [
         {
           "ts": "2026-08-26T11:19:22.718794+00:00",
@@ -200,6 +200,10 @@
         {
           "ts": "2026-08-30T13:23:37.176314+00:00",
           "topic": "El caso Blesa: 6 años de cárcel por el uso de las tarjetas black de Bankia"
+        },
+        {
+          "ts": "2026-09-27T12:46:28.558870+00:00",
+          "topic": "Caso Blesa y las Tarjetas Black: 12 millones de euros gastados en secreto mientras Bankia quebraba"
         }
       ]
     },
