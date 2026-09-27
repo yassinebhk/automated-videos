@@ -162,6 +162,41 @@ def _fetch_pexels_background(title: str, dest: Path, w: int = 1280,
         return None
 
 
+def _fetch_pollinations_background(title: str, dest: Path,
+                                     w: int = 1280, h: int = 720) -> Path | None:
+    """Fallback IA cuando Pexels no da match relevante: Pollinations genera
+    imagen desde prompt cinematográfico del título. 100% gratis, sin API key,
+    landscape 1280×720.
+
+    Se usa como capa 2 (Pexels → aquí → frame video → gris). Cinemat: los
+    fondos Pollinations quedan más "cinemáticos" que un frame random del
+    video, y siempre son 100% temáticos (query = 3 keywords del title)."""
+    try:
+        import requests, urllib.parse as _u
+        # Extraer 3 keywords significativas del título ES/EN.
+        words = re.findall(r"\b[A-ZÁÉÍÓÚÑa-záéíóúñ]{4,}\b", title)
+        stop = {"caso", "explicado", "casos", "para", "como", "sobre", "todo",
+                "todos", "sino", "pero", "explanation", "case", "story"}
+        kws = [w for w in words if w.lower() not in stop][:3]
+        base_prompt = " ".join(kws) if kws else "dramatic scene"
+        # Prompt cinemático + palabras negativas para evitar el "look AI" caras raras.
+        prompt = (f"{base_prompt}, cinematic wide shot, dramatic lighting, "
+                  f"newspaper editorial photography, no faces, no text")
+        url = (f"https://image.pollinations.ai/prompt/{_u.quote(prompt)}"
+               f"?width={w}&height={h}&nologo=true&enhance=true")
+        r = requests.get(url, timeout=45)
+        if r.status_code != 200 or len(r.content) < 5000:
+            print(f"  thumb: pollinations bg fail HTTP {r.status_code}")
+            return None
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_bytes(r.content)
+        print(f"  thumb: bg pollinations OK prompt='{base_prompt}' ({len(r.content)}b)")
+        return dest
+    except Exception as e:
+        print(f"  thumb: pollinations bg fail: {e}")
+        return None
+
+
 def _fit_text(draw, text: str, font_path_size, max_w: int, max_h: int) -> ImageFont.FreeTypeFont:
     """Busca el mayor tamaño de fuente que quepa."""
     size = font_path_size
@@ -211,11 +246,14 @@ def build_viral_thumbnail(
             except Exception:
                 ai_face_img = None
 
-    # 1. Fondo — prioridad Pexels stock (real, profesional) sobre frame
-    # del video (que es Pollinations AI y puede verse como "muñeco").
-    # Fallback frame video → fallback gris oscuro.
+    # 1. Fondo — prioridad Pexels stock (real, profesional). Si Pexels no
+    # devuelve nada relevante, cae a Pollinations con prompt específico
+    # (mejor que frame del video que es Pollinations genérico Pollinations).
+    # Última red: frame del video → gris oscuro.
     bg_frame = dest.parent / "_thumb_frame.jpg"
     frame = _fetch_pexels_background(title, bg_frame, W, H)
+    if not frame:
+        frame = _fetch_pollinations_background(title, bg_frame, W, H)
     if not frame:
         frame = extract_first_frame(video_path, bg_frame, at_seconds=2.0)
     if not frame:

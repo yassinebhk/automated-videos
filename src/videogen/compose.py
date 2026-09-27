@@ -90,13 +90,22 @@ Style: Default,{FONT_NAME},{font_size},&H00FFFFFF,&H000000FF,&H00000000,&HA00000
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 """
+    # Motion captions estilo TikTok: cada chunk aparece con fade + zoom-pop
+    # ligero (bounce 100%→110% en 120ms). Efecto "vivo" que retiene mejor que
+    # texto estático. Overridable con CAPTIONS_STATIC=1 (fallback plano).
+    motion = __import__("os").environ.get("CAPTIONS_STATIC", "").strip().lower() not in ("1", "true", "yes")
+    # \fad(in,out) = fade ms · \t(t1,t2,\fscxN\fscyN) = transición scale en ese rango.
+    # Prefijo cabe DENTRO del texto, en un bloque {\code}. No usar \\ (raw ok en ASS).
+    fx_prefix = r"{\fad(60,60)\t(0,120,\fscx112\fscy112)\t(120,240,\fscx100\fscy100)}" if motion else ""
+
     lines = [header]
     for start, end, text in chunks:
         # En ASS el campo Text es el último: las comas NO se escapan.
-        # Solo neutralizamos llaves (bloques de override) y backslashes sueltos.
+        # Neutralizamos llaves del texto para que no rompan el prefix override.
         safe = text.replace("{", "(").replace("}", ")")
+        line_text = f"{fx_prefix}{safe}" if motion else safe
         lines.append(
-            f"Dialogue: 0,{_fmt_time(start)},{_fmt_time(end)},Default,,0,0,0,,{safe}\n"
+            f"Dialogue: 0,{_fmt_time(start)},{_fmt_time(end)},Default,,0,0,0,,{line_text}\n"
         )
     dest.write_text("".join(lines), encoding="utf-8")
     return dest

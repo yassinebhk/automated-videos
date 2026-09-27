@@ -42,6 +42,12 @@ chatterbox = [
 whisper = [
     "faster-whisper>=1.0.0",
 ]
+# B-roll semantic — embeddings multilingües ES para rankear stock por
+# relevancia. Opt-in con SEMANTIC_BROLL=1 (fallback silencioso a ranking
+# léxico simple si no está instalado). Instalar: pip install -e '.[semantic]'
+semantic = [
+    "sentence-transformers>=3.0.0",
+]
 
 [project.scripts]
 videogen = "videogen.cli:cli"

@@ -258,7 +258,9 @@ def _record_used(pid: str) -> None:
         pass
 
 
-def _pexels_candidates(query: str, orientation: str) -> list[tuple[str, str]]:
+def _pexels_candidates(query: str, orientation: str) -> list[tuple[str, str, str]]:
+    """Devuelve (id, url, alt) — 'alt' es la descripción textual de la foto
+    en Pexels, útil para ranking por relevancia real vs. keyword-match ciego."""
     key = os.environ.get("PEXELS_API_KEY", "").strip()
     if not key:
         return []
@@ -274,15 +276,17 @@ def _pexels_candidates(query: str, orientation: str) -> list[tuple[str, str]]:
         for ph in r.json().get("photos", []):
             src = ph.get("src") or {}
             url = src.get("portrait") or src.get("large2x") or src.get("original") or src.get("large")
+            alt = (ph.get("alt") or "").strip()
             if url:
-                out.append((f"pexels_{ph.get('id')}", url))
+                out.append((f"pexels_{ph.get('id')}", url, alt))
         return out
     except Exception as e:
         print(f"  pexels fail: {str(e)[:60]}")
         return []
 
 
-def _pixabay_candidates(query: str, vertical: bool) -> list[tuple[str, str]]:
+def _pixabay_candidates(query: str, vertical: bool) -> list[tuple[str, str, str]]:
+    """(id, url, alt). Pixabay usa 'tags' (comma-sep) como texto descriptivo."""
     key = os.environ.get("PIXABAY_API_KEY", "").strip()
     if not key:
         return []
@@ -301,26 +305,68 @@ def _pixabay_candidates(query: str, vertical: bool) -> list[tuple[str, str]]:
         out = []
         for hit in r.json().get("hits", []):
             url = hit.get("largeImageURL") or hit.get("webformatURL")
+            alt = (hit.get("tags") or "").replace(",", " ").strip()
             if url:
-                out.append((f"pixabay_{hit.get('id')}", url))
+                out.append((f"pixabay_{hit.get('id')}", url, alt))
         return out
     except Exception as e:
         print(f"  pixabay fail: {str(e)[:60]}")
         return []
 
 
+def _rank_by_relevance(cands: list, query: str) -> list:
+    """Ordena candidatos (id, url, alt) por overlap léxico con query.
+
+    Simple: cuenta palabras compartidas (>=3 chars, minúsculas) entre alt y
+    query. Empates → orden original de Pexels (que ya es por relevancia).
+    Sin dep externa. Suficiente para descartar off-topic evidentes.
+
+    Opt-in avanzado con SEMANTIC_BROLL=1 → usa sentence-transformers
+    (multilingüe MiniLM ES) para embeddings semánticos si está instalado.
+    Fallback silencioso a este ranking simple si el paquete no está.
+    """
+    if not cands or not query:
+        return cands
+
+    # Modo semantic opt-in (dep opcional, ~120MB modelo primera vez)
+    if os.environ.get("SEMANTIC_BROLL", "").strip().lower() in ("1", "true", "yes"):
+        try:
+            from sentence_transformers import SentenceTransformer, util as st_util
+            model = SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2")
+            q_emb = model.encode(query, convert_to_tensor=True)
+            alt_texts = [(c[2] or c[0]).strip() for c in cands]
+            a_emb = model.encode(alt_texts, convert_to_tensor=True)
+            sims = st_util.cos_sim(q_emb, a_emb)[0].tolist()
+            scored = sorted(zip(cands, sims), key=lambda x: -x[1])
+            return [c for c, _ in scored]
+        except Exception as e:
+            print(f"  semantic fallback ({type(e).__name__}: {str(e)[:60]})")
+
+    # Ranking simple por overlap léxico
+    q_words = {w for w in query.lower().split() if len(w) >= 3}
+    def _score(cand):
+        alt = (cand[2] or "").lower() if len(cand) > 2 else ""
+        alt_words = {w.strip(",.!?;:") for w in alt.split() if len(w) >= 3}
+        return len(q_words & alt_words)
+    return sorted(cands, key=_score, reverse=True)
+
+
 def _fetch_stock(prompt: str, out: Path, width: int, height: int, seed: int = 0) -> Path | None:
-    """Imagen REAL relevante (Pexels → Pixabay), evitando repetir fotos recientes."""
+    """Imagen REAL relevante (Pexels → Pixabay), evitando repetir fotos recientes.
+    Rankea por relevancia semántica antes de aplicar anti-repetición → mejor
+    match texto-imagen (menos "coche genérico" cuando el script habla de KIO)."""
     import requests
     query = _stock_query(prompt)
     orientation = "portrait" if height >= width else "landscape"
     cands = _pexels_candidates(query, orientation) or _pixabay_candidates(query, height >= width)
     if not cands:
         return None
+    # Ranking por relevancia (alt-text overlap o semantic si SEMANTIC_BROLL=1)
+    cands = _rank_by_relevance(cands, query)
     used = _load_used()
     # 1ª foto NO usada recientemente; si todas usadas, cae al seed (determinista)
     pick = next((c for c in cands if c[0] not in used), None) or cands[seed % len(cands)]
-    pid, url = pick
+    pid, url = pick[0], pick[1]
     try:
         img = requests.get(url, timeout=30).content
     except Exception as e:
