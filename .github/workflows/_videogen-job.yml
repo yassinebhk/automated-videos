@@ -240,6 +240,9 @@ jobs:
           PYTHONUNBUFFERED: "1"
           AUTOGEN_PUBLISH_HOUR: ${{ inputs.publish_hour || '21' }}
           EXTRA_ENV: ${{ inputs.extra_env }}
+          # Atomización auto post-longform: genera 4-5 clips promo tras cada
+          # long-form. NO auto-sube (user decide con /atomize <slug> en bot).
+          LONGFORM_AUTO_ATOMIZE: "1"
           # YT_ANALYTICS_SCOPE: NO se fuerza aquí (bug 21/09 5673465: forzarlo pedía el
           # scope yt-analytics.readonly en CADA refresh → invalid_scope en todo token no
           # reautorizado → subidas rotas). El watch-time real (YPP) se activa solo si el

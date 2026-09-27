@@ -353,22 +353,66 @@ def _format_court_source(court) -> str:
     return body
 
 
+def _related_videos_from_case(title: str, max_related: int = 3) -> str:
+    """Bloque "Ver también" con hasta N videos del mismo case_key en el canal.
+    Es pseudo-cards: la YT API v3 no expone real cards → linkamos en la
+    descripción para que aparezcan en search Google y en el "En este video"
+    de YT Studio. Consulta el ledger local de playlists (case_key → video_ids).
+    """
+    try:
+        from . import case_ledger
+        case_key = case_ledger.match_case_key(title or "")
+        if not case_key:
+            return ""
+        from pathlib import Path
+        from .config import ROOT
+        ledger_path = ROOT / "output" / "playlists_manager_ledger.json"
+        if not ledger_path.exists():
+            return ""
+        data = json.loads(ledger_path.read_text(encoding="utf-8"))
+        entry = (data.get("cases") or {}).get(case_key) or {}
+        vids = entry.get("video_ids") or []
+        if len(vids) < 2:
+            return ""
+        # Los últimos N-1 (excluyendo el que acabamos de subir; irá al final del array)
+        # se muestran como "otros videos" del caso.
+        others = vids[-max_related - 1:-1]
+        if not others:
+            return ""
+        pretty_case = case_key.replace("_", " ").title()
+        lines = [f"📼 Más del Caso {pretty_case}:"]
+        for vid in others:
+            lines.append(f"  • https://youtu.be/{vid}")
+        return "\n".join(lines)
+    except Exception:
+        return ""
+
+
 def _enrich_description_seo(base: str, title: str, hashtags: list[str], is_short: bool = True, court=None) -> str:
-    """Envuelve la descripción del guion con SEO-hook (primeras 2 líneas visibles
-    en search) + fuente judicial verificable + CTA fuerte al canal + link a
-    playlists segmentadas.
+    """Envuelve la descripción con SEO Google keywords + fuente + pseudo-cards
+    al mismo case_key + CTA canal.
 
     Estructura:
-    1. Título + hook (primeras 2 líneas visibles en search)
-    2. Fuente judicial (si conocida) — señal anti-AI-slop
-    3. Descripción original del script
-    4. CTA (subscribe + playlists)
-    5. Hashtags
+    1. SEO head con keywords Google buscables ES (¿Qué pasó con X?)
+    2. Descripción original del script
+    3. Fuente judicial (si conocida) — señal anti-AI-slop
+    4. Related videos del mismo case (pseudo-cards)
+    5. CTA (subscribe + playlists)
+    6. Hashtags
     """
     base = (base or "").strip()
     dur_hint = "60 segundos" if is_short else "~9 minutos"
-    seo_head = f"🚨 {title}\n\nCaso real con sentencia firme, explicado en {dur_hint}."
+    # SEO head con keywords Google. Patrón "¿Qué pasó con..." es una de las
+    # queries reales que la gente escribe en Google sobre casos ES → indexa
+    # mejor que un genérico "🚨 {title}". Nicho-agnóstico (no hardcodea
+    # "sentencia firme" que solo aplica a true crime).
+    seo_head = (
+        f"🚨 {title}\n\n"
+        f"¿Qué pasó realmente? Todo el caso explicado en {dur_hint}, con "
+        f"datos verificables y fuentes citables al pie."
+    )
     court_block = _format_court_source(court)
+    related_block = _related_videos_from_case(title, max_related=3)
     cta = (
         "\n\n━━━━━━━━━━━━━━━\n"
         f"🎬 Casos nuevos cada semana\n"
@@ -383,6 +427,8 @@ def _enrich_description_seo(base: str, title: str, hashtags: list[str], is_short
     if court_block:
         parts.append(court_block)
     parts.append(base)
+    if related_block:
+        parts.append(related_block)
     return ("\n\n".join(p for p in parts if p) + cta + tags_line).strip()[:5000]
 
 
@@ -693,6 +739,50 @@ def publish_long(
         head = "🎬 Long-form subido" if not publish_at else f"🗓 Long-form programado ({publish_at})"
         msg = f"{head}: {title}\n" + "\n".join(f"{k.upper()}: {v}" for k, v in links.items())
         _notify_telegram(msg)
+
+    # Atomización auto: post-upload longform genera 4-5 shorts promo (opt-in).
+    # LONGFORM_AUTO_ATOMIZE=1 activa. El user decide si subirlos con /atomize
+    # desde el bot (por ahora no se auto-suben para no saturar el canal).
+    import os as _os_atom
+    if _os_atom.environ.get("LONGFORM_AUTO_ATOMIZE", "").strip() in ("1", "true", "yes"):
+        try:
+            from . import atomize
+            # Handle/channel dinámico por YT_CHANNEL_PREFIX (evita CTA "@waitwhy_ybb"
+            # en clips de TaxHack/AyudaGob/etc — CTA incorrecto = engagement 0).
+            _prefix = _os_atom.environ.get("YT_CHANNEL_PREFIX", "").strip()
+            _BRAND_MAP = {
+                "": ("@waitwhy_ybb", "WaitWhy"),
+                "YT_TAX": ("@taxhack_es", "TaxHack ES"),
+                "YT_LEGAL": ("@tusderechos_es", "TusDerechos ES"),
+                "YT_AYUDAS": ("@ayudagob", "AyudaGob"),
+                "YT_MOTOR": ("@motor60s", "Motor60s"),
+                "YT_POV": ("@tiempoatras_es", "TiempoAtrás ES"),
+                "YT_RANKING": ("@topranking_es", "TopRanking ES"),
+                "YT_IA": ("@ia_autonomos_es", "IA Autónomos ES"),
+                "YT_AMBIENT": ("@menteencalma", "MenteEnCalma"),
+                "YT_AITOOLS": ("@aitoolsweekly", "AI Tools Weekly"),
+                "YT_CRIMINOPATIA": ("@criminopatia", "Criminopatía"),
+            }
+            _handle, _channel = _BRAND_MAP.get(_prefix, _BRAND_MAP[""])
+            for lang in langs:
+                if lang not in links:
+                    continue
+                progress(f"[{lang}] atomize auto ({_channel}): generando clips promo…")
+                clips = atomize.atomize_long(slug, lang=lang,
+                                              handle=_handle, channel=_channel,
+                                              progress=progress)
+                if clips:
+                    progress(f"[{lang}] atomize: {len(clips)} clips → {clips[0].parent}")
+                    if notify:
+                        _notify_telegram(
+                            f"✂️ Atomize [{lang}] «{slug}» ({_channel}): "
+                            f"{len(clips)} clips promo listos.\nSúbelos con "
+                            f"/atomize {slug} o revísalos en "
+                            f"output/uploaded/{slug}/atomized/"
+                        )
+        except Exception as _ate:
+            progress(f"atomize auto skip: {type(_ate).__name__}: {_ate}")
+
     return links
 
 

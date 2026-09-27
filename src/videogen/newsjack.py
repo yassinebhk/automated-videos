@@ -223,15 +223,63 @@ def score_with_gemini(items: list[dict], max_out: int = 3) -> list[dict]:
         return items[:max_out]
 
 
+def _daily_cap_reached() -> bool:
+    """True si ya se publicó ≥1 newsjack hoy (cap 1/día para no saturar)."""
+    from datetime import datetime as _dt, timezone as _tz
+    data = _load_ledger()
+    today = _dt.now(_tz.utc).date().isoformat()
+    for h, ts in data.items():
+        try:
+            if _dt.fromisoformat(ts).date().isoformat() == today:
+                return True
+        except Exception:
+            continue
+    return False
+
+
+def _duplicates_recent_case(headline: str) -> bool:
+    """True si el caso YA fue cubierto en videos previos (case_ledger 90d)."""
+    try:
+        from . import case_ledger
+        key = case_ledger.match_case_key(headline or "")
+        if not key:
+            return False
+        recent = case_ledger.get_recent_case_keys(days=90)
+        return key in recent
+    except Exception:
+        return False
+
+
 def pick_best_today() -> dict | None:
-    """Devuelve el mejor candidato del día para newsjacking, o None."""
+    """Devuelve el mejor candidato del día — con guardrails duros de calidad.
+
+    Guardrails (reactivación 27/09 tras pausa 18/09):
+      - Cap 1/día: si ya se publicó un newsjack hoy → skip.
+      - Multi-fuente obligatoria: candidato debe tener ≥2 medios adicionales
+        (>=3 totales) → señal de importancia real, no anécdota.
+      - Case dedup 90d: si el caso ya fue cubierto en videos previos → skip
+        (evita saturar un mismo tema).
+      - Todo lo anterior + scoring Gemini (que ya filtra por CIFRA/PERSONA/JUICIO).
+    """
+    if _daily_cap_reached():
+        print("  newsjack: SKIP — cap diario alcanzado (1/día)")
+        return None
     items = fetch_all_candidates()
     print(f"  newsjack: {len(items)} candidatos pre-Gemini")
-    scored = score_with_gemini(items, max_out=3)
-    print(f"  newsjack: {len(scored)} tras Gemini scoring")
-    if not scored:
+    # Filtro multi-fuente ANTES del scoring (ahorra tokens Gemini)
+    multi = [it for it in items if len(it.get("_extra_sources", [])) >= 2]
+    if not multi:
+        print("  newsjack: SKIP — ningún candidato con ≥3 medios replicando")
         return None
-    best = scored[0]
+    print(f"  newsjack: {len(multi)} candidatos multi-fuente")
+    scored = score_with_gemini(multi, max_out=3)
+    print(f"  newsjack: {len(scored)} tras Gemini scoring")
+    # Filtro case_ledger post-scoring (dedup con videos previos)
+    fresh = [s for s in scored if not _duplicates_recent_case(s.get("title", ""))]
+    if not fresh:
+        print("  newsjack: SKIP — todos los picks ya cubiertos en videos previos (90d)")
+        return None
+    best = fresh[0]
     _mark_used(best["hash"])
     print(f"  newsjack: elegido «{best.get('topic','')[:100]}»")
     return best
