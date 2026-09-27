@@ -375,6 +375,15 @@
           "topic": "[ACTUALIDAD] El cambio climático según los informes del IPCC: el registro de aumento de temperatura global de +1.1°C y los compromisos firmados en el Acuerdo de París de 2015."
         }
       ]
+    },
+    "deuda_espana_historia": {
+      "count": 1,
+      "history": [
+        {
+          "ts": "2026-09-27T09:05:17.307159+00:00",
+          "topic": "[ACTUALIDAD] Deuda pública de España: cómo se pasó de cero en 1975 a superar el 100% del PIB"
+        }
+      ]
     }
   }
 }
