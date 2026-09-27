@@ -1,18 +1,5 @@
 [
   {
-    "slug": "padel_fact_name_paddle_20260920_201303",
-    "title": "Why it's called 'padel' — Padel Facts #padel #shorts",
-    "status": "fail_container_ready",
-    "container_id": "18096040295188569",
-    "public_url": "https://yassinebhk.github.io/automated-videos/reels/padel_fact_name_paddle_20260920_201303.mp4",
-    "attempts": 4,
-    "catbox_status": "rc=412 body=Invalid uploader",
-    "status_ext": "ERROR",
-    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
-    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18096040295188569'}",
-    "ts": "2026-09-20T20:35:12.568299+00:00"
-  },
-  {
     "slug": "fractal_minibrot_20260920_204434",
     "title": "Satisfying Infinite Fractal Zoom #satisfying #shorts",
     "status": "fail_container_ready",
@@ -893,5 +880,13 @@
     "media_id": "18150692638540879",
     "url": "https://instagram.com/reel/18150692638540879",
     "ts": "2026-09-27T14:23:50.821988+00:00"
+  },
+  {
+    "slug": "padel_tactic_drop_shot_20260927_144325",
+    "title": "The Drop Shot — Padel Tactics #padel #shorts",
+    "status": "ok",
+    "media_id": "18099976337322287",
+    "url": "https://instagram.com/reel/18099976337322287",
+    "ts": "2026-09-27T14:45:51.315727+00:00"
   }
 ]
