@@ -240,11 +240,32 @@ def snapshot_instagram() -> list[dict]:
             timeout=15,
         ).json().get("data", [])
         for m in media:
+            mid = m["id"]
+            # Views vía /insights (fix 28/09/26). Reels usan métrica 'plays'
+            # (o 'views' en v22+); fotos/carrousels no tienen views por diseño.
+            # Rate: ~200 req/h/token; 20 medias × 4 pases/día = 80/día → OK.
+            views = 0
+            if m.get("media_type") in ("VIDEO", "REELS"):
+                try:
+                    ins = requests.get(
+                        f"{base}/{mid}/insights",
+                        params={"metric": "plays,reach", "access_token": token},
+                        timeout=10,
+                    ).json()
+                    # v21 devuelve {data:[{name:'plays', values:[{value:N}]}, ...]}
+                    for item in (ins.get("data") or []):
+                        if item.get("name") == "plays":
+                            vs = item.get("values") or []
+                            if vs:
+                                views = int(vs[0].get("value") or 0)
+                                break
+                except Exception:
+                    views = 0  # fallback: no bloquea el snapshot
             rows.append({
                 "platform": "instagram", "kind": "video",
-                "video_id": m["id"], "slug": None,
+                "video_id": mid, "slug": None,
                 "title": (m.get("caption") or "")[:80],
-                "views": 0,  # views requiere /insights por media, coste extra
+                "views": views,
                 "likes": int(m.get("like_count") or 0),
                 "comments": int(m.get("comments_count") or 0),
                 "published": (m.get("timestamp") or "")[:10],
