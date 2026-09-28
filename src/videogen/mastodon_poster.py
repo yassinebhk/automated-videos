@@ -33,7 +33,8 @@ def post_short_to_mastodon(video_title: str, video_url: str,
     bsky = os.environ.get("BLUESKY_HANDLE", "")
     cross = f"@{bsky} en Bluesky" if bsky else ""
     main_text, reply_text = social_post.build_viral_post(
-        video_title, video_url, teaser=teaser, cross_platform=cross, niche=niche
+        video_title, video_url, teaser=teaser, cross_platform=cross, niche=niche,
+        platform="mastodon",
     )
     # Mastodon acepta hasta 500 chars — usamos el build_viral pero ampliamos
     main_text = main_text[:499]

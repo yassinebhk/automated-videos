@@ -218,6 +218,32 @@ def _check_bluesky() -> tuple[bool, str]:
         return False, f"login fail: {str(e)[:80]}"
 
 
+def _check_cronjob_pat_expiry() -> tuple[bool, str]:
+    """Alerta si el PAT de cron-job.org está cerca de expirar.
+
+    El PAT actual expira 2027-09-16 (memoria: `Renovar PAT cron-job.org
+    antes de 16/09/2027`). Sin renovar → los cron externos que triggean
+    los workflows GH via API dejan de funcionar y el ecosistema queda en
+    silencio.
+
+    Devuelve:
+      - ok=True  · verde si >30 días de margen
+      - ok=True  · amarillo (con detail alertando) si 14-30 días
+      - ok=False · rojo si <=14 días (aparece en 'Servicios caídos')
+    """
+    from datetime import date
+    EXPIRY = date(2027, 9, 16)
+    today = date.today()
+    days_left = (EXPIRY - today).days
+    if days_left <= 0:
+        return False, f"⚠️ EXPIRADO hace {-days_left}d — renovar YA en cron-job.org"
+    if days_left <= 14:
+        return False, f"⚠️ EXPIRA en {days_left}d ({EXPIRY.isoformat()}) — renovar PAT"
+    if days_left <= 30:
+        return True, f"⚠ {days_left}d hasta expirar ({EXPIRY.isoformat()})"
+    return True, f"{days_left}d hasta expirar"
+
+
 def _check_mastodon() -> tuple[bool, str]:
     tok = os.environ.get("MASTODON_ACCESS_TOKEN", "").strip()
     inst = os.environ.get("MASTODON_INSTANCE", "https://mastodon.social").rstrip("/")
@@ -360,6 +386,9 @@ def check_all() -> dict[str, Any]:
         "Bluesky":      _safe(_check_bluesky, "Bluesky"),
         "Mastodon":     _safe(_check_mastodon, "Mastodon"),
     }
+    ops = {
+        "cron-job.org PAT": _safe(_check_cronjob_pat_expiry, "PAT"),
+    }
     yt = {}
     for prefix, name in YT_CHANNELS:
         yt[name] = _safe(lambda p=prefix, n=name: _check_youtube_channel(p, n), name)
@@ -376,12 +405,13 @@ def check_all() -> dict[str, Any]:
     lines += _fmt_group("LLMs", llms) + [""]
     lines += _fmt_group("Media", media) + [""]
     lines += _fmt_group("Social", social) + [""]
+    lines += _fmt_group("Ops", ops) + [""]
     lines += _fmt_group("YouTube canales", yt) + [""]
 
     # Alertas urgentes agrupadas — para que el user vea de un vistazo
     # qué necesita acción MANUAL YA
     down = []
-    for group in (llms, media, social, yt):
+    for group in (llms, media, social, ops, yt):
         for name, r in group.items():
             if not r["ok"]:
                 down.append(name)
@@ -402,6 +432,6 @@ def check_all() -> dict[str, Any]:
         print(f"  reauth: {n_btn} botones enviados para {yt_down}")
 
     return {
-        "llms": llms, "media": media, "social": social, "youtube": yt,
-        "down_count": len(down), "down_services": down,
+        "llms": llms, "media": media, "social": social, "ops": ops,
+        "youtube": yt, "down_count": len(down), "down_services": down,
     }

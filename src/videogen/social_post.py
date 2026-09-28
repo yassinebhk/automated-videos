@@ -118,15 +118,31 @@ NICHE_STYLE["ai_tools"] = NICHE_STYLE["aitools"]
 NICHE_STYLE["ia"] = NICHE_STYLE["ia_autonomos"]
 
 
+def _add_utm(url: str, platform: str) -> str:
+    """Añade UTM tags al URL para medir funnel RRSS→YT en YouTube Analytics.
+    Sin platform → devuelve URL sin cambios. Idempotente."""
+    if not url or not platform:
+        return url
+    if "utm_source=" in url:
+        return url
+    sep = "&" if "?" in url else "?"
+    return f"{url}{sep}utm_source={platform}&utm_medium=social&utm_campaign=crosspost"
+
+
 def build_viral_post(video_title: str, video_url: str, teaser: str = "",
                      cross_platform: str = "",
-                     include_url: bool = True, niche: str = "") -> tuple[str, str]:
+                     include_url: bool = True, niche: str = "",
+                     platform: str = "") -> tuple[str, str]:
     """Devuelve (main_text, reply_text) — 2 posts para thread.
 
     - main_text: hook + cifra + provocación + [link opcional] + hashtags
     - reply_text: contexto extra (víctimas, consecuencia legal) para thread
     - include_url: False para IG/TikTok (algoritmo esconde posts con links externos)
+    - platform: 'bluesky'|'mastodon'|'threads'|'x' → añade UTM tags al video_url
+      para medir tráfico entrante en YT Analytics (fix funnel RRSS→YT 28/09).
     """
+    if include_url and platform:
+        video_url = _add_utm(video_url, platform)
     episode = _extract_episode(video_title)
     hook_emoji = _hook_for(episode)
     case = _extract_case(video_title)

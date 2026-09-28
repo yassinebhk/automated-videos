@@ -61,7 +61,8 @@ def post_short_to_x(video_title: str, video_url: str,
 
     from . import social_post
     main_text, _ = social_post.build_viral_post(
-        video_title, video_url, teaser=teaser, cross_platform=""
+        video_title, video_url, teaser=teaser, cross_platform="",
+        platform="twitter",
     )
     # X permite 280 chars — nuestro main ya está dentro
     if len(main_text) > 280:

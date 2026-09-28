@@ -77,7 +77,8 @@ def post_short_to_threads(video_title: str, video_url: str,
 
     from . import social_post
     main_text, reply_text = social_post.build_viral_post(
-        video_title, video_url, teaser=teaser, cross_platform="", niche=niche
+        video_title, video_url, teaser=teaser, cross_platform="", niche=niche,
+        platform="threads",
     )
     # Threads permite 500 chars — nuestro main ya está dentro
     main_text = main_text[:500]

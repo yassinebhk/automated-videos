@@ -36,7 +36,8 @@ def post_short_to_bluesky(video_title: str, video_url: str,
     if masto and os.environ.get("MASTODON_ACCESS_TOKEN"):
         cross = f"@automated_videos@{masto.replace('https://','')}"
     main_text, reply_text = social_post.build_viral_post(
-        video_title, video_url, teaser=teaser, cross_platform=cross, niche=niche
+        video_title, video_url, teaser=teaser, cross_platform=cross, niche=niche,
+        platform="bluesky",
     )
 
     if dry_run:
