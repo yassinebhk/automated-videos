@@ -964,6 +964,19 @@ def bluesky_growth_cmd():
     bluesky_growth.run_growth_loop(dry_run=False)
 
 
+@cli.command(name="bluesky-daily-fact")
+@click.option("--dry-run", is_flag=True, help="Solo muestra el texto, no publica")
+def bluesky_daily_fact_cmd(dry_run: bool):
+    """Post diario Bluesky con dato + fuente (1×/día, cap por ledger).
+
+    Idempotente: si ya se publicó hoy, skip. Piggyback en catchup 4×/día
+    → primer pase del día publica, resto skip.
+    """
+    from . import bluesky_daily_fact
+    r = bluesky_daily_fact.run_bsky_daily_fact(dry_run=dry_run)
+    print(f"  bsky-fact: {r}")
+
+
 @cli.command(name="mastodon-growth")
 def mastodon_growth_cmd():
     """Ejecuta el growth loop de Mastodon (follows + favs + reblogs)."""

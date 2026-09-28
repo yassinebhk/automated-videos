@@ -27,8 +27,13 @@ from .config import ROOT
 
 LEDGER = ROOT / "output" / "bsky_reply_boost_ledger.json"
 LEDGER_MAX = 500
-MAX_REPLIES_PER_DAY = 3
+# 28/09/26: cap 3→8 tras confirmar que Bsky es la RRSS que rinde
+# (única con 3 replies reales/día en la última semana; el resto ~0).
+# Bsky es tolerante a bots educados que aportan valor (dato + fuente).
+MAX_REPLIES_PER_DAY = 8
 MIN_POST_LIKES = 8
+# Nuevo: priorizar hilos con conversación activa (más eyeballs por reply nuestra).
+MIN_POST_REPLIES = 3
 MAX_AUTHOR_FOLLOWERS = 5000
 MAX_POST_AGE_HOURS = 24
 
@@ -158,6 +163,10 @@ def _run_bsky_reply_boost_impl(dry_run: bool, ledger: dict) -> dict:
                 continue
             likes = getattr(post, "like_count", 0) or 0
             if likes < MIN_POST_LIKES:
+                continue
+            # Reply count check — hilos con conversación activa rinden más
+            reply_count = getattr(post, "reply_count", 0) or 0
+            if reply_count < MIN_POST_REPLIES:
                 continue
             # Age check
             try:

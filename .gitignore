@@ -19,6 +19,7 @@ output/**
 !output/ig_engagement_ledger.json
 !output/threads_engagement_ledger.json
 !output/bsky_reply_boost_ledger.json
+!output/bsky_daily_fact_ledger.json
 !output/playlists_manager_ledger.json
 # Ranking datasets (World Bank refresh semanal)
 !output/ranking_datasets/

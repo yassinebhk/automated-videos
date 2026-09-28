@@ -21,6 +21,7 @@ on:
           - ig
           - threads
           - bsky
+          - bsky_fact
           - playlists
 
 permissions:
@@ -65,9 +66,17 @@ jobs:
       command: bsky-reply-boost --live
     secrets: inherit
 
+  bsky_fact:
+    if: ${{ always() && (inputs.which == 'all' || inputs.which == 'bsky_fact') }}
+    needs: [bsky]
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: bluesky-daily-fact
+    secrets: inherit
+
   playlists:
     if: ${{ always() && (inputs.which == 'all' || inputs.which == 'playlists') }}
-    needs: [bsky]
+    needs: [bsky_fact]
     uses: ./.github/workflows/_videogen-job.yml
     with:
       command: playlists-catchup

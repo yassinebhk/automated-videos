@@ -255,9 +255,17 @@ jobs:
       command: bsky-reply-boost --live
     secrets: inherit
 
-  playlists_sync:
+  bsky_daily_fact:
     if: ${{ always() && (inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts') }}
     needs: [engagement_bsky]
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: bluesky-daily-fact
+    secrets: inherit
+
+  playlists_sync:
+    if: ${{ always() && (inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts') }}
+    needs: [bsky_daily_fact]
     uses: ./.github/workflows/_videogen-job.yml
     with:
       command: playlists-catchup
