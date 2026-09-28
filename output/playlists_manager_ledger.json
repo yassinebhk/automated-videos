@@ -5,7 +5,20 @@
       "video_ids": [
         "m20i-05kmaM"
       ]
+    },
+    "gescartera": {
+      "playlist_id": null,
+      "video_ids": [
+        "zmel1TnEC2o"
+      ]
+    },
+    "banesto": {
+      "playlist_id": null,
+      "video_ids": [
+        "wF3zGy3F2Wc",
+        "STXk79BF6NA"
+      ]
     }
   },
-  "last_run": "2026-09-28T13:27:45.301315+00:00"
+  "last_run": "2026-09-28T22:30:18.184875+00:00"
 }
