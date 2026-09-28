@@ -289,8 +289,33 @@ def save_sample_frame(variant_key: str, out_png: Path, w: int = 720, h: int = 12
     return out_png
 
 
+# Variedad REAL por run (anti-repetición 28/09): en vez de reutilizar el mismo
+# variant→mismo título (bug: 5 fractales compartían "Fractal Zoom" → ×14), cada run
+# aplica una PALETA aleatoria (visual distinto) + un DESCRIPTOR único (título distinto).
+# Los fractales son infinitos → variedad prácticamente ilimitada; el guardarraíl de
+# dedup en la subida caza cualquier colisión rara.
+SAT_PALETTES = ["twilight", "twilight_shifted", "magma", "inferno", "plasma", "viridis",
+                "cividis", "turbo", "cubehelix", "ocean", "gnuplot2", "nipy_spectral"]
+SAT_COLORS = ["#39e0d0", "#f5c542", "#ff6ec7", "#7cf542", "#42a5f5", "#ff7043",
+              "#b388ff", "#26c6da", "#ffd54f", "#ff5252"]
+SAT_ADJ = ["Ember", "Ocean", "Twilight", "Neon", "Golden", "Crimson", "Frost", "Aurora",
+           "Velvet", "Cosmic", "Molten", "Electric", "Midnight", "Prism", "Solar", "Lunar",
+           "Jade", "Ruby", "Sapphire", "Obsidian", "Amber", "Coral", "Ivory", "Onyx"]
+SAT_NOUN = ["Drift", "Bloom", "Cascade", "Pulse", "Flow", "Spiral", "Descent", "Dream",
+            "Haze", "Wave", "Trance", "Mirage", "Vortex", "Glow", "Echo", "Reverie",
+            "Bloom", "Current", "Nebula", "Tide"]
+
+
 def generate_satisfying_video(out_dir: Path, variant: dict, seconds: int = 30) -> dict | None:
+    import random as _rnd
     gen = variant.get("gen", "fractal")
+    variant = dict(variant)  # copia — NO mutar el global VARIANTS
+    # Paleta/color aleatorios → cada vídeo es visualmente distinto aunque sea el mismo tipo.
+    if gen == "harmo":
+        variant["color"] = _rnd.choice(SAT_COLORS)
+    else:
+        variant["cmap"] = _rnd.choice(SAT_PALETTES)
+    descriptor = f"{_rnd.choice(SAT_ADJ)} {_rnd.choice(SAT_NOUN)}"
     ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     slug = f"{gen}_{variant['key']}_{ts}"
     work = out_dir / slug
@@ -304,7 +329,10 @@ def generate_satisfying_video(out_dir: Path, variant: dict, seconds: int = 30) -
     except Exception as e:
         print(f"  satisfying: music skip ({e})")
         final = raw
-    title, extra = GEN_META.get(gen, GEN_META["fractal"])
+    base, extra = GEN_META.get(gen, GEN_META["fractal"])
+    # Título único por run: "{base} · {Adjetivo Sustantivo}" → nunca repite (con el pool
+    # 24×20 = 480 combos por tipo) y el descriptor añade tokens que rompen el dedup.
+    title = f"{base} · {descriptor}"
     tags = ["satisfying", "oddlysatisfying", "relaxing", "hypnotic"] + extra
     return {
         "slug": slug, "variant": variant["key"], "video_path": str(final),
