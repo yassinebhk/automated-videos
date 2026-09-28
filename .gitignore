@@ -11,6 +11,18 @@ output/**
 !output/social_boost_log.json
 !output/ambient_ledger.json
 !output/ig_publish_log.json
+# Engagement ledgers (creados por engagement/ig_engagement/threads_engagement/
+# bsky_reply_boost/playlists_manager). Sin estas líneas git status no los
+# detecta y el commit del reusable los ignora silenciosamente (bug 28/09
+# tras 5 runs de engagement-manual con ledgers vacíos aunque los jobs OK).
+!output/engagement_ledger.json
+!output/ig_engagement_ledger.json
+!output/threads_engagement_ledger.json
+!output/bsky_reply_boost_ledger.json
+!output/playlists_manager_ledger.json
+# Ranking datasets (World Bank refresh semanal)
+!output/ranking_datasets/
+!output/ranking_datasets/**
 # Los youtube.json + youtube_long.json (100 bytes cada uno) son metadata
 # necesaria para backfill (slug → video_id). Sin ellos, GH Actions runner
 # no encuentra los Shorts para reciclar.
