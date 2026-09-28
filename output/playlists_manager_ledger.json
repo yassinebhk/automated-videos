@@ -1,4 +1,11 @@
 {
-  "cases": {},
+  "cases": {
+    "naseiro": {
+      "playlist_id": null,
+      "video_ids": [
+        "m20i-05kmaM"
+      ]
+    }
+  },
   "last_run": "2026-09-28T13:27:45.301315+00:00"
 }

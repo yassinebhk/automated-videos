@@ -283,7 +283,7 @@
       ]
     },
     "naseiro": {
-      "count": 3,
+      "count": 4,
       "history": [
         {
           "ts": "2026-09-08T10:31:12.572180+00:00",
@@ -296,6 +296,10 @@
         {
           "ts": "2026-09-16T22:11:40.288023+00:00",
           "topic": "Caso Naseiro: las escuchas de 1990 que destaparon la financiación ilegal del Partido Popular y terminaron en los tribunales valencianos."
+        },
+        {
+          "ts": "2026-09-28T17:21:39.060841+00:00",
+          "topic": "[CRIMEN] Naseiro: el escándalo de financiación del PP de 1990 que marcó un antes y un después en los tribunales"
         }
       ]
     },
