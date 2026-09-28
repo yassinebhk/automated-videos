@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import json
 import os
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
@@ -206,8 +207,17 @@ def catchup_all_cases() -> dict:
     """Barre output/uploaded/ y sincroniza retroactivamente cada video al
     playlist de su case_key. Cron 1×/semana."""
     from . import case_ledger
+    # Evidencia de ejecución: escribimos last_run siempre, aunque no haya match.
+    # Sin esto, si ningún video hace match con case_key, el ledger no existe
+    # y no hay forma de saber que el job corrió (bug 28/09 tras piggyback).
+    _ledger_early = _load_ledger()
+    _ledger_early["last_run"] = datetime.now(timezone.utc).isoformat()
+    try:
+        _save_ledger(_ledger_early)
+    except Exception as e:
+        print(f"  playlists: save early ledger fail {e}")
     if not UPLOADED_DIR.exists():
-        return {"checked": 0, "synced": 0}
+        return {"checked": 0, "synced": 0, "last_run": _ledger_early["last_run"]}
     synced = errors = 0
     for d in sorted(UPLOADED_DIR.iterdir()):
         if not d.is_dir():
