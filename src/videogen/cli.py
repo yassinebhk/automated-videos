@@ -1947,6 +1947,24 @@ def traffic_report_cmd(days: int):
         print("Ningún canal con scope analytics todavía → reautoriza para activar la medición del funnel.")
 
 
+@cli.command(name="dedup-cleanup")
+@click.option("--apply", "do_apply", is_flag=True, default=False,
+              help="Ejecuta de verdad. Sin este flag = dry-run (solo lista).")
+@click.option("--max-views", default=30, show_default=True,
+              help="Solo copias con menos de N views (casi sin audiencia).")
+@click.option("--only", "only_prefix", default=None,
+              help="Limita a un canal (ej. YT_RANKING o youtube_ranking).")
+@click.option("--restore", is_flag=True, default=False,
+              help="Deshacer: vuelve a PÚBLICO las copias (revierte un --apply).")
+def dedup_cleanup_cmd(do_apply: bool, max_views: int, only_prefix: str | None, restore: bool):
+    """Limpia duplicados de bajo alcance en YouTube → los pone en PRIVADO (reversible,
+    NO borra). Conserva SIEMPRE la copia con más views de cada grupo. Dry-run por
+    defecto. Requiere scope youtube.force-ssl en el token del canal."""
+    from . import dedup_cleanup
+    dedup_cleanup.run(apply=do_apply, max_views=max_views,
+                      only_prefix=only_prefix, restore=restore)
+
+
 @cli.command(name="broadcast-test")
 def broadcast_test_cmd():
     """Manda un mensaje de prueba al canal de difusión Telegram (verifica config +

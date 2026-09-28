@@ -1,0 +1,35 @@
+name: Dedup cleanup (privar duplicados de bajo alcance)
+
+# Pone en PRIVADO (reversible, NO borra) las copias duplicadas de vídeos YT con
+# casi nada de audiencia (views < umbral), conservando la mejor copia de cada grupo.
+# Dry-run por defecto (solo lista). Requiere scope youtube.force-ssl en el token
+# del canal — si falta, ese canal falla aislado y se reporta para reauth.
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "dry-run (solo lista) · apply (privar) · restore (volver a público)"
+        type: choice
+        options: [dry-run, apply, restore]
+        default: dry-run
+      max_views:
+        description: "Solo copias con menos de N views (casi sin audiencia)"
+        default: "30"
+      only:
+        description: "Limitar a un canal (ej. YT_RANKING). Vacío = todos"
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: >-
+        dedup-cleanup --max-views ${{ inputs.max_views }}
+        ${{ inputs.only != '' && format('--only {0}', inputs.only) || '' }}
+        ${{ inputs.mode == 'apply' && '--apply' || '' }}
+        ${{ inputs.mode == 'restore' && '--apply --restore' || '' }}
+    secrets: inherit
