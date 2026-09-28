@@ -68,8 +68,40 @@ def _pick_gordo_case() -> str | None:
     return picked.get("name") or picked.get("title") or picked.get("key")
 
 
-def _generate_plan(case_name: str) -> list[dict] | None:
-    """Gemini genera plan de 5 partes con ángulos distintos + cliffhangers."""
+# Ángulos por modo de miniserie. Añadir modos nuevos SIN romper "crime" default.
+_SERIES_MODES = {
+    "crime": {
+        "structure": [
+            "Parte 1/5 · Contexto: quién, cuándo, dónde. Sitúa al espectador.",
+            "Parte 2/5 · Mecanismo: CÓMO lo hicieron paso a paso.",
+            "Parte 3/5 · Detalles brutales: cifras, testimonios, momentos clave.",
+            "Parte 4/5 · Investigación/juicio: cómo cayeron, sentencia.",
+            "Parte 5/5 · Consecuencias hoy: qué queda, quién sigue impune.",
+        ],
+        "angles": "contexto/mecanismo/detalles/juicio/consecuencias",
+        "case_label": "caso español real",
+    },
+    "historical": {
+        "structure": [
+            "Parte 1/5 · Escena: qué pasaba antes, situación política/social.",
+            "Parte 2/5 · Protagonistas: quiénes decidieron, motivaciones reales.",
+            "Parte 3/5 · Evento clave: qué ocurrió, cifras, giro dramático.",
+            "Parte 4/5 · Consecuencia inmediata: reacción, muertos, desplazados.",
+            "Parte 5/5 · Legado hoy: qué queda del hecho en España 2026.",
+        ],
+        "angles": "escena/protagonistas/evento/consecuencia/legado",
+        "case_label": "hecho histórico español",
+    },
+}
+
+
+def _generate_plan(case_name: str, mode: str = "crime") -> list[dict] | None:
+    """Gemini genera plan de 5 partes con ángulos distintos + cliffhangers.
+
+    mode: 'crime' (default, true-crime ES) o 'historical' (eventos históricos
+    ES sin dimensión judicial — batallas, caídas de plazas, tratados, etc).
+    """
+    cfg = _SERIES_MODES.get(mode, _SERIES_MODES["crime"])
     try:
         from google import genai
         from google.genai import types
@@ -97,24 +129,23 @@ def _generate_plan(case_name: str) -> list[dict] | None:
             },
             "required": ["parts"],
         }
+        structure_lines = "\n".join(f"- {s}" for s in cfg["structure"])
         prompt = (
-            f"Divide el caso español real '{case_name}' en una MINISERIE de 5 shorts "
+            f"Divide el {cfg['case_label']} '{case_name}' en una MINISERIE de 5 shorts "
             f"YouTube (<60s cada uno). Cada parte con ángulo DISTINTO.\n\n"
-            f"Estructura obligatoria:\n"
-            f"- Parte 1/5 · Contexto: quién, cuándo, dónde. Sitúa al espectador.\n"
-            f"- Parte 2/5 · Mecanismo: CÓMO lo hicieron paso a paso.\n"
-            f"- Parte 3/5 · Detalles brutales: cifras, testimonios, momentos clave.\n"
-            f"- Parte 4/5 · Investigación/juicio: cómo cayeron, sentencia.\n"
-            f"- Parte 5/5 · Consecuencias hoy: qué queda, quién sigue impune.\n\n"
+            f"Estructura obligatoria:\n{structure_lines}\n\n"
+            f"REGLAS VERACIDAD (importantes):\n"
+            f"- Datos REALES verificables en fuentes públicas.\n"
+            f"- NO inventar fechas, cifras ni protagonistas.\n"
+            f"- Si un dato exacto no se conoce con certeza, decir 'aproximadamente' o rango.\n\n"
             f"Para cada parte devuelve:\n"
             f"- part_num (1-5)\n"
-            f"- angle (etiqueta corta: contexto/mecanismo/detalles/juicio/consecuencias)\n"
+            f"- angle (etiqueta corta: {cfg['angles']})\n"
             f"- topic: descripción del short LISTO para autogen, con formato:\n"
             f"  '[MINISERIE {case_name} · Parte N/5] <descripción angulo>'\n"
             f"  máximo 200 chars.\n"
             f"- cliffhanger: frase gancho para el FINAL del script que enganche a la\n"
-            f"  siguiente parte. Ej: 'Y lo peor no era eso. Mañana, la parte 2: cómo\n"
-            f"  movieron 200M€ sin que nadie los detectara'. Máx 150 chars.\n\n"
+            f"  siguiente parte. Máx 150 chars.\n\n"
             f"Devuelve JSON con clave 'parts' = array de 5 objetos."
         )
         resp = client.models.generate_content(
@@ -144,31 +175,54 @@ def _generate_plan(case_name: str) -> list[dict] | None:
 
 
 def start_new_series() -> dict | None:
-    """Crea nueva serie: elige caso + genera plan + guarda active_series."""
+    """Crea nueva serie: elige caso al azar del pool + genera plan modo crime."""
     case = _pick_gordo_case()
     if not case:
         return None
-    print(f"  series: iniciando nueva miniserie sobre «{case[:80]}»")
-    plan = _generate_plan(case)
+    return start_series_with_case(case, mode="crime")
+
+
+def start_series_with_case(case_name: str, mode: str = "crime",
+                            overwrite: bool = False) -> dict | None:
+    """Fuerza miniserie sobre un caso concreto (útil para explotar virales).
+
+    Args:
+        case_name: descripción del caso ("Caída de Ceuta 1415", "Caso KIO"…).
+        mode: "crime" (default) o "historical" (eventos históricos sin juicio).
+        overwrite: si ya hay serie activa, la reemplaza. Default False → skip.
+
+    Uso típico: viral detectado en dashboard → forzar miniserie sobre ese ángulo
+    sin esperar al cron miércoles ni al picker aleatorio.
+    """
+    if not overwrite and ACTIVE_SERIES.exists():
+        existing = _load(ACTIVE_SERIES, None)
+        if existing:
+            print(f"  series: ya hay activa «{existing.get('case_name','?')[:60]}» — "
+                  f"pasa overwrite=True para reemplazar")
+            return None
+
+    print(f"  series: iniciando miniserie forzada mode={mode} sobre «{case_name[:80]}»")
+    plan = _generate_plan(case_name, mode=mode)
     if not plan:
         return None
     from . import case_ledger
     key = None
     try:
-        key = case_ledger.match_case_key(case)
+        key = case_ledger.match_case_key(case_name)
     except Exception:
         pass
     active = {
-        "case_name": case,
+        "case_name": case_name,
         "case_key": key,
+        "mode": mode,
         "started_at": datetime.now(timezone.utc).isoformat(),
         "parts": plan,
         "next_part": 1,
         "last_published_at": None,
     }
     _save(ACTIVE_SERIES, active)
-    _notify(f"🎬 <b>Miniserie iniciada</b>\n"
-            f"→ <i>{case[:80]}</i>\n"
+    _notify(f"🎬 <b>Miniserie iniciada</b> ({mode})\n"
+            f"→ <i>{case_name[:80]}</i>\n"
             f"5 partes planificadas · próxima: 1/5")
     return active
 

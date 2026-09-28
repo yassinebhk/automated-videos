@@ -1696,14 +1696,34 @@ def playlists_refresh_cmd(channel: str | None):
 
 
 @cli.command(name="series-start")
-def series_start_cmd():
-    """Inicia nueva miniserie de 5 partes sobre un caso gordo aleatorio."""
+@click.option("--topic", "topic_", type=str, default="",
+              help="Forzar miniserie sobre un caso concreto (ej. 'Caída de Ceuta 1415'). "
+                   "Vacío = picker aleatorio del pool.")
+@click.option("--mode", type=click.Choice(["crime", "historical"]), default="crime",
+              help="Estructura ángulos: crime (juicio/consecuencias) o historical "
+                   "(evento/protagonistas/legado). Default crime.")
+@click.option("--overwrite", is_flag=True,
+              help="Reemplaza la miniserie activa si existe. Sin este flag = skip.")
+def series_start_cmd(topic_: str, mode: str, overwrite: bool):
+    """Inicia nueva miniserie de 5 partes.
+
+    Ejemplos:
+      videogen series-start                                              # picker aleatorio (crime)
+      videogen series-start --topic "Caída de Ceuta 1415" --mode historical  # forzar viral
+      videogen series-start --topic "Caso KIO" --overwrite               # reemplazar activa
+    """
     from . import series_generator
-    result = series_generator.start_new_series()
+    if topic_:
+        result = series_generator.start_series_with_case(
+            topic_, mode=mode, overwrite=overwrite,
+        )
+    else:
+        result = series_generator.start_new_series()
     if not result:
-        print("  ❌ no se pudo iniciar serie")
+        print("  ❌ no se pudo iniciar serie (ya hay activa? sin --overwrite salta)")
         raise SystemExit(1)
     print(json.dumps({"case": result["case_name"],
+                       "mode": result.get("mode", "crime"),
                        "parts": len(result["parts"])}, indent=2, ensure_ascii=False))
 
 
