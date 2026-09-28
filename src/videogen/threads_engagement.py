@@ -70,18 +70,69 @@ def _creds() -> tuple[Optional[str], Optional[str]]:
     return tok, uid
 
 
-def _fetch_mentions(tok: str, uid: str) -> list[dict]:
-    """Devuelve menciones directas al user. Endpoint /me/mentions."""
+def _fetch_own_threads(tok: str, uid: str, limit: int = 15) -> list[dict]:
+    """Últimos N threads propios (scope threads_basic — ya confirmado activo)."""
     r = requests.get(
-        f"{API_BASE}/{uid}/mentions",
+        f"{API_BASE}/{uid}/threads",
+        params={"fields": "id,timestamp", "access_token": tok, "limit": limit},
+        timeout=20,
+    )
+    if r.status_code != 200:
+        print(f"  threads-eng: own threads fail {r.status_code} — {r.text[:180]}")
+        return []
+    return r.json().get("data", []) or []
+
+
+def _fetch_replies_to_thread(tok: str, thread_id: str) -> list[dict]:
+    """Replies a un thread propio (scope threads_manage_replies — ya activo)."""
+    r = requests.get(
+        f"{API_BASE}/{thread_id}/replies",
         params={"fields": "id,text,username,timestamp",
                 "access_token": tok, "limit": 25},
         timeout=20,
     )
     if r.status_code != 200:
-        print(f"  threads-eng: mentions list fail {r.status_code} — {r.text[:180]}")
+        # No spamear log si el thread simplemente no tiene replies
+        if r.status_code not in (400, 404):
+            print(f"  threads-eng: replies {thread_id} fail {r.status_code} — {r.text[:180]}")
         return []
     return r.json().get("data", []) or []
+
+
+def _fetch_own_thread_replies(tok: str, uid: str, own_username: str) -> list[dict]:
+    """Junta replies de los últimos N threads propios que:
+    - no sean del propio user
+    - estén en la ventana MAX_AGE_HOURS
+    - tengan >= MIN_MENTION_WORDS
+
+    Sustituye a _fetch_mentions (que requería scope threads_manage_mentions
+    no confirmado). Este flow SOLO requiere scopes ya activos: threads_basic
+    + threads_manage_replies (los mismos que usa el poster que ya funciona).
+    """
+    own_low = (own_username or "").lower()
+    now = datetime.now(timezone.utc)
+    cutoff = now - timedelta(hours=MAX_AGE_HOURS)
+    out: list[dict] = []
+    for th in _fetch_own_threads(tok, uid, limit=15):
+        th_id = th.get("id")
+        if not th_id:
+            continue
+        for rep in _fetch_replies_to_thread(tok, th_id):
+            uname = (rep.get("username") or "").lower()
+            if uname == own_low:
+                continue
+            ts = rep.get("timestamp")
+            try:
+                ts_dt = datetime.fromisoformat((ts or "").replace("+0000", "+00:00"))
+            except Exception:
+                continue
+            if ts_dt < cutoff:
+                continue
+            text = (rep.get("text") or "").strip()
+            if len(text.split()) < MIN_MENTION_WORDS:
+                continue
+            out.append(rep)
+    return out
 
 
 def _reply_to_mention(tok: str, uid: str, mention_id: str, text: str) -> Optional[str]:
@@ -124,12 +175,13 @@ def run_threads_engagement_pass(dry_run: bool = False) -> dict:
     if used_today >= MAX_REPLIES_PER_DAY:
         return {"skipped": "daily cap reached", "used_today": used_today}
 
-    mentions = _fetch_mentions(tok, uid)
+    own_username = os.environ.get("THREADS_USERNAME", "waitwhy_")
+    # Nuevo path: replies a mis propios threads (scopes ya activos).
+    # El pre-filtro por edad/palabras/no-self ya lo hace la helper.
+    mentions = _fetch_own_thread_replies(tok, uid, own_username)
     if not mentions:
         return {"mentions_checked": 0, "replied": 0}
 
-    now = datetime.now(timezone.utc)
-    cutoff = now - timedelta(hours=MAX_AGE_HOURS)
     replied = 0
 
     for m in mentions:
@@ -138,17 +190,7 @@ def run_threads_engagement_pass(dry_run: bool = False) -> dict:
         mid = m.get("id")
         if not mid or mid in replied_ids:
             continue
-        ts = m.get("timestamp")
-        try:
-            ts_dt = datetime.fromisoformat((ts or "").replace("+0000", "+00:00"))
-        except Exception:
-            continue
-        if ts_dt < cutoff:
-            continue
         text = (m.get("text") or "").strip()
-        if len(text.split()) < MIN_MENTION_WORDS:
-            replied_ids.add(mid)
-            continue
         reply_text = random.choice(_REPLY_TEMPLATES)
         if dry_run:
             print(f"  threads-eng DRY {mid} @{m.get('username')} → «{text[:50]}» → «{reply_text}»")
