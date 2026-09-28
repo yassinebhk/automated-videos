@@ -112,16 +112,9 @@ def run_once() -> dict[str, Any]:
         _notify(f"🌀 <b>Satisfying · RRSS</b> {crosspost_full.summary_line(cross)}")
     except Exception as e:
         print(f"  satisfying crosspost fail: {e}")
-    # TT video
-    try:
-        from ..notify_batch import send_video_for_tiktok
-        send_video_for_tiktok(meta["video_path"], DISPLAY_NAME, meta["title"], url)
-    except Exception as e:
-        print(f"  satisfying: TT tg fail — {e}")
-    try:
-        from .. import social_reels
-        social_reels.post_ig_reel(meta["video_path"], meta["title"], url, meta["slug"], hashtags=meta.get("tags"), prefix=YT_PREFIX)
-    except Exception as _e:
-        print(f"  satisfying: ig fail — {_e}")
+    # NOTA (petición usuario 28/09): satisfying NO se sube a Instagram ni a TikTok.
+    # Solo YouTube + Bluesky/Mastodon/Threads (vía crosspost_full arriba; IG ya está
+    # fuera de la whitelist _ig_allowed). Se quitaron el envío a TT (send_video_for_tiktok)
+    # y el Reel de IG (social_reels.post_ig_reel) a propósito.
     return {"status": "ok", "slug": meta["slug"], "url": url,
             "variant": variant["key"], "yt_status": yt_status}
