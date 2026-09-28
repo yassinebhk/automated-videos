@@ -53,7 +53,18 @@ jobs:
           sudo apt-get install -y --no-install-recommends ffmpeg fonts-noto-color-emoji
 
       - name: Install videogen (editable)
-        run: pip install -e '.[whisper]' boto3   # boto3=R2 · whisper=faster-whisper para captions con timing real
+        # Versión pinneada de boto3 + retries pip para evitar el backtracking hell
+        # cuando PyPI tiene timeouts (bug 28/09: sin pin bajó de 1.43 a 0.0.1
+        # buscando resolver con python-dateutil que no se descargaba).
+        # --prefer-binary evita compilar wheels antiguos.
+        run: |
+          pip install --upgrade pip
+          pip install \
+            --retries 5 \
+            --timeout 60 \
+            --prefer-binary \
+            'boto3>=1.35,<2' \
+            -e '.[whisper]'
 
       - name: Install Manim (solo padel-once — motor de animación)
         if: inputs.command == 'padel-once'
