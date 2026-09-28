@@ -1,7 +1,16 @@
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Centro de Mando</title>
 <meta name="description" content="Panel de control en tiempo real de todos los canales de YouTube y redes sociales.">
+<!-- PWA: instalable desde Chrome/Edge/Safari iOS 16.4+ -->
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#4f46e5" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#182034" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Centro de Mando">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
@@ -293,15 +302,35 @@ section.view.on{display:block;animation:rise .3s ease}
 @media(max-width:860px){.two{grid-template-columns:1fr}}
 @media(max-width:760px){
   .app{grid-template-columns:1fr}
-  .rail{position:sticky;top:0;height:auto;flex-direction:row;align-items:center;overflow-x:auto;padding:10px 12px;gap:6px;z-index:30}
+  .rail{position:sticky;top:0;height:auto;flex-direction:row;align-items:center;overflow-x:auto;padding:10px 12px;gap:6px;z-index:30;
+    padding-top:calc(10px + env(safe-area-inset-top))}
   .brand{padding:0 8px 0 2px;flex:none} .brand span{display:none}
   .rail .foot{display:none}
   .nav{flex-direction:row;flex:1}
   .nav button{flex-direction:column;gap:3px;padding:7px 11px;font-size:10.5px;white-space:nowrap}
   .nav button span{display:none}
-  .topbar{padding:13px 16px} .wrap{padding:18px 16px 64px}
+  .topbar{padding:13px 16px} .wrap{padding:18px 16px 64px;padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right));padding-bottom:calc(64px + env(safe-area-inset-bottom))}
   .kpis{grid-template-columns:repeat(2,1fr)}
+  /* Charts / tablas anchas no deben crear scroll horizontal en la página */
+  .card{overflow:hidden}
+  .card canvas{max-width:100%;height:auto!important}
+  table{display:block;overflow-x:auto;max-width:100%}
 }
+/* Móvil pequeño (<=480px): kpis 1 col, tipografía compacta */
+@media(max-width:480px){
+  .kpis{grid-template-columns:1fr;gap:10px}
+  .chgrid,.recgrid,.insights,.socgrid,.cal{grid-template-columns:1fr;gap:12px}
+  .topbar h1{font-size:19px}
+  .wrap{padding:14px 12px 56px}
+  .card{padding:14px}
+}
+/* Install button (Chrome/Edge PWA prompt) — solo aparece si el evento
+   beforeinstallprompt está disponible. Lo mostramos vía JS al capturarlo. */
+#installBtn{display:none;position:fixed;right:14px;bottom:calc(14px + env(safe-area-inset-bottom));
+  z-index:80;background:var(--accent);color:#fff;border:0;border-radius:999px;
+  padding:12px 18px;font-weight:700;font-size:13px;box-shadow:var(--shadow-lg);cursor:pointer;
+  display:none}
+#installBtn.show{display:inline-flex;align-items:center;gap:8px}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 @media print{
   .rail,.topbar,#scrim,#drawer,.noprint{display:none!important}
@@ -314,6 +343,42 @@ section.view.on{display:block;animation:rise .3s ease}
 <div id="root"><div class="loading"><div class="spin"></div><div>Cargando métricas…</div></div></div>
 <div class="scrim" id="scrim"></div>
 <aside class="drawer" id="drawer"></aside>
+
+<!-- Botón install PWA (Chrome/Edge). Se hace visible cuando el navegador
+     dispara beforeinstallprompt. En iOS Safari NO existe ese evento — el user
+     usa "Añadir a pantalla de inicio" del menú Share; los meta tags apple-*
+     ya están puestos arriba. -->
+<button id="installBtn" title="Instalar como app">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M6 11l6 6 6-6M4 21h16"/></svg>
+  Instalar app
+</button>
+
+<script>
+// PWA: registrar service worker + capturar prompt install
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch((e) => console.warn("SW reg fail", e));
+  });
+}
+let deferredPrompt = null;
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  const btn = document.getElementById("installBtn");
+  if (btn) btn.classList.add("show");
+});
+document.getElementById("installBtn")?.addEventListener("click", async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  console.log("PWA install:", outcome);
+  deferredPrompt = null;
+  document.getElementById("installBtn")?.classList.remove("show");
+});
+window.addEventListener("appinstalled", () => {
+  document.getElementById("installBtn")?.classList.remove("show");
+});
+</script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
