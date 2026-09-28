@@ -216,3 +216,49 @@ jobs:
     with:
       command: ai-tools-longform
     secrets: inherit
+
+  # ─── ENGAGEMENT (piggyback en el catchup 4×/día, evita cron-job.org extra) ───
+  # Los cron GH internos no disparan fiablemente (memoria
+  # gh-scheduler-poco-fiable-usar-cronjob-org). El catchup SÍ corre 4×/día
+  # vía cron-job.org (07/11/15/19 UTC + safety 20:37) → engachamos aquí.
+  # Todos los comandos son idempotentes y con caps diarios (ledger) → correr
+  # 4×/día no genera spam ni duplicados.
+
+  engagement_yt:
+    if: ${{ always() && (inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts') }}
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: engagement
+    secrets: inherit
+
+  engagement_ig:
+    if: ${{ always() && (inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts') }}
+    needs: [engagement_yt]
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: ig-engagement
+    secrets: inherit
+
+  engagement_threads:
+    if: ${{ always() && (inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts') }}
+    needs: [engagement_ig]
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: threads-engagement
+    secrets: inherit
+
+  engagement_bsky:
+    if: ${{ always() && (inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts') }}
+    needs: [engagement_threads]
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: bsky-reply-boost --live
+    secrets: inherit
+
+  playlists_sync:
+    if: ${{ always() && (inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts') }}
+    needs: [engagement_bsky]
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: playlists-catchup
+    secrets: inherit
