@@ -1,0 +1,67 @@
+name: Engagement manual (dispatch — 5 jobs en ~5min)
+
+# Feedback loop rápido: dispatchable a mano desde Actions UI o via API.
+# Corre SOLO los 5 engagement sin esperar los 26 jobs del catchup completo.
+# Útil para validar cambios en 5 min en vez de 2h.
+#
+# Este workflow es SOLO manual (no schedule interno). Los engagement en
+# producción se disparan piggyback en catchup-all-channels.yml 4×/día.
+
+on:
+  workflow_dispatch:
+    inputs:
+      which:
+        description: "Qué engagement correr"
+        required: false
+        default: "all"
+        type: choice
+        options:
+          - all
+          - yt
+          - ig
+          - threads
+          - bsky
+          - playlists
+
+permissions:
+  contents: write
+
+concurrency:
+  group: videogen-engagement-manual
+  cancel-in-progress: false
+
+jobs:
+  yt:
+    if: ${{ inputs.which == 'all' || inputs.which == 'yt' }}
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: engagement
+    secrets: inherit
+
+  ig:
+    if: ${{ inputs.which == 'all' || inputs.which == 'ig' }}
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: ig-engagement
+    secrets: inherit
+
+  threads:
+    if: ${{ inputs.which == 'all' || inputs.which == 'threads' }}
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: threads-engagement
+    secrets: inherit
+
+  bsky:
+    if: ${{ inputs.which == 'all' || inputs.which == 'bsky' }}
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: bsky-reply-boost --live
+    secrets: inherit
+
+  playlists:
+    if: ${{ inputs.which == 'all' || inputs.which == 'playlists' }}
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: playlists-catchup
+    secrets: inherit
