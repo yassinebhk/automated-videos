@@ -181,11 +181,16 @@ def run_engagement_pass(max_total: int = MAX_REPLIES_PER_PASS,
         return {"error": "no channel_id"}
 
     ledger = _load_ledger()
+    # Touch last_run + save inmediato → ledger existe aunque salgamos early por
+    # falta de videos/comentarios. Sin esto, es imposible saber si el pase corrió.
+    ledger["last_run"] = datetime.now(timezone.utc).isoformat()
+    if not dry_run:
+        _save_ledger(ledger)
     already = set(ledger.get("replied", []))
 
     video_ids = _recent_video_ids(tok, MIN_AGE_HOURS, MAX_AGE_HOURS)
     if not video_ids:
-        return {"videos_checked": 0, "replied": 0, "skipped": 0}
+        return {"videos_checked": 0, "replied": 0, "skipped": 0, "last_run": ledger["last_run"]}
 
     replied_total = 0
     skipped_total = 0

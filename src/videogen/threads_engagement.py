@@ -167,20 +167,23 @@ def run_threads_engagement_pass(dry_run: bool = False) -> dict:
         return {"error": "no THREADS_TOKEN/THREADS_USER_ID"}
 
     ledger = _load_ledger()
+    ledger["last_run"] = datetime.now(timezone.utc).isoformat()
+    if not dry_run:
+        _save_ledger(ledger)
     replied_ids = set(ledger.get("replied", []))
     today = datetime.now(timezone.utc).date().isoformat()
     day_count = ledger.get("day_count", {})
     used_today = day_count.get(today, 0)
 
     if used_today >= MAX_REPLIES_PER_DAY:
-        return {"skipped": "daily cap reached", "used_today": used_today}
+        return {"skipped": "daily cap reached", "used_today": used_today, "last_run": ledger["last_run"]}
 
     own_username = os.environ.get("THREADS_USERNAME", "waitwhy_")
     # Nuevo path: replies a mis propios threads (scopes ya activos).
     # El pre-filtro por edad/palabras/no-self ya lo hace la helper.
     mentions = _fetch_own_thread_replies(tok, uid, own_username)
     if not mentions:
-        return {"mentions_checked": 0, "replied": 0}
+        return {"mentions_checked": 0, "replied": 0, "last_run": ledger["last_run"]}
 
     replied = 0
 

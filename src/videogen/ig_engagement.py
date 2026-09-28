@@ -164,11 +164,14 @@ def run_ig_engagement_pass(max_total: int = MAX_REPLIES_PER_PASS,
         return {"error": "no IG_TOKEN/IG_USER_ID"}
 
     ledger = _load_ledger()
+    ledger["last_run"] = datetime.now(timezone.utc).isoformat()
+    if not dry_run:
+        _save_ledger(ledger)
     already = set(ledger.get("replied", []))
 
     reels = _recent_reels(tok, uid, MAX_AGE_HOURS)
     if not reels:
-        return {"reels_checked": 0, "replied": 0}
+        return {"reels_checked": 0, "replied": 0, "last_run": ledger["last_run"]}
 
     replied_total = 0
     per_reel: dict[str, int] = {}

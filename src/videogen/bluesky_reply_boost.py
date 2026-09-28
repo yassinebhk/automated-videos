@@ -105,13 +105,16 @@ def run_bsky_reply_boost(dry_run: bool = True) -> dict:
         return {"error": "no BLUESKY_HANDLE/BLUESKY_APP_PASSWORD"}
 
     ledger = _load_ledger()
+    ledger["last_run"] = datetime.now(timezone.utc).isoformat()
+    if not dry_run:
+        _save_ledger(ledger)
     replied_ids = set(ledger.get("replied", []))
     today = datetime.now(timezone.utc).date().isoformat()
     day_count = ledger.get("day_count", {})
     used_today = day_count.get(today, 0)
 
     if used_today >= MAX_REPLIES_PER_DAY:
-        return {"skipped": "daily cap reached", "used_today": used_today}
+        return {"skipped": "daily cap reached", "used_today": used_today, "last_run": ledger["last_run"]}
 
     now = datetime.now(timezone.utc)
     cutoff = now - timedelta(hours=MAX_POST_AGE_HOURS)

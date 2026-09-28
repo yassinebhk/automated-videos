@@ -32,15 +32,21 @@ def _ledger_summary(path: Path) -> str:
         d = json.loads(path.read_text(encoding="utf-8"))
     except Exception as e:
         return f"⚠️  parse fail: {e}"
-    mt = datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc)
-    age = datetime.now(timezone.utc) - mt
-    hrs = age.total_seconds() / 3600
-    age_str = f"{hrs:.1f}h" if hrs < 24 else f"{age.days}d"
-    # Métricas útiles según ledger
+    # last_run del propio ledger (evidencia dura de que corrió, no mtime)
+    last_run = d.get("last_run")
+    age_str = "?"
+    if last_run:
+        try:
+            lr = datetime.fromisoformat(last_run)
+            age = datetime.now(timezone.utc) - lr
+            hrs = age.total_seconds() / 3600
+            age_str = f"{hrs:.1f}h" if hrs < 24 else f"{age.days}d"
+        except Exception:
+            pass
     replied = d.get("replied", [])
     cases = d.get("cases", {})
     day_count = d.get("day_count", {})
-    parts = [f"mtime: hace {age_str}"]
+    parts = [f"last_run: hace {age_str}"]
     if isinstance(replied, list):
         parts.append(f"replied: {len(replied)}")
     if isinstance(cases, dict) and cases:
