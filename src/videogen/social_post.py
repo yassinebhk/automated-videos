@@ -120,11 +120,23 @@ NICHE_STYLE["ia"] = NICHE_STYLE["ia_autonomos"]
 
 def _add_utm(url: str, platform: str) -> str:
     """Añade UTM tags al URL para medir funnel RRSS→YT en YouTube Analytics.
-    Sin platform → devuelve URL sin cambios. Idempotente."""
+    Sin platform → devuelve URL sin cambios. Idempotente.
+
+    Normaliza `youtu.be/{id}` → `youtube.com/watch?v={id}` porque el formato
+    corto con query params tiene comportamiento inconsistente en el unfurl
+    de algunos clientes RRSS (algunas plataformas fallan al mostrar preview
+    del vídeo si el URL es youtu.be/xyz?utm_source=...). El formato watch?v=
+    es el canónico y todos los clientes lo previsualizan bien.
+    """
     if not url or not platform:
         return url
     if "utm_source=" in url:
         return url
+    # Normaliza youtu.be → watch?v= para máxima compatibilidad con previews
+    import re as _re
+    m = _re.match(r"https?://youtu\.be/([\w-]+)/?$", url.strip())
+    if m:
+        url = f"https://www.youtube.com/watch?v={m.group(1)}"
     sep = "&" if "?" in url else "?"
     return f"{url}{sep}utm_source={platform}&utm_medium=social&utm_campaign=crosspost"
 
