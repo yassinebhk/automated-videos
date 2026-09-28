@@ -392,6 +392,15 @@
           "topic": "[ACTUALIDAD] Deuda pública de España: cómo se pasó de cero en 1975 a superar el 100% del PIB"
         }
       ]
+    },
+    "criptomonedas_origen": {
+      "count": 1,
+      "history": [
+        {
+          "ts": "2026-09-28T09:04:41.199101+00:00",
+          "topic": "[ACTUALIDAD] Satoshi Nakamoto: ¿cuánto vale hoy la pizza de 10.000 bitcoins que se compró en 2010?"
+        }
+      ]
     }
   }
 }
