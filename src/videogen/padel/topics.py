@@ -24,6 +24,7 @@ from . import manim_scene
 
 DYNAMIC_PATH = ROOT / "output" / "dynamic_topics_padel.json"
 REFRESH_INTERVAL_DAYS = 7  # semanal (antes 14 → se repetían ideas a las 2 sem)
+MAX_DYNAMIC = 150  # cap del pool dinámico acumulado (28/09: acumula, ya no sobrescribe)
 CTA = "Follow for more padel."
 
 # Fuentes de pádel para inspiración de temas frescos (foros/prensa del nicho).
@@ -262,8 +263,14 @@ def refresh_dynamic(n: int = 12) -> list[dict] | None:
         if len(topics) < 3:
             print(f"  padel topics: solo {len(topics)} generados — insuficiente")
             return None
-        _save_dynamic({"generated_at": datetime.now(timezone.utc).isoformat(), "topics": topics})
-        print(f"  padel topics: ✅ {len(topics)} frescos guardados")
+        # ACUMULA (no sobrescribe): el pool dinámico crece semana a semana en vez de
+        # churnear los mismos 12 → más variedad real. Dedup por key contra lo previo.
+        prev = _load_dynamic().get("topics", [])
+        prev_keys = {t.get("key") for t in prev}
+        merged = prev + [t for t in topics if t.get("key") and t["key"] not in prev_keys]
+        merged = merged[-MAX_DYNAMIC:]
+        _save_dynamic({"generated_at": datetime.now(timezone.utc).isoformat(), "topics": merged})
+        print(f"  padel topics: ✅ +{len(topics)} frescos (pool dinámico={len(merged)})")
         return topics
     except Exception as e:
         print(f"  padel topics refresh fail: {type(e).__name__}: {e}")

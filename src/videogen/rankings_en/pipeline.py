@@ -68,9 +68,36 @@ def _recently_used(key: str) -> bool:
 def _pick_topic() -> dict | None:
     all_t = topic_pool.all_topics()
     fresh = [t for t in all_t if not _recently_used(t["key"])]
+    # Si el pool fresco se agota, fuerza un refresh dinámico (specs nuevos) antes
+    # de rendirse a reutilizar — así el canal no se queda mudo por el guardarraíl.
+    if len(fresh) < 3:
+        try:
+            topic_pool.refresh_dynamic()
+            all_t = topic_pool.all_topics()
+            fresh = [t for t in all_t if not _recently_used(t["key"])]
+        except Exception as e:
+            print(f"  rankings-en: refresh on-empty fail ({e})")
+    # Anti-repeat SEMÁNTICO por título contra lo ya publicado (además del cooldown
+    # por key). El guardarraíl de subida es el backstop duro; esto evita gastar un
+    # render en algo que se va a bloquear. Ver [[dedup-semantico-titulo]].
+    try:
+        from .. import dedup_common
+        # Key del canal donde REALMENTE se publica (host fallback = YT_AITOOLS) →
+        # mismo criterio que el guardarraíl de subida.
+        host_prefix = YT_PREFIX if os.environ.get(YT_PREFIX + "_REFRESH_TOKEN") \
+            else os.environ.get("RANKINGS_EN_HOST_YT_PREFIX", "YT_AITOOLS").strip()
+        recents = []
+        for pk in {dedup_common.platform_key_for_prefix(host_prefix), "youtube_rankings"}:
+            recents += dedup_common.recent_titles_from_history(pk, days=180)
+        cand = [t for t in fresh
+                if not dedup_common.title_is_repeat(t.get("titulo") or t.get("title") or "", recents)]
+        if cand:
+            fresh = cand
+    except Exception as e:
+        print(f"  rankings-en: dedup título skip ({e})")
     if not fresh:
         fresh = all_t
-    return random.choice(fresh)
+    return random.choice(fresh) if fresh else None
 
 
 def _upload(meta: dict) -> dict | None:
