@@ -31,6 +31,9 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # CRÍTICO — needs encadenado: 5 jobs paralelos causan race en git push
+  # (todos intentan commitear ledger al mismo tiempo → ninguno persiste).
+  # Secuencial: cada uno espera al anterior. Total ~5 min (vs 2h del catchup).
   yt:
     if: ${{ inputs.which == 'all' || inputs.which == 'yt' }}
     uses: ./.github/workflows/_videogen-job.yml
@@ -39,28 +42,32 @@ jobs:
     secrets: inherit
 
   ig:
-    if: ${{ inputs.which == 'all' || inputs.which == 'ig' }}
+    if: ${{ always() && (inputs.which == 'all' || inputs.which == 'ig') }}
+    needs: [yt]
     uses: ./.github/workflows/_videogen-job.yml
     with:
       command: ig-engagement
     secrets: inherit
 
   threads:
-    if: ${{ inputs.which == 'all' || inputs.which == 'threads' }}
+    if: ${{ always() && (inputs.which == 'all' || inputs.which == 'threads') }}
+    needs: [ig]
     uses: ./.github/workflows/_videogen-job.yml
     with:
       command: threads-engagement
     secrets: inherit
 
   bsky:
-    if: ${{ inputs.which == 'all' || inputs.which == 'bsky' }}
+    if: ${{ always() && (inputs.which == 'all' || inputs.which == 'bsky') }}
+    needs: [threads]
     uses: ./.github/workflows/_videogen-job.yml
     with:
       command: bsky-reply-boost --live
     secrets: inherit
 
   playlists:
-    if: ${{ inputs.which == 'all' || inputs.which == 'playlists' }}
+    if: ${{ always() && (inputs.which == 'all' || inputs.which == 'playlists') }}
+    needs: [bsky]
     uses: ./.github/workflows/_videogen-job.yml
     with:
       command: playlists-catchup
