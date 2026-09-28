@@ -32,8 +32,11 @@ LEDGER_MAX = 500
 # Bsky es tolerante a bots educados que aportan valor (dato + fuente).
 MAX_REPLIES_PER_DAY = 8
 MIN_POST_LIKES = 8
-# Nuevo: priorizar hilos con conversación activa (más eyeballs por reply nuestra).
-MIN_POST_REPLIES = 3
+# Nuevo: priorizar hilos con al menos algo de conversación (evita hilos muertos
+# sin comment alguno). 28/09 bajado 3→1 tras ver que el ratio like/reply de Bsky
+# es alto — con >=3 replies muchos hilos con 8+ likes quedarían fuera y podría
+# matar el sistema. >=1 basta como señal mínima de que hay lectura activa.
+MIN_POST_REPLIES = 1
 MAX_AUTHOR_FOLLOWERS = 5000
 MAX_POST_AGE_HOURS = 24
 
