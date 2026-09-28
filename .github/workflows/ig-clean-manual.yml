@@ -6,8 +6,16 @@ name: IG clean manual
 on:
   workflow_dispatch:
     inputs:
+      not_whitelisted:
+        description: "true = borra TODO reel cuyo slug NO empiece por whitelist (waitwhy/criminopatia/legal/ayudas/pov/trabajos). Recomendado para limpieza histórica anti-mix."
+        required: true
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
       filter:
-        description: "Substring del slug (ej. 'padel', 'fractal', 'motor'). Vacío = TODOS los reels"
+        description: "Alternativa a not_whitelisted: substring del slug (ej. 'padel', 'fractal', 'motor'). Vacío = TODOS los reels"
         required: false
         default: ""
         type: string
@@ -34,6 +42,7 @@ jobs:
     with:
       command: ig-clean
       extra_env: |
+        IG_CLEAN_NOT_WHITELISTED=${{ inputs.not_whitelisted }}
         IG_CLEAN_FILTER=${{ inputs.filter }}
         IG_CLEAN_OLDER_DAYS=${{ inputs.older_than_days }}
         IG_CLEAN_DRY_RUN=${{ inputs.dry_run }}

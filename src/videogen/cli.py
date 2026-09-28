@@ -1152,6 +1152,7 @@ def ig_clean_cmd(filter_: str, not_whitelisted: bool, older_than_days: int,
     env_filter = _os.environ.get("IG_CLEAN_FILTER", "").strip()
     env_older = _os.environ.get("IG_CLEAN_OLDER_DAYS", "").strip()
     env_dry = _os.environ.get("IG_CLEAN_DRY_RUN", "").strip().lower()
+    env_nwl = _os.environ.get("IG_CLEAN_NOT_WHITELISTED", "").strip().lower()
     if env_filter: filter_ = env_filter
     if env_older:
         try: older_than_days = int(env_older)
@@ -1161,6 +1162,8 @@ def ig_clean_cmd(filter_: str, not_whitelisted: bool, older_than_days: int,
     elif env_dry in ("false", "0", "no"):
         dry_run = False
         yes = True  # workflow dispatch → auto-confirm si dry=false explícito
+    if env_nwl in ("true", "1", "yes"):
+        not_whitelisted = True
 
     if not IG_LOG_PATH.exists():
         console.print("[red]No hay log IG local[/]")

@@ -30,11 +30,12 @@ from typing import Any
 # Free tier = 20 req/día PER MODEL → 4 modelos = ~80 req/día antes de saturar todos.
 # 23/09/26: fuera la familia 1.5 (gemini-1.5-flash y -8b) — Google la retiró y devolvía
 # 404 NOT_FOUND (ensuciaba la cascada y hacía un round-trip inútil en cada fallo total).
-# En su lugar 'gemini-flash-latest' (alias válido, ya usado en ideas/script/graphics).
+# 28/09/26: mismo con gemini-2.0-flash (404 NOT_FOUND, Google sugiere gemini-3.8-flash).
+# Verificado con ping: 3.5-flash, 3.5-flash-lite, 3.8-flash y flash-latest siguen vivos.
 GEMINI_MODELS = [
     "gemini-3.5-flash",
     "gemini-3.5-flash-lite",
-    "gemini-2.0-flash",
+    "gemini-3.8-flash",
     "gemini-flash-latest",
 ]
 # OpenRouter modelos :free (rotación por si uno rate-limita)
