@@ -162,14 +162,26 @@ def _reply_to_mention(tok: str, uid: str, mention_id: str, text: str) -> Optiona
 
 
 def run_threads_engagement_pass(dry_run: bool = False) -> dict:
-    tok, uid = _creds()
-    if not (tok and uid):
-        return {"error": "no THREADS_TOKEN/THREADS_USER_ID"}
-
+    """Wrap try/except global — nunca propaga exit 1."""
     ledger = _load_ledger()
     ledger["last_run"] = datetime.now(timezone.utc).isoformat()
     if not dry_run:
-        _save_ledger(ledger)
+        try:
+            _save_ledger(ledger)
+        except Exception as e:
+            print(f"  threads-eng: save early ledger fail {e}")
+    try:
+        return _run_threads_engagement_pass_impl(dry_run, ledger)
+    except Exception as e:
+        import traceback; traceback.print_exc()
+        return {"error": f"crash: {type(e).__name__}: {str(e)[:200]}",
+                "last_run": ledger["last_run"]}
+
+
+def _run_threads_engagement_pass_impl(dry_run: bool, ledger: dict) -> dict:
+    tok, uid = _creds()
+    if not (tok and uid):
+        return {"error": "no THREADS_TOKEN/THREADS_USER_ID", "last_run": ledger["last_run"]}
     replied_ids = set(ledger.get("replied", []))
     today = datetime.now(timezone.utc).date().isoformat()
     day_count = ledger.get("day_count", {})

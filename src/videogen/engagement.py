@@ -172,20 +172,29 @@ def _pick_reply(idx: int) -> str:
 
 def run_engagement_pass(max_total: int = MAX_REPLIES_PER_PASS,
                         dry_run: bool = False) -> dict:
-    """Ejecuta un pase de auto-reply. Devuelve dict con contadores."""
-    tok = _access_token()
-    if not tok:
-        return {"error": "no token"}
-    ch_id = _channel_id(tok)
-    if not ch_id:
-        return {"error": "no channel_id"}
-
+    """Ejecuta un pase de auto-reply. Wrap try/except global."""
     ledger = _load_ledger()
-    # Touch last_run + save inmediato → ledger existe aunque salgamos early por
-    # falta de videos/comentarios. Sin esto, es imposible saber si el pase corrió.
     ledger["last_run"] = datetime.now(timezone.utc).isoformat()
     if not dry_run:
-        _save_ledger(ledger)
+        try:
+            _save_ledger(ledger)
+        except Exception as e:
+            print(f"  engagement: save early ledger fail {e}")
+    try:
+        return _run_engagement_pass_impl(max_total, dry_run, ledger)
+    except Exception as e:
+        import traceback; traceback.print_exc()
+        return {"error": f"crash: {type(e).__name__}: {str(e)[:200]}",
+                "last_run": ledger["last_run"]}
+
+
+def _run_engagement_pass_impl(max_total: int, dry_run: bool, ledger: dict) -> dict:
+    tok = _access_token()
+    if not tok:
+        return {"error": "no token", "last_run": ledger["last_run"]}
+    ch_id = _channel_id(tok)
+    if not ch_id:
+        return {"error": "no channel_id", "last_run": ledger["last_run"]}
     already = set(ledger.get("replied", []))
 
     video_ids = _recent_video_ids(tok, MIN_AGE_HOURS, MAX_AGE_HOURS)

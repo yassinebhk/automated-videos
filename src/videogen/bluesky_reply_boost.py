@@ -96,18 +96,36 @@ def _pick_reply(idx: int) -> str:
 
 
 def run_bsky_reply_boost(dry_run: bool = True) -> dict:
-    """Ejecuta un pase de reply-boost. Dry-run por defecto (safe)."""
-    try:
-        c = _client()
-    except Exception as e:
-        return {"error": f"auth fail: {e}"}
-    if not c:
-        return {"error": "no BLUESKY_HANDLE/BLUESKY_APP_PASSWORD"}
-
+    """Ejecuta un pase de reply-boost. Dry-run por defecto (safe).
+    Cualquier exception se captura y se devuelve como dict — nunca propaga
+    exit 1 al workflow. Ledger.last_run se guarda ANTES de operaciones
+    de red para dejar evidencia de ejecución incluso si el módulo crashea."""
+    # Paso 1: last_run ANTES de nada (evidencia dura de ejecución)
     ledger = _load_ledger()
     ledger["last_run"] = datetime.now(timezone.utc).isoformat()
     if not dry_run:
-        _save_ledger(ledger)
+        try:
+            _save_ledger(ledger)
+        except Exception as e:
+            print(f"  bsky-boost: save early ledger fail {e}")
+
+    try:
+        return _run_bsky_reply_boost_impl(dry_run, ledger)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return {"error": f"crash: {type(e).__name__}: {str(e)[:200]}",
+                "last_run": ledger["last_run"]}
+
+
+def _run_bsky_reply_boost_impl(dry_run: bool, ledger: dict) -> dict:
+    try:
+        c = _client()
+    except Exception as e:
+        return {"error": f"auth fail: {e}", "last_run": ledger["last_run"]}
+    if not c:
+        return {"error": "no BLUESKY_HANDLE/BLUESKY_APP_PASSWORD", "last_run": ledger["last_run"]}
+
     replied_ids = set(ledger.get("replied", []))
     today = datetime.now(timezone.utc).date().isoformat()
     day_count = ledger.get("day_count", {})
