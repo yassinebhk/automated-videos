@@ -1556,8 +1556,10 @@ def padel_once_cmd():
     from .padel import pipeline
     result = pipeline.run_once()
     print(json.dumps(result, indent=2, ensure_ascii=False))
+    # Canal pre-cableado (hospeda en TopRanking). Soft-fail: si el dedup bloquea un
+    # tip repetido o falla la subida, no tumba el catchup.
     if result.get("status") not in ("ok", "disabled"):
-        raise SystemExit(1)
+        print(f"⚠️ padel no-fatal: status={result.get('status')} (no rompe el run)")
 
 
 @cli.command(name="precache-scripts")

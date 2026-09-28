@@ -193,6 +193,27 @@ def upload_video(
         status["privacyStatus"] = "private"
         status["publishAt"] = publish_at
 
+    # ── GUARDARRAÍL DE DEDUP (premisa DURA del usuario: NUNCA repetir vídeos exactos) ──
+    # Bloquea subir un vídeo cuyo título repita uno ya publicado en ESTE canal
+    # (dedup semántico contra stats_history persistente — no depende del ledger, que
+    # puede no persistir en carreras de commit). FAIL-OPEN solo si el chequeo peta
+    # (no bloquear por un error), pero BLOQUEA repeticiones confirmadas. Toggle:
+    # DEDUP_UPLOAD_GUARD=0. Los pipelines cazan esta excepción → saltan la subida
+    # duplicada sin romper el run.
+    if privacy == "public" and _os_scopes.environ.get("DEDUP_UPLOAD_GUARD", "1").lower() not in ("0", "false", "no"):
+        try:
+            from . import dedup_common
+            _pref = _channel_prefix()
+            _pkey = "youtube" if not _pref else dedup_common.platform_key_for_prefix(_pref)
+            _dup = dedup_common.title_is_repeat(title, dedup_common.recent_titles_from_history(_pkey, days=180))
+        except Exception as e:
+            print(f"  dedup-guard: chequeo falló ({type(e).__name__}) → permito la subida")
+            _dup = False
+        if _dup:
+            raise RuntimeError(
+                f"DEDUP: '{title[:70]}' ya publicado en {_pkey} — NO subo duplicado. "
+                f"Premisa: nunca repetir vídeos exactos; el pool de este canal necesita temas frescos.")
+
     # Funnel YouTube → Telegram: link del canal de difusión en la 1ª línea de la
     # descripción (recomendación research: arriba del "mostrar más"). Solo si está
     # configurado y no está ya puesto. Da una razón para saltar (casos + fuentes).
