@@ -2,19 +2,6 @@
   {
     "slug": "padel_tactic_drop_shot_20260921_082343",
     "title": "The Drop Shot — Padel Tactics #padel #shorts",
-    "status": "fail_container_ready",
-    "container_id": "18096090902188569",
-    "public_url": "https://yassinebhk.github.io/automated-videos/reels/padel_tactic_drop_shot_20260921_082343.mp4",
-    "attempts": 4,
-    "catbox_status": "rc=412 body=Invalid uploader",
-    "status_ext": "ERROR",
-    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
-    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18096090902188569'}",
-    "ts": "2026-09-21T08:39:45.996769+00:00"
-  },
-  {
-    "slug": "padel_tactic_drop_shot_20260921_082343",
-    "title": "The Drop Shot — Padel Tactics #padel #shorts",
     "status": "ok",
     "media_id": "17920995879429378",
     "url": "https://instagram.com/reel/17920995879429378",
@@ -816,5 +803,13 @@
     "media_id": "17973965640133448",
     "url": "https://instagram.com/reel/17973965640133448",
     "ts": "2026-09-29T17:01:34.718016+00:00"
+  },
+  {
+    "slug": "top-3-pilar-albarracin-premio-2026",
+    "title": "3 Obras disruptivas que te consagran · 2026 · #1",
+    "status": "ok",
+    "media_id": "18492339364101958",
+    "url": "https://instagram.com/reel/18492339364101958",
+    "ts": "2026-09-29T19:34:41.168342+00:00"
   }
 ]
