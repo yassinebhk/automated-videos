@@ -247,19 +247,29 @@ def snapshot_instagram() -> list[dict]:
             views = 0
             if m.get("media_type") in ("VIDEO", "REELS"):
                 try:
-                    ins = requests.get(
+                    r_ins = requests.get(
                         f"{base}/{mid}/insights",
                         params={"metric": "plays,reach", "access_token": token},
                         timeout=10,
-                    ).json()
-                    # v21 devuelve {data:[{name:'plays', values:[{value:N}]}, ...]}
-                    for item in (ins.get("data") or []):
-                        if item.get("name") == "plays":
-                            vs = item.get("values") or []
-                            if vs:
-                                views = int(vs[0].get("value") or 0)
-                                break
-                except Exception:
+                    )
+                    if r_ins.status_code != 200:
+                        # Log el error específico (una sola vez por snapshot es OK
+                        # el runner captura stdout y podemos ver el motivo real
+                        # en logs Actions). Sin esto, un fallo por scope se traga
+                        # como views=0 → 441 reels a 0 sin saber por qué.
+                        body = r_ins.text[:220].replace("\n", " ")
+                        print(f"  ig-analytics: /insights fail HTTP {r_ins.status_code} — {body}")
+                    else:
+                        ins = r_ins.json()
+                        # v21 devuelve {data:[{name:'plays', values:[{value:N}]}, ...]}
+                        for item in (ins.get("data") or []):
+                            if item.get("name") == "plays":
+                                vs = item.get("values") or []
+                                if vs:
+                                    views = int(vs[0].get("value") or 0)
+                                    break
+                except Exception as e:
+                    print(f"  ig-analytics: /insights exception {type(e).__name__}: {e}")
                     views = 0  # fallback: no bloquea el snapshot
             rows.append({
                 "platform": "instagram", "kind": "video",
