@@ -226,11 +226,15 @@
       ]
     },
     "millet": {
-      "count": 1,
+      "count": 2,
       "history": [
         {
           "ts": "2026-08-28T18:09:28.746467+00:00",
           "topic": "Millet y el saqueo del Palau: cómo 26 millones de euros desaparecieron del templo de la música catalana, con sentencia firme en 2018."
+        },
+        {
+          "ts": "2026-09-29T13:09:01.226726+00:00",
+          "topic": "Félix Millet y el saqueo del Palau de la Música: 26 millones de euros desviados y 9 años de cárcel"
         }
       ]
     },
