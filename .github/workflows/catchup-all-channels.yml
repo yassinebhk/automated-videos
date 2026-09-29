@@ -270,3 +270,14 @@ jobs:
     with:
       command: playlists-catchup
     secrets: inherit
+
+  # Snapshot analytics + dashboard piggyback aquí (fix 29/09): antes solo
+  # dependía del cron GH interno de snapshot.yml (poco fiable). Vía este
+  # catchup queda garantizado 4×/día por cron-job.org.
+  snapshot_metrics:
+    if: ${{ always() && (inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts') }}
+    needs: [playlists_sync]
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: snapshot
+    secrets: inherit
