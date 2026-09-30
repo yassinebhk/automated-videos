@@ -1,12 +1,8 @@
 {
   "cases": {
     "kio": {
-      "count": 21,
+      "count": 22,
       "history": [
-        {
-          "ts": "2026-09-12T10:23:14.832606+00:00",
-          "topic": "[CRIMEN] KIO: el fraude en bolsa que costó 300 millones de euros y salpicó a la familia real saudí"
-        },
         {
           "ts": "2026-09-13T11:24:21.214343+00:00",
           "topic": "[CRIMEN] KIO: El fraude bursátil de 300 millones de euros que hizo temblar la bolsa española en el año 2000"
@@ -42,6 +38,10 @@
         {
           "ts": "2026-09-30T09:05:02.283251+00:00",
           "topic": "KIO: el fraude bursátil de 300 millones de euros que sacudió la economía española en el año 2000"
+        },
+        {
+          "ts": "2026-09-30T12:32:09.166245+00:00",
+          "topic": "Torres KIO: el fraude bursátil de 300 millones de euros que sacudió España en los años 90"
         }
       ]
     },
