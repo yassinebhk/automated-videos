@@ -1,12 +1,8 @@
 {
   "cases": {
     "kio": {
-      "count": 20,
+      "count": 21,
       "history": [
-        {
-          "ts": "2026-09-11T10:32:40.489482+00:00",
-          "topic": "[CRIMEN] El Caso KIO: la justicia sentenció a 6 años a los responsables del fraude millonario que vació la bolsa española en los 90"
-        },
         {
           "ts": "2026-09-12T10:23:14.832606+00:00",
           "topic": "[CRIMEN] KIO: el fraude en bolsa que costó 300 millones de euros y salpicó a la familia real saudí"
@@ -42,6 +38,10 @@
         {
           "ts": "2026-09-27T15:41:06.903173+00:00",
           "topic": "KIO: el fraude bursátil de 300 millones de euros que sacudió España en el año 2000"
+        },
+        {
+          "ts": "2026-09-30T09:05:02.283251+00:00",
+          "topic": "KIO: el fraude bursátil de 300 millones de euros que sacudió la economía española en el año 2000"
         }
       ]
     },
