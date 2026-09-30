@@ -2,19 +2,6 @@
   {
     "slug": "plasma_plasma_magma_20260921_111952",
     "title": "Flowing Plasma Waves #satisfying #shorts",
-    "status": "fail_container_ready",
-    "container_id": "18096103289188569",
-    "public_url": "https://yassinebhk.github.io/automated-videos/reels/plasma_plasma_magma_20260921_111952.mp4",
-    "attempts": 4,
-    "catbox_status": "rc=412 body=Invalid uploader",
-    "status_ext": "ERROR",
-    "error_message": "Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found",
-    "full": "{'status_code': 'ERROR', 'status': 'ERROR', 'error_message': 'Media download has failed.: The media could not be fetched from the provided URI. Video download failed with: HTTP error code 404. Not Found', 'id': '18096103289188569'}",
-    "ts": "2026-09-21T11:37:36.451812+00:00"
-  },
-  {
-    "slug": "plasma_plasma_magma_20260921_111952",
-    "title": "Flowing Plasma Waves #satisfying #shorts",
     "status": "ok",
     "media_id": "18111259277029012",
     "url": "https://instagram.com/reel/18111259277029012",
@@ -796,5 +783,13 @@
     "media_id": "18093493559541868",
     "url": "https://instagram.com/reel/18093493559541868",
     "ts": "2026-09-30T17:00:23.154175+00:00"
+  },
+  {
+    "slug": "la-literatura-y-la-realidad-de-cuba_teaser",
+    "title": "ANÁLISIS: La literatura y la realidad de Cuba · 7 min",
+    "status": "ok",
+    "media_id": "17912508267496509",
+    "url": "https://instagram.com/reel/17912508267496509",
+    "ts": "2026-09-30T17:59:53.648198+00:00"
   }
 ]
