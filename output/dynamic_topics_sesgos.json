@@ -1,0 +1,89 @@
+{
+  "generated_at": "2026-10-02T20:28:46.044798+00:00",
+  "topics": [
+    {
+      "key": "efecto_arrastre",
+      "titulo": "Efecto arrastre: por qué compras algo solo porque otros lo hacen",
+      "hook": "¿Por qué un restaurante con fila vacía te parece sospechoso aunque tengas hambre?",
+      "angle": "Explicar el efecto de arrastre o mentalidad de rebaño estudiado por Solomon Asch en sus experimentos de conformidad social de 1951.",
+      "visual": "multitud caminando calle, neon lights, close up reloj, cinematic drone"
+    },
+    {
+      "key": "ilusion_de_control",
+      "titulo": "Ilusión de control: por qué soplas más fuerte en los dados",
+      "hook": "Soplas los dados con fuerza creyendo que cambiará el número, pero las matemáticas se ríen de ti.",
+      "angle": "Analizar la ilusión de control documentada por Ellen Langer en 1975, donde las personas confunden azar con habilidad.",
+      "visual": "casino ruleta, manos tirando dados, macro shot luz de neón, dark moody atmosphere"
+    },
+    {
+      "key": "efecto_dotacion",
+      "titulo": "Efecto dotación: por qué sobrevaloras lo que es tuyo",
+      "hook": "Esa taza vieja vale dos euros para cualquiera, pero para ti vale oro solo porque lleva tu nombre.",
+      "angle": "Desglosar el efecto dotación demostrado por Daniel Kahneman, Jack Knetsch y Richard Thaler en 1990 sobre la asimetría de valor.",
+      "visual": "persona mirando taza vieja, manos con objetos antiguos, warm lighting, close up emotion"
+    },
+    {
+      "key": "descuento_hiperbolico",
+      "titulo": "Descuento hiperbólico: por qué arruinas tu futuro por cinco minutos de placer",
+      "hook": "Prefieres diez euros hoy que cien la semana que viene, y tu cerebro biológico es el culpable.",
+      "angle": "Explicar el descuento hiperbólico en economía conductual, señalando cómo valoramos desproporcionadamente la recompensa inmediata frente a la futura.",
+      "visual": "persona comiendo comida rapida, telefono movil notificaciones, reloj corriendo, cinematic low light"
+    },
+    {
+      "key": "sesgo_de_proyeccion",
+      "titulo": "Sesgo de proyección: por qué compras comida con hambre y te arrepientes",
+      "hook": "Fuiste al supermercado con hambre y ahora tu refrigerador está lleno de cosas que odiarás mañana.",
+      "angle": "Profundizar en el sesgo de proyección descrito por George Loewenstein, Ted O'Donoghue y Matthew Rabin sobre cómo nuestro estado actual distorsiona nuestras decisiones futuras.",
+      "visual": "supermercado pasillos vacios, carrito lleno de snacks, neon store lights, slow motion"
+    },
+    {
+      "key": "maldicion_del_conocimiento",
+      "titulo": "La maldición del conocimiento: por qué los expertos no se entienden con nadie",
+      "hook": "Cuando sabes algo muy bien, te es físicamente imposible imaginar lo que se siente al ignorarlo.",
+      "angle": "Analizar la maldición del conocimiento documentada por Colin Camerer, George Loewenstein y Martin Weber en 1989 sobre la asimetría de información.",
+      "visual": "cientifico explicando pizarra, alumno confundido, cinematic lab lighting, macro focus"
+    },
+    {
+      "key": "falacia_de_planificacion",
+      "titulo": "La falacia de planificación: por qué tus proyectos siempre duran el doble",
+      "hook": "Prometiste terminar el trabajo en una hora, y tres horas después sigues en la introducción.",
+      "angle": "Explicar la falacia de planificación acuñada por Daniel Kahneman y Amos Tversky en 1979, analizando por qué subestimamos sistemáticamente tiempos y costes.",
+      "visual": "persona estresada ordenador, reloj de pared nocturno, cafe frio, dark room cinematic"
+    },
+    {
+      "key": "efecto_espectador",
+      "titulo": "El efecto espectador: por qué nadie ayuda cuando alguien lo necesita",
+      "hook": "Si hay cien personas viendo una emergencia, es estadísticamente más probable que nadie mueva un dedo.",
+      "angle": "Desglosar el efecto espectador estudiado por John Darley y Bibb Latané tras el caso de Kitty Genovese en 1964.",
+      "visual": "multitud calle transitada, persona sola sentada, rainy city night, cinematic moody"
+    },
+    {
+      "key": "heuristica_del_esfuerzo",
+      "titulo": "Heurística del esfuerzo: por qué crees que lo caro siempre es mejor",
+      "hook": "Si algo tardó un segundo en fabricarse, tu cerebro asume que es una basura inservible.",
+      "angle": "Explicar cómo evaluamos la calidad en función del esfuerzo percibido, basado en la investigación de behavioral pricing.",
+      "visual": "reloj de lujo ensamblandose, manos artesano, macro lens light reflection, premium studio lighting"
+    },
+    {
+      "key": "efecto_cita_previa",
+      "titulo": "Efecto de mera exposicion: por qué te termina gustando esa canción odiosa",
+      "hook": "La primera vez que la escuchaste la detestaste, pero tras escucharla diez veces ya la estás tarareando.",
+      "angle": "Analizar el efecto de mera exposición demostrado por Robert Zajonc en 1968 sobre la familiaridad y el agrado.",
+      "visual": "altavoz vibrando, ondas de sonido abstractas, neon colors, cinematic abstract motion"
+    },
+    {
+      "key": "ceguera_al_cambio",
+      "titulo": "Ceguera al cambio: por qué no ves lo obvio frente a tus ojos",
+      "hook": "Te acaban de cambiar la persona con la que hablas y tu cerebro ni siquiera se ha dado cuenta.",
+      "angle": "Explicar la ceguera al cambio en psicología cognitiva, basada en los clásicos experimentos de Daniel Simons y Christopher Chabris.",
+      "visual": "persona parpadeando, transicion rapida de rostros, blur effect, mysterious aesthetic"
+    },
+    {
+      "key": "sesgo_de_impacto",
+      "titulo": "Sesgo de impacto: por qué exageras lo mal que te sentará una tragedia",
+      "hook": "Crees que si pierdes tu trabajo tu vida se acaba, pero la ciencia dice que te adaptarás antes de lo que piensas.",
+      "angle": "Examinar el sesgo de impacto en la investigación sobre afecto pronosticado por Daniel Gilbert y Timothy Wilson.",
+      "visual": "persona mirando por ventana, lluvia cayendo en cristal, luz calida interior, cinematic depth"
+    }
+  ]
+}
