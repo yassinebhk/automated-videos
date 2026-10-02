@@ -121,6 +121,28 @@ jobs:
           YT_AITOOLS_REFRESH_TOKEN: ${{ secrets.YT_AITOOLS_REFRESH_TOKEN }}
           YT_AITOOLS_CLIENT_ID:     ${{ secrets.YT_AITOOLS_CLIENT_ID }}
           YT_AITOOLS_CLIENT_SECRET: ${{ secrets.YT_AITOOLS_CLIENT_SECRET }}
+          # Canales nuevos (tanda 02/10) — necesarios para que suban (secrets: inherit no basta)
+          YT_STOIC_REFRESH_TOKEN:        ${{ secrets.YT_STOIC_REFRESH_TOKEN }}
+          YT_STOIC_CLIENT_ID:            ${{ secrets.YT_STOIC_CLIENT_ID }}
+          YT_STOIC_CLIENT_SECRET:        ${{ secrets.YT_STOIC_CLIENT_SECRET }}
+          YT_MISTERIOS_REFRESH_TOKEN:    ${{ secrets.YT_MISTERIOS_REFRESH_TOKEN }}
+          YT_MISTERIOS_CLIENT_ID:        ${{ secrets.YT_MISTERIOS_CLIENT_ID }}
+          YT_MISTERIOS_CLIENT_SECRET:    ${{ secrets.YT_MISTERIOS_CLIENT_SECRET }}
+          YT_SESGOS_REFRESH_TOKEN:       ${{ secrets.YT_SESGOS_REFRESH_TOKEN }}
+          YT_SESGOS_CLIENT_ID:           ${{ secrets.YT_SESGOS_CLIENT_ID }}
+          YT_SESGOS_CLIENT_SECRET:       ${{ secrets.YT_SESGOS_CLIENT_SECRET }}
+          YT_FILOSOFIA_REFRESH_TOKEN:    ${{ secrets.YT_FILOSOFIA_REFRESH_TOKEN }}
+          YT_FILOSOFIA_CLIENT_ID:        ${{ secrets.YT_FILOSOFIA_CLIENT_ID }}
+          YT_FILOSOFIA_CLIENT_SECRET:    ${{ secrets.YT_FILOSOFIA_CLIENT_SECRET }}
+          YT_CURIOSIDADES_REFRESH_TOKEN: ${{ secrets.YT_CURIOSIDADES_REFRESH_TOKEN }}
+          YT_CURIOSIDADES_CLIENT_ID:     ${{ secrets.YT_CURIOSIDADES_CLIENT_ID }}
+          YT_CURIOSIDADES_CLIENT_SECRET: ${{ secrets.YT_CURIOSIDADES_CLIENT_SECRET }}
+          YT_ESPACIO_REFRESH_TOKEN:      ${{ secrets.YT_ESPACIO_REFRESH_TOKEN }}
+          YT_ESPACIO_CLIENT_ID:          ${{ secrets.YT_ESPACIO_CLIENT_ID }}
+          YT_ESPACIO_CLIENT_SECRET:      ${{ secrets.YT_ESPACIO_CLIENT_SECRET }}
+          YT_GEOQUIZ_REFRESH_TOKEN:      ${{ secrets.YT_GEOQUIZ_REFRESH_TOKEN }}
+          YT_GEOQUIZ_CLIENT_ID:          ${{ secrets.YT_GEOQUIZ_CLIENT_ID }}
+          YT_GEOQUIZ_CLIENT_SECRET:      ${{ secrets.YT_GEOQUIZ_CLIENT_SECRET }}
           YT_RANKINGS_REFRESH_TOKEN: ${{ secrets.YT_RANKINGS_REFRESH_TOKEN }}
           YT_RANKINGS_CLIENT_ID:     ${{ secrets.YT_RANKINGS_CLIENT_ID }}
           YT_RANKINGS_CLIENT_SECRET: ${{ secrets.YT_RANKINGS_CLIENT_SECRET }}
@@ -305,6 +327,28 @@ jobs:
           YT_AITOOLS_REFRESH_TOKEN: ${{ secrets.YT_AITOOLS_REFRESH_TOKEN }}
           YT_AITOOLS_CLIENT_ID:     ${{ secrets.YT_AITOOLS_CLIENT_ID }}
           YT_AITOOLS_CLIENT_SECRET: ${{ secrets.YT_AITOOLS_CLIENT_SECRET }}
+          # Canales nuevos (tanda 02/10) — necesarios para que suban (secrets: inherit no basta)
+          YT_STOIC_REFRESH_TOKEN:        ${{ secrets.YT_STOIC_REFRESH_TOKEN }}
+          YT_STOIC_CLIENT_ID:            ${{ secrets.YT_STOIC_CLIENT_ID }}
+          YT_STOIC_CLIENT_SECRET:        ${{ secrets.YT_STOIC_CLIENT_SECRET }}
+          YT_MISTERIOS_REFRESH_TOKEN:    ${{ secrets.YT_MISTERIOS_REFRESH_TOKEN }}
+          YT_MISTERIOS_CLIENT_ID:        ${{ secrets.YT_MISTERIOS_CLIENT_ID }}
+          YT_MISTERIOS_CLIENT_SECRET:    ${{ secrets.YT_MISTERIOS_CLIENT_SECRET }}
+          YT_SESGOS_REFRESH_TOKEN:       ${{ secrets.YT_SESGOS_REFRESH_TOKEN }}
+          YT_SESGOS_CLIENT_ID:           ${{ secrets.YT_SESGOS_CLIENT_ID }}
+          YT_SESGOS_CLIENT_SECRET:       ${{ secrets.YT_SESGOS_CLIENT_SECRET }}
+          YT_FILOSOFIA_REFRESH_TOKEN:    ${{ secrets.YT_FILOSOFIA_REFRESH_TOKEN }}
+          YT_FILOSOFIA_CLIENT_ID:        ${{ secrets.YT_FILOSOFIA_CLIENT_ID }}
+          YT_FILOSOFIA_CLIENT_SECRET:    ${{ secrets.YT_FILOSOFIA_CLIENT_SECRET }}
+          YT_CURIOSIDADES_REFRESH_TOKEN: ${{ secrets.YT_CURIOSIDADES_REFRESH_TOKEN }}
+          YT_CURIOSIDADES_CLIENT_ID:     ${{ secrets.YT_CURIOSIDADES_CLIENT_ID }}
+          YT_CURIOSIDADES_CLIENT_SECRET: ${{ secrets.YT_CURIOSIDADES_CLIENT_SECRET }}
+          YT_ESPACIO_REFRESH_TOKEN:      ${{ secrets.YT_ESPACIO_REFRESH_TOKEN }}
+          YT_ESPACIO_CLIENT_ID:          ${{ secrets.YT_ESPACIO_CLIENT_ID }}
+          YT_ESPACIO_CLIENT_SECRET:      ${{ secrets.YT_ESPACIO_CLIENT_SECRET }}
+          YT_GEOQUIZ_REFRESH_TOKEN:      ${{ secrets.YT_GEOQUIZ_REFRESH_TOKEN }}
+          YT_GEOQUIZ_CLIENT_ID:          ${{ secrets.YT_GEOQUIZ_CLIENT_ID }}
+          YT_GEOQUIZ_CLIENT_SECRET:      ${{ secrets.YT_GEOQUIZ_CLIENT_SECRET }}
           YT_RANKINGS_REFRESH_TOKEN: ${{ secrets.YT_RANKINGS_REFRESH_TOKEN }}
           YT_RANKINGS_CLIENT_ID:     ${{ secrets.YT_RANKINGS_CLIENT_ID }}
           YT_RANKINGS_CLIENT_SECRET: ${{ secrets.YT_RANKINGS_CLIENT_SECRET }}
