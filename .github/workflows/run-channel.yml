@@ -1,0 +1,23 @@
+name: Run one channel (manual)
+
+# Ejecuta UN comando de canal a demanda (subida REAL si tiene secrets). Útil para
+# validar un canal recién activado sin esperar al catchup. Ej. command:
+#   stoic-once · geoquiz-once · batch-once --slug espacio · ai-tools-once
+
+on:
+  workflow_dispatch:
+    inputs:
+      command:
+        description: "Comando videogen a ejecutar"
+        required: true
+        default: "stoic-once"
+
+permissions:
+  contents: write
+
+jobs:
+  run:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: ${{ inputs.command }}
+    secrets: inherit
