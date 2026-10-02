@@ -1,0 +1,113 @@
+{
+  "generated_at": "2026-10-02T10:52:16.185398+00:00",
+  "topics": [
+    {
+      "key": "inbox_zero_anxiety",
+      "stoic": "Seneca",
+      "principle": "tranquilitas",
+      "stressor": "email notifications and constant availability",
+      "hook": "Your phone buzzes at 11 PM with a Slack ping, instantly spiking your heart rate.",
+      "titulo": "Why Constant Notifications Destroy Peace (A Seneca Guide)",
+      "visual": "dark desk, smartphone glow, shadows, rain outside"
+    },
+    {
+      "key": "career_pivot_dread",
+      "stoic": "Epictetus",
+      "principle": "dichotomy of control",
+      "stressor": "starting over in a new industry at thirty",
+      "hook": "You stare at a blank resume, terrified you made a massive mistake leaving your safe job.",
+      "titulo": "Starting Over Late? The Stoic Reality Check",
+      "visual": "foggy city street, lone traveler, dim streetlights, stone architecture"
+    },
+    {
+      "key": "remote_work_isolation",
+      "stoic": "Marcus Aurelius",
+      "principle": "inner citadel",
+      "stressor": "working entirely alone from a cramped apartment for months",
+      "hook": "Three days pass without speaking another word out loud as you stare at a laptop screen.",
+      "titulo": "How to Stay Sane Working Alone (Marcus Aurelius Method)",
+      "visual": "empty apartment, single candle, dark shadows, solitary statue"
+    },
+    {
+      "key": "algorithmic_envy",
+      "stoic": "Musonius Rufus",
+      "principle": "simplicity",
+      "stressor": "seeing peers buy luxury items funded by questionable ventures online",
+      "hook": "You watch a twenty-two-year-old flaunt a sports car on your feed while you budget for groceries.",
+      "titulo": "The Stoic Antidote to Modern Financial Envy",
+      "visual": "dark minimalist room, shattered mirror, moonlight, marble bust"
+    },
+    {
+      "key": "unsolicited_feedback_dread",
+      "stoic": "Seneca",
+      "principle": "objective judgment",
+      "stressor": "receiving a passive-aggressive performance review from an insecure manager",
+      "hook": "Your stomach drops as you read an evaluation filled with vague, uncharitable critiques.",
+      "titulo": "How to Handle Toxic Performance Reviews Like Seneca",
+      "visual": "dark office, harsh desk lamp, heavy shadows, old parchment"
+    },
+    {
+      "key": "burnout_side_hustle",
+      "stoic": "Zeno",
+      "principle": "living in accordance with nature",
+      "stressor": "working two jobs plus a monetization project until exhaustion",
+      "hook": "You close your laptop at 2 AM, feeling completely hollow despite checking off every task.",
+      "titulo": "The Hidden Cost of the Grindset According to Zeno",
+      "visual": "dark room, glowing monitor, fading embers, storm clouds"
+    },
+    {
+      "key": "social_calendar_exhaustion",
+      "stoic": "Epictetus",
+      "principle": "boundaries of attention",
+      "stressor": "obligatory weekend networking events that drain all your energy",
+      "hook": "You force a smile at a crowded mixer, wishing you were anywhere else on earth.",
+      "titulo": "Why You Feel Drained By People (And How Epictetus Fixed It)",
+      "visual": "crowded dark hallway, blurry silhouettes, flickering candle, rain on glass"
+    },
+    {
+      "key": "flight_cancellation_fury",
+      "stoic": "Marcus Aurelius",
+      "principle": "obstacle is the way",
+      "stressor": "being stranded at an airport overnight due to sudden mechanical delays",
+      "hook": "The gate agent announces your connecting flight is canceled, ruining your entire week off.",
+      "titulo": "How to Stay Calm When Travel Plans Collapse",
+      "visual": "empty airport terminal, night shadows, massive glass windows, lightning"
+    },
+    {
+      "key": "grocery_inflation_shock",
+      "stoic": "Musonius Rufus",
+      "principle": "sufficiency",
+      "stressor": "watching everyday grocery bills double while quality drops",
+      "hook": "You look at the total at the register, realizing basic staples now cost a fortune.",
+      "titulo": "Surviving Inflation With Ancient Stoic Wisdom",
+      "visual": "dark kitchen, single overhead bulb, rough stone counter, empty bowl"
+    },
+    {
+      "key": "project_cancellation_grief",
+      "stoic": "Seneca",
+      "principle": "premeditatio malorum",
+      "stressor": "having a six-month creative project killed by upper management overnight",
+      "hook": "All your work is deleted instantly because a director decided to shift company focus.",
+      "titulo": "When Your Hard Work Gets Scrapped (A Seneca Reset)",
+      "visual": "dark studio, broken clay vessel, candlelight, stormy sky"
+    },
+    {
+      "key": "identity_loss_job_title",
+      "stoic": "Marcus Aurelius",
+      "principle": "rational nature",
+      "stressor": "losing your high-status corporate title and feeling like nobody",
+      "hook": "You introduce yourself at a dinner party and realize you have no idea who you are without your job.",
+      "titulo": "Who Are You Without Your Title? Marcus Aurelius Answers",
+      "visual": "dark mirror reflection, ancient stone pillars, fading light, smoke"
+    },
+    {
+      "key": "health_scare_waiting_room",
+      "stoic": "Epictetus",
+      "principle": "control dichotomy",
+      "stressor": "waiting two agonizing weeks for important medical test results",
+      "hook": "You stare at the clinic ceiling, trapped in a loop of worst-case scenarios.",
+      "titulo": "How to Stop Torturing Yourself While Waiting for Bad News",
+      "visual": "dark hospital corridor, flickering fluorescent light, cold metal chairs, rain"
+    }
+  ]
+}
