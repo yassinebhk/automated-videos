@@ -209,14 +209,25 @@ def reauth_cmd(channel_prefix: str):
             csec = os.environ.get(csec_env, "").strip()
 
             console.print(f"[yellow]Modo multi-canal: OAuth directo para {channel_prefix}[/]")
+            # Fallback FÁCIL: si no hay client por canal en env, reutiliza el client
+            # OAuth principal (secrets/youtube_client_secret.json). Así no hay que
+            # exportar nada. Consistencia: el token se minta y se guardará con ESTE
+            # mismo client (el script activar_canales.sh setea los 3 secrets iguales).
             if not (cid and csec):
-                console.print(f"[bold red]❌ Faltan env vars {cid_env} + {csec_env}[/]")
-                console.print(f"[yellow]Cópialos de GH Secrets y expórtalos ANTES de correr reauth:[/]")
-                console.print(f"[cyan]  export {cid_env}='...'[/]")
-                console.print(f"[cyan]  export {csec_env}='...'[/]")
-                console.print(f"[cyan]  .venv/bin/videogen reauth --channel {channel_prefix}[/]")
-                console.print(f"[dim]O añádelos a tu .env local en la raíz del repo.[/]")
-                raise SystemExit(1)
+                try:
+                    import json as _json
+                    _d = _json.loads(upload_youtube.CLIENT_SECRET.read_text(encoding="utf-8"))
+                    _k = "installed" if "installed" in _d else ("web" if "web" in _d else list(_d)[0])
+                    cid = _d[_k]["client_id"].strip()
+                    csec = _d[_k]["client_secret"].strip()
+                    console.print(f"[green]Reutilizando client OAuth principal ({upload_youtube.CLIENT_SECRET.name})[/]")
+                except Exception as _e:
+                    console.print(f"[bold red]❌ No hay {cid_env}/{csec_env} ni client principal usable ({_e})[/]")
+                    raise SystemExit(1)
+            # Export para que el script que llama pueda leer el client usado y setear
+            # los secrets YT_<X>_CLIENT_ID/SECRET idénticos.
+            os.environ[cid_env] = cid
+            os.environ[csec_env] = csec
 
             # Construir client_config inline (no depende de client_secret.json)
             client_config = {
