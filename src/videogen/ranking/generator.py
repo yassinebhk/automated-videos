@@ -93,9 +93,9 @@ def _generate_dataset_with_gemini(topic: dict, n_items: int = 10,
 
         prompt = (
             f"Genera dataset REAL para bar chart race del topic:\n"
-            f"- Tema: {topic['titulo']}\n"
-            f"- Fuente base: {topic['fuente']}\n"
-            f"- Dataset hint: {topic['dataset_hint']}\n"
+            f"- Tema: {topic.get('titulo') or topic.get('title', '')}\n"
+            f"- Fuente base: {topic.get('fuente', 'fuente pública oficial')}\n"
+            f"- Dataset hint: {topic.get('dataset_hint', '')}\n"
             f"- Año actual: {current_year} (los años del ranking DEBEN llegar hasta {current_year} o {current_year - 1} si el dato oficial no está publicado aún)\n\n"
             f"REGLAS VERACIDAD (ESTRICTAS — el user detectó datos fake):\n"
             f"- Datos VERIFICABLES en la fuente citada. Si no lo son, RECHAZA la tarea.\n"

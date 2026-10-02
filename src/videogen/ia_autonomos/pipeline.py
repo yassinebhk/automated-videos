@@ -160,6 +160,12 @@ def run_once() -> dict[str, Any]:
         return {"status": "ok", "slug": slug, "url": url,
                  "topic_key": topic["key"], "crosspost": cross}
     except Exception as e:
+        from ..upload_youtube import DedupSkip
+        if isinstance(e, DedupSkip):
+            print(f"  ia_autonomos: skip dedup — {e}")
+            _notify(f"⏭️ <b>IA Autónomos</b>: salté un duplicado (premisa no-repetir). "
+                    f"El pool necesita temas frescos.")
+            return {"status": "skip_dedup", "error": str(e), "topic_key": topic["key"]}
         import traceback
         traceback.print_exc()
         _notify(f"❌ IA Autónomos short falló: {type(e).__name__}: {str(e)[:200]}",

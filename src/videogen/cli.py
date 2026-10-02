@@ -1365,7 +1365,7 @@ def tax_once_cmd():
     from .tax import pipeline
     result = pipeline.run_once()
     print(json.dumps(result, indent=2, ensure_ascii=False))
-    if result.get("status") not in ("ok", "paused"):
+    if result.get("status") not in ("ok", "skip_dedup", "paused"):
         raise SystemExit(1)
 
 
@@ -1375,7 +1375,7 @@ def legal_once_cmd():
     from .legal import pipeline
     result = pipeline.run_once()
     print(json.dumps(result, indent=2, ensure_ascii=False))
-    if result.get("status") not in ("ok", "paused"):
+    if result.get("status") not in ("ok", "skip_dedup", "paused"):
         raise SystemExit(1)
 
 
@@ -1385,7 +1385,7 @@ def ayudas_once_cmd():
     from .ayudas import pipeline
     result = pipeline.run_once()
     print(json.dumps(result, indent=2, ensure_ascii=False))
-    if result.get("status") not in ("ok",):
+    if result.get("status") not in ("ok", "skip_dedup",):
         raise SystemExit(1)
 
 
@@ -1395,7 +1395,7 @@ def motor_once_cmd():
     from .motor import pipeline
     result = pipeline.run_once()
     print(json.dumps(result, indent=2, ensure_ascii=False))
-    if result.get("status") not in ("ok",):
+    if result.get("status") not in ("ok", "skip_dedup",):
         raise SystemExit(1)
 
 
@@ -1407,7 +1407,7 @@ def tax_longform_cmd():
     from .tax import pipeline
     result = pipeline.run_longform()
     print(json.dumps(result, indent=2, ensure_ascii=False))
-    if result.get("status") not in ("ok",):
+    if result.get("status") not in ("ok", "skip_dedup",):
         raise SystemExit(1)
 
 
@@ -1417,7 +1417,7 @@ def legal_longform_cmd():
     from .legal import pipeline
     result = pipeline.run_longform()
     print(json.dumps(result, indent=2, ensure_ascii=False))
-    if result.get("status") not in ("ok",):
+    if result.get("status") not in ("ok", "skip_dedup",):
         raise SystemExit(1)
 
 
@@ -1427,7 +1427,7 @@ def ayudas_longform_cmd():
     from .ayudas import pipeline
     result = pipeline.run_longform()
     print(json.dumps(result, indent=2, ensure_ascii=False))
-    if result.get("status") not in ("ok",):
+    if result.get("status") not in ("ok", "skip_dedup",):
         raise SystemExit(1)
 
 
@@ -1437,7 +1437,7 @@ def motor_longform_cmd():
     from .motor import pipeline
     result = pipeline.run_longform()
     print(json.dumps(result, indent=2, ensure_ascii=False))
-    if result.get("status") not in ("ok",):
+    if result.get("status") not in ("ok", "skip_dedup",):
         raise SystemExit(1)
 
 
@@ -1447,7 +1447,7 @@ def pov_once_cmd():
     from .pov import pipeline
     result = pipeline.run_once()
     print(json.dumps(result, indent=2, ensure_ascii=False))
-    if result.get("status") not in ("ok",):
+    if result.get("status") not in ("ok", "skip_dedup",):
         raise SystemExit(1)
 
 
@@ -1457,7 +1457,7 @@ def pov_longform_cmd():
     from .pov import pipeline
     result = pipeline.run_longform()
     print(json.dumps(result, indent=2, ensure_ascii=False))
-    if result.get("status") not in ("ok",):
+    if result.get("status") not in ("ok", "skip_dedup",):
         raise SystemExit(1)
 
 
@@ -1467,7 +1467,7 @@ def ranking_once_cmd():
     from .ranking import pipeline
     result = pipeline.run_once()
     print(json.dumps(result, indent=2, ensure_ascii=False))
-    if result.get("status") not in ("ok",):
+    if result.get("status") not in ("ok", "skip_dedup",):
         raise SystemExit(1)
 
 
@@ -1477,7 +1477,7 @@ def ia_autonomos_once_cmd():
     from .ia_autonomos import pipeline
     result = pipeline.run_once()
     print(json.dumps(result, indent=2, ensure_ascii=False))
-    if result.get("status") not in ("ok", "no_secrets"):
+    if result.get("status") not in ("ok", "skip_dedup", "no_secrets"):
         raise SystemExit(1)
 
 
@@ -1487,7 +1487,7 @@ def ia_autonomos_longform_cmd():
     from .ia_autonomos import pipeline
     result = pipeline.run_longform()
     print(json.dumps(result, indent=2, ensure_ascii=False))
-    if result.get("status") not in ("ok", "no_secrets"):
+    if result.get("status") not in ("ok", "skip_dedup", "no_secrets"):
         raise SystemExit(1)
 
 
@@ -1497,7 +1497,7 @@ def ai_tools_once_cmd():
     from .ai_tools import pipeline
     result = pipeline.run_once()
     print(json.dumps(result, indent=2, ensure_ascii=False))
-    if result.get("status") not in ("ok",):
+    if result.get("status") not in ("ok", "skip_dedup",):
         raise SystemExit(1)
 
 
@@ -1507,7 +1507,7 @@ def ai_tools_longform_cmd():
     from .ai_tools import pipeline
     result = pipeline.run_longform()
     print(json.dumps(result, indent=2, ensure_ascii=False))
-    if result.get("status") not in ("ok",):
+    if result.get("status") not in ("ok", "skip_dedup",):
         raise SystemExit(1)
 
 
@@ -1517,7 +1517,7 @@ def ranking_longform_cmd():
     from .ranking import pipeline
     result = pipeline.run_longform()
     print(json.dumps(result, indent=2, ensure_ascii=False))
-    if result.get("status") not in ("ok", "no_secrets", "no_topic"):
+    if result.get("status") not in ("ok", "skip_dedup", "no_secrets", "no_topic"):
         raise SystemExit(1)
 
 
@@ -1529,7 +1529,7 @@ def rankings_en_once_cmd():
     print(json.dumps(result, indent=2, ensure_ascii=False))
     # Canal EN pre-cableado sin canal YT propio (usa host fallback). Su fallo NO debe
     # tumbar el catchup que incluye canales reales → soft-fail (exit 0, avisado en log).
-    if result.get("status") not in ("ok", "paused"):
+    if result.get("status") not in ("ok", "skip_dedup", "paused"):
         print(f"⚠️ rankings-en no-fatal: status={result.get('status')} "
               f"(canal pre-cableado, no rompe el run)")
 
@@ -1540,7 +1540,7 @@ def trabajos_once_cmd():
     from .trabajos import pipeline
     result = pipeline.run_once()
     print(json.dumps(result, indent=2, ensure_ascii=False))
-    if result.get("status") not in ("ok", "paused"):
+    if result.get("status") not in ("ok", "skip_dedup", "paused"):
         raise SystemExit(1)
 
 
@@ -1550,7 +1550,7 @@ def criminopatia_once_cmd():
     from .criminopatia import pipeline
     result = pipeline.run_once()
     print(json.dumps(result, indent=2, ensure_ascii=False))
-    if result.get("status") not in ("ok", "paused"):
+    if result.get("status") not in ("ok", "skip_dedup", "paused"):
         raise SystemExit(1)
 
 
@@ -1561,7 +1561,7 @@ def satisfying_once_cmd():
     result = pipeline.run_once()
     print(json.dumps(result, indent=2, ensure_ascii=False))
     # Canal pre-cableado sin canal YT propio → soft-fail (no tumba el catchup).
-    if result.get("status") not in ("ok", "skip_daily_cap"):
+    if result.get("status") not in ("ok", "skip_dedup", "skip_daily_cap"):
         print(f"⚠️ satisfying no-fatal: status={result.get('status')} "
               f"(canal pre-cableado, no rompe el run)")
 
@@ -1574,7 +1574,7 @@ def padel_once_cmd():
     print(json.dumps(result, indent=2, ensure_ascii=False))
     # Canal pre-cableado (hospeda en TopRanking). Soft-fail: si el dedup bloquea un
     # tip repetido o falla la subida, no tumba el catchup.
-    if result.get("status") not in ("ok", "disabled"):
+    if result.get("status") not in ("ok", "skip_dedup", "disabled"):
         print(f"⚠️ padel no-fatal: status={result.get('status')} (no rompe el run)")
 
 

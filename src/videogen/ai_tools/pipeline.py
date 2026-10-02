@@ -270,6 +270,12 @@ def run_once() -> dict[str, Any]:
             print(f"  aitools: ig fail — {_e}")
         return {"status": "ok", "slug": slug, "url": url, "topic_key": topic["key"]}
     except Exception as e:
+        from ..upload_youtube import DedupSkip
+        if isinstance(e, DedupSkip):
+            print(f"  aitools: skip dedup — {e}")
+            _notify(f"⏭️ <b>{DISPLAY_NAME}</b>: salté un duplicado (premisa no-repetir). "
+                    f"El pool necesita temas frescos.")
+            return {"status": "skip_dedup", "error": str(e), "topic_key": topic["key"]}
         import traceback
         traceback.print_exc()
         _notify(f"❌ {DISPLAY_NAME} short falló: {type(e).__name__}: {str(e)[:200]}",
@@ -306,6 +312,11 @@ def run_longform(target_minutes: int = 8) -> dict[str, Any]:
         return {"status": "ok", "slug": slug, "url": url,
                 "topic_key": topic["key"], "kind": "long"}
     except Exception as e:
+        from ..upload_youtube import DedupSkip
+        if isinstance(e, DedupSkip):
+            print(f"  aitools-long: skip dedup — {e}")
+            _notify(f"⏭️ <b>{DISPLAY_NAME} · long-form</b>: salté un duplicado (premisa no-repetir).")
+            return {"status": "skip_dedup", "error": str(e), "topic_key": topic["key"]}
         import traceback
         traceback.print_exc()
         _notify(f"❌ {DISPLAY_NAME} long-form falló: {type(e).__name__}: {str(e)[:200]}")

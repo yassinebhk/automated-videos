@@ -34,6 +34,13 @@ if _os_scopes.environ.get("YT_ANALYTICS_SCOPE", "").strip() in ("1", "true", "ye
 CLIENT_SECRET = SECRETS_DIR / "youtube_client_secret.json"
 TOKEN_FILE = SECRETS_DIR / "youtube_token.json"
 
+
+class DedupSkip(RuntimeError):
+    """El guardarraíl de dedup bloqueó una subida porque el título ya se publicó.
+    NO es un error: es un skip DE DISEÑO (la premisa 'nunca repetir vídeos exactos').
+    Los pipelines lo distinguen de un fallo real → devuelven status 'skip_dedup' y el
+    comando CLI sale 0 (el job NO debe ponerse en rojo por honrar la premisa)."""
+
 # Canal PRINCIPAL WaitWhy. Cualquier prefijo SECUNDARIO (YT_TAX, YT_MOTOR…) cuyo
 # token resuelva a ESTE id está mal reautorizado (minteado contra la cuenta de
 # WaitWhy) → NO subimos, para no contaminar el canal insignia (true crime ES) con
@@ -210,7 +217,7 @@ def upload_video(
             print(f"  dedup-guard: chequeo falló ({type(e).__name__}) → permito la subida")
             _dup = False
         if _dup:
-            raise RuntimeError(
+            raise DedupSkip(
                 f"DEDUP: '{title[:70]}' ya publicado en {_pkey} — NO subo duplicado. "
                 f"Premisa: nunca repetir vídeos exactos; el pool de este canal necesita temas frescos.")
 

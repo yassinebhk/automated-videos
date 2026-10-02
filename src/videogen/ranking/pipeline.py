@@ -76,6 +76,11 @@ def run_longform() -> dict[str, Any]:
         return {"status": "ok", "slug": slug, "url": url,
                 "topic_key": topic["key"], "kind": "long"}
     except Exception as e:
+        from ..upload_youtube import DedupSkip
+        if isinstance(e, DedupSkip):
+            print(f"  ranking-long: skip dedup — {e}")
+            _notify(f"⏭️ <b>TopRanking ES · long-form</b>: salté un duplicado (premisa no-repetir).")
+            return {"status": "skip_dedup", "error": str(e), "topic_key": topic["key"]}
         import traceback
         traceback.print_exc()
         _notify(f"❌ TopRanking long-form falló: {type(e).__name__}: {str(e)[:200]}")
@@ -137,6 +142,9 @@ def _upload_ranking(meta: dict) -> dict | None:
         )
         return {"video_id": vid, "url": f"https://youtube.com/shorts/{vid}"}
     except Exception as e:
+        from ..upload_youtube import DedupSkip
+        if isinstance(e, DedupSkip):
+            raise  # propaga → run_once lo convierte en skip_dedup (no es un fallo)
         print(f"  ranking upload fail: {type(e).__name__}: {e}")
         return None
     finally:
@@ -169,7 +177,16 @@ def run_once() -> dict[str, Any]:
         return {"status": "gen_fail", "topic_key": topic["key"]}
 
     print(f"  ranking: video generado · uploading canal TopRanking ES…")
-    up = _upload_ranking(meta)
+    try:
+        up = _upload_ranking(meta)
+    except Exception as e:
+        from ..upload_youtube import DedupSkip
+        if isinstance(e, DedupSkip):
+            print(f"  ranking: skip dedup — {e}")
+            _notify(f"⏭️ <b>TopRanking ES</b>: salté un duplicado (premisa no-repetir). "
+                    f"El pool necesita datasets frescos.")
+            return {"status": "skip_dedup", "error": str(e), "topic_key": topic["key"]}
+        raise
     if not up:
         _notify(f"⚠️ Ranking {topic['key']} generado pero upload falló",
                  urgent=True)
