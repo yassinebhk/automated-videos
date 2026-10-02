@@ -168,6 +168,16 @@ jobs:
       command: padel-once
     secrets: inherit
 
+  # Stoic Mind (EN) — nueva apuesta 02/10. Sin secrets YT_STOIC_* hace no-op
+  # instantáneo (no genera, no gasta) y se AUTO-ACTIVA al crear el canal + secrets.
+  stoic_short:
+    if: ${{ always() && (inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue') }}
+    needs: [padel_short]
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: stoic-once
+    secrets: inherit
+
   # ─── LONG-FORM (dominicales) ───
 
   waitwhy_long:

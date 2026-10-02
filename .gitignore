@@ -21,6 +21,9 @@ output/**
 !output/bsky_reply_boost_ledger.json
 !output/bsky_daily_fact_ledger.json
 !output/playlists_manager_ledger.json
+# Stoic Mind (nuevo canal 02/10) — ledger + pool dinámico de ángulos
+!output/stoic_ledger.json
+!output/dynamic_topics_stoic.json
 # Ranking datasets (World Bank refresh semanal)
 !output/ranking_datasets/
 !output/ranking_datasets/**

@@ -1,0 +1,20 @@
+name: Stoic Mind — test generación (sin canal)
+
+# Fuerza la GENERACIÓN de 1 Short estoico EN aunque no exista el canal YT todavía
+# (STOIC_GENERATE_WITHOUT_CHANNEL=1) para revisar calidad antes de crear el canal.
+# No sube a YouTube (no hay secrets YT_STOIC_*). Manual.
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  stoic_test:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: stoic-once
+      extra_env: |
+        STOIC_GENERATE_WITHOUT_CHANNEL=1
+    secrets: inherit

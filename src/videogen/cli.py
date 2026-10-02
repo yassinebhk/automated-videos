@@ -1511,6 +1511,17 @@ def ai_tools_longform_cmd():
         raise SystemExit(1)
 
 
+@cli.command(name="stoic-once")
+def stoic_once_cmd():
+    """Genera + (si hay canal YT_STOIC) sube 1 Short estoico EN al canal Stoic Mind.
+    Pre-cableado: sin secrets YT_STOIC_* genera y omite subida (no rompe)."""
+    from .stoic import pipeline
+    result = pipeline.run_once()
+    print(json.dumps(result, indent=2, ensure_ascii=False))
+    if result.get("status") not in ("ok", "skip_dedup", "no_topic", "no_channel"):
+        raise SystemExit(1)
+
+
 @cli.command(name="ranking-longform")
 def ranking_longform_cmd():
     """Genera + sube 1 long-form Top-N (cuenta atrás) al canal TopRanking (YT_RANKING)."""
