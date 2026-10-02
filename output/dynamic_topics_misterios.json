@@ -1,0 +1,89 @@
+{
+  "generated_at": "2026-10-02T19:33:09.774888+00:00",
+  "topics": [
+    {
+      "key": "el_tesoro_de_oak_island",
+      "titulo": "El pozo monetario de Oak Island: 200 años cavando sin hallar oro",
+      "hook": "Desde 1795, este pozo en Canadá ha tragar tesoros y vidas humanas sin revelar su secreto.",
+      "angle": "Documentar la excavación continuada del Money Pit desde su descubrimiento por adolescentes, detallando las estructuras de ingeniería halladas a 30 metros de profundidad según registros históricos sin confirmar nunca la existencia real de un tesoro.",
+      "visual": "Bosque canadiense antiguo, pozo oscuro profundo, poleas de madera coloniales, linterna iluminando tierra húmeda"
+    },
+    {
+      "key": "la_expedicion_de_franklin",
+      "titulo": "Los barcos fantasma del Ártico: el misterio de la expedición Franklin",
+      "hook": "Dos buques de la Marina Real británica desaparecieron en el hielo, dejando tras de sí un rastro de canibalismo y notas indescifrables.",
+      "angle": "Exponer el fracaso de la búsqueda del Paso Noroeste en 1845 liderada por John Franklin, basándose en los diarios de rescate recuperados y el hallazgo arqueológico moderno de los pecios Erebus y Terror.",
+      "visual": "Barco atrapado en hielo polar, tormenta de nieve ártica, latas de conservas oxidadas, calavera antigua sobre la nieve"
+    },
+    {
+      "key": "el_misterio_de_roanoke",
+      "titulo": "La colonia perdida de Roanoke: 115 personas evaporadas en América",
+      "hook": "En 1590, un gobernador regresó a una isla y halló a toda su colonia desaparecida sin una sola señal de lucha.",
+      "angle": "Analizar la desaparición de los colonos ingleses de Roanoke basándose en la única pista física encontrada: la palabra tallada 'Croatoan' en un poste de madera, descartando mitos sobrenaturales.",
+      "visual": "Fuerte de madera antiguo, niebla costera espesa, palabra tallada en tronco de árbol, mapa colonial antiguo"
+    },
+    {
+      "key": "las_tablillas_de_tartaria",
+      "titulo": "Las tablillas de Tartaria: escritura más antigua que Sumeria o un fraude",
+      "hook": "En Rumanía aparecieron unas pequeñas arcillas con símbolos que sacudieron los cimientos de la arqueología moderna.",
+      "angle": "Examinar el descubrimiento en 1961 de las tablillas de Tartaria, la datación por termoluminiscencia y el debate académico actual sobre si contienen el sistema de escritura más antiguo del mundo o son una anomalía sin descifrar.",
+      "visual": "Arcilla antigua con símbolos extraños, manos de arqueólogo con guantes, laboratorio de datación por carbono, museo arqueológico oscuro"
+    },
+    {
+      "key": "la_campana_de_hund",
+      "titulo": "La campana sumergida de Hund: el artefacto nórdico imposible",
+      "hook": "En el año 1667 se inventó un dispositivo de inmersión que desafió la física de su época en el mar Báltico.",
+      "angle": "Detallar el diseño documentado de la campana de buceo de Franz Kessler utilizada para rescatar cañones del barco de guerra sueco Mars, explicando cómo operaba bajo el agua según los archivos reales.",
+      "visual": "Mar Báltico oscuro, campana de madera y plomo bajo el agua, burbujas de aire, documentos náuticos del siglo XVII"
+    },
+    {
+      "key": "el_manuscrito_de_ripley",
+      "titulo": "El pergamino alquímico de Sir George Ripley: la receta prohibida",
+      "hook": "Un rollo ilustrado de seis metros de largo esconde los pasos exactos que los alquimistas usaban para intentar crear oro.",
+      "angle": "Analizar el pergamino del siglo XV conservado en la Biblioteca Británica, explicando el simbolismo documentado de sus grabados sin validar las premisas pseudocientíficas de la alquimia.",
+      "visual": "Pergamino largo antiguo, dibujos alquímicos de dragones, frascos de laboratorio medievales, velas parpadeantes"
+    },
+    {
+      "key": "la_cueva_de_las_manos",
+      "titulo": "La Cueva de las Manos: quiénes pintaron la Patagonia hace 9000 años",
+      "hook": "Cientos de manos negativas en las paredes de un cañadón remoto en Argentina guardan silencio desde el Holoceno.",
+      "angle": "Revisar los estudios arqueológicos de la Cueva de las Manos en el río Pinturas, detallando las técnicas de pigmentación mineral usadas por los cazadores-recolectores del Pleistoceno tardío.",
+      "visual": "Cañadón patagónico árido, pared de roca con manos pintadas en negativo, pigmento rojo natural, pincel arqueológico"
+    },
+    {
+      "key": "el_tesoro_de_san_narciso",
+      "titulo": "El galeón Nuestra Señora de Atocha: el naufragio que cambió la ley del mar",
+      "hook": "Un tesoro español valorado en cientos de millones de dólares durmió bajo el mar Caribe durante 362 años.",
+      "angle": "Documentar la historia del hundimiento de 1622 por un huracán y el posterior proceso de rescate arqueológico submarino liderado por Mel Fisher, basado en los manifiestos de carga oficiales de Sevilla.",
+      "visual": "Monedas de oro antiguas bajo el agua, restos de madera de galeón, arrecife de coral caribeño, lingotes de plata con sello real"
+    },
+    {
+      "key": "los_mapas_de_piri_reis",
+      "titulo": "El mapa de Piri Reis de 1513: costas imposibles para el siglo XVI",
+      "hook": "Un almirante otomano dibujó un mapa mundial que mostraba detalles terrestres que supuestamente nadie conocía entonces.",
+      "angle": "Analizar cartográficamente el mapa de Piri Reis conservado en el Palacio de Topkapi, contrastando las fuentes portuguesas y colinas usadas por su autor frente a los mitos modernos sobre la Antártida.",
+      "visual": "Manuscrito cartográfico otomano antiguo, lupas sobre pergamino, brújula de bronce, biblioteca histórica de Estambul"
+    },
+    {
+      "key": "las_ruinas_de_nan_madol",
+      "titulo": "Nan Madol: la ciudad de piedra flotante sobre un arrecife del Pacífico",
+      "hook": "Millones de toneladas de columnas de basalto natural fueron transportadas sin tecnología moderna a un remoto atolón.",
+      "angle": "Estudiar la arquitectura megalítica de la ciudad artificial de Nan Madol en Micronesia, detallando los métodos constructivos documentados por la arqueología marina en arrecifes de coral.",
+      "visual": "Islotes artificiales de piedra, canales de agua azul cristalina, columnas de basalto gigantescas, vista aérea de atolón"
+    },
+    {
+      "key": "el_faro_de_eilean_mor",
+      "titulo": "El enigma del faro de Eilean Mor: tres fareros evaporados",
+      "hook": "En 1900, un barco llegó a una isla escocesa y halló la mesa servida pero ni un solo rastro de los tres guardianes.",
+      "angle": "Reconstruir el informe oficial de investigación sobre la desaparición de los fareros de las Islas Flannan, examinando los registros meteorológicos de la época y descartando leyendas urbanas.",
+      "visual": "Faro solitario en acantilado escocés, mar embravecido gris, mesa de comedor con comida intacta, lámpara de aceite antigua"
+    },
+    {
+      "key": "las_cuevas_de_longyou",
+      "titulo": "Las grutas de Longyou: 24 cuevas talladas a mano sin registro histórico",
+      "hook": "Millones de metros cúbicos de roca fueron extraídos en China bajo tierra sin dejar una sola mención en libros antiguos.",
+      "angle": "Investigar el complejo subterráneo de Longyou descubierto en 1992, analizando las marcas de cincel uniformes y la ausencia total de documentos sobre su excavación en las dinastías chinas.",
+      "visual": "Cueva subterránea gigante artificial, pilares de piedra estriados, linterna de explorador, agua subterránea oscura"
+    }
+  ]
+}
