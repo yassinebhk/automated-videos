@@ -184,21 +184,25 @@ def generate_geoquiz(out_dir: Path, candidates: list[tuple], n_rounds: int = 5) 
         frames.append((rv, 1.7))
     outro = work / "f_outro.png"; _frame_outro(outro); frames.append((outro, 2.8))
 
-    listf = work / "concat.txt"
-    lines = []
+    # Secuencia numerada (image2) = método robusto entre versiones de ffmpeg:
+    # cada frame se repite dur*fps veces y se codifica a 30 fps constante.
+    import shutil
+    fps = 30
+    seq = work / "seq"
+    seq.mkdir(exist_ok=True)
+    idx = 0
     for p, dur in frames:
-        lines.append(f"file '{p.name}'")
-        lines.append(f"duration {dur}")
-    lines.append(f"file '{frames[-1][0].name}'")  # repetir último (quirk concat)
-    listf.write_text("\n".join(lines), encoding="utf-8")
+        for _ in range(max(1, round(dur * fps))):
+            shutil.copyfile(p, seq / f"{idx:05d}.png")
+            idx += 1
 
     raw = work / "raw.mp4"
-    cmd = ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(listf),
-           "-vsync", "vfr", "-pix_fmt", "yuv420p", "-c:v", "libx264", "-r", "30",
+    cmd = ["ffmpeg", "-y", "-framerate", str(fps), "-i", str(seq / "%05d.png"),
+           "-c:v", "libx264", "-pix_fmt", "yuv420p", "-r", str(fps),
            "-movflags", "+faststart", str(raw)]
-    r = subprocess.run(cmd, capture_output=True, text=True, timeout=300, cwd=str(work))
+    r = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
     if r.returncode != 0 or not raw.exists():
-        print(f"  geoquiz: ffmpeg concat fail: {r.stderr[-400:]}")
+        print(f"  geoquiz: ffmpeg encode fail: {r.stderr[-400:]}")
         return None
 
     total_s = sum(d for _, d in frames)
