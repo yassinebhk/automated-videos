@@ -1538,6 +1538,17 @@ def batch_once_cmd(slug: str):
         raise SystemExit(1)
 
 
+@cli.command(name="geoquiz-once")
+def geoquiz_once_cmd():
+    """Genera + (si hay canal YT_GEOQUIZ) sube 1 Short de quiz de geografía (banderas).
+    Sin voz (música+texto). Pre-cableado: sin secrets hace no-op."""
+    from .geoquiz import pipeline
+    result = pipeline.run_once()
+    print(json.dumps(result, indent=2, ensure_ascii=False))
+    if result.get("status") not in ("ok", "skip_dedup", "no_channel"):
+        raise SystemExit(1)
+
+
 @cli.command(name="ranking-longform")
 def ranking_longform_cmd():
     """Genera + sube 1 long-form Top-N (cuenta atrás) al canal TopRanking (YT_RANKING)."""

@@ -1,0 +1,19 @@
+name: GeoQuiz — test generación (sin canal)
+
+# Fuerza la GENERACIÓN de 1 Short de quiz de banderas aunque no exista el canal YT
+# (GEOQUIZ_GENERATE_WITHOUT_CHANNEL=1), para revisar calidad. No sube. Manual.
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  geoquiz_test:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: geoquiz-once
+      extra_env: |
+        GEOQUIZ_GENERATE_WITHOUT_CHANNEL=1
+    secrets: inherit
