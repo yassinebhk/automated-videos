@@ -24,6 +24,17 @@ output/**
 # Stoic Mind (nuevo canal 02/10) — ledger + pool dinámico de ángulos
 !output/stoic_ledger.json
 !output/dynamic_topics_stoic.json
+# Tanda 02/10 (misterios/sesgos/filosofia/curiosidades/espacio) — ledgers + dinámicos
+!output/misterios_ledger.json
+!output/dynamic_topics_misterios.json
+!output/sesgos_ledger.json
+!output/dynamic_topics_sesgos.json
+!output/filosofia_ledger.json
+!output/dynamic_topics_filosofia.json
+!output/curiosidades_ledger.json
+!output/dynamic_topics_curiosidades.json
+!output/espacio_ledger.json
+!output/dynamic_topics_espacio.json
 # Ranking datasets (World Bank refresh semanal)
 !output/ranking_datasets/
 !output/ranking_datasets/**

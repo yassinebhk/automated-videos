@@ -1522,6 +1522,22 @@ def stoic_once_cmd():
         raise SystemExit(1)
 
 
+@cli.command(name="batch-once")
+@click.option("--slug", required=True, help="Canal de la tanda 02/10: misterios|sesgos|filosofia|curiosidades|espacio")
+def batch_once_cmd(slug: str):
+    """Genera + (si hay canal YT_<X>) sube 1 Short de un canal narrado de la tanda nueva.
+    Pre-cableado: sin secrets hace no-op (no rompe)."""
+    from . import simple_channel, channels_batch
+    cfg = channels_batch.by_slug(slug)
+    if not cfg:
+        print(json.dumps({"status": "unknown_slug", "slug": slug}))
+        raise SystemExit(1)
+    result = simple_channel.run_once(cfg)
+    print(json.dumps(result, indent=2, ensure_ascii=False))
+    if result.get("status") not in ("ok", "skip_dedup", "no_topic", "no_channel"):
+        raise SystemExit(1)
+
+
 @cli.command(name="ranking-longform")
 def ranking_longform_cmd():
     """Genera + sube 1 long-form Top-N (cuenta atrás) al canal TopRanking (YT_RANKING)."""

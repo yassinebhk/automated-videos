@@ -1,0 +1,32 @@
+name: Tanda 02/10 — test generación (sin canal)
+
+# Fuerza la GENERACIÓN de 1 Short de un canal de la tanda nueva aunque no exista su
+# canal YT (BATCH_GENERATE_WITHOUT_CHANNEL=1), para revisar calidad antes de crearlos.
+# No sube a YouTube. Manual.
+
+on:
+  workflow_dispatch:
+    inputs:
+      slug:
+        description: "Canal: misterios | sesgos | filosofia | curiosidades | espacio"
+        required: true
+        default: "misterios"
+        type: choice
+        options:
+          - misterios
+          - sesgos
+          - filosofia
+          - curiosidades
+          - espacio
+
+permissions:
+  contents: write
+
+jobs:
+  batch_test:
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: batch-once --slug ${{ inputs.slug }}
+      extra_env: |
+        BATCH_GENERATE_WITHOUT_CHANNEL=1
+    secrets: inherit

@@ -178,6 +178,48 @@ jobs:
       command: stoic-once
     secrets: inherit
 
+  # Tanda 02/10 — canales narrados nuevos (pre-cableados). No-op hasta crear canal +
+  # secrets YT_<X>_*; se auto-activan. Encadenados para no saturar.
+  misterios_short:
+    if: ${{ always() && (inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue') }}
+    needs: [stoic_short]
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: batch-once --slug misterios
+    secrets: inherit
+
+  sesgos_short:
+    if: ${{ always() && (inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue') }}
+    needs: [misterios_short]
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: batch-once --slug sesgos
+    secrets: inherit
+
+  filosofia_short:
+    if: ${{ always() && (inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue') }}
+    needs: [sesgos_short]
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: batch-once --slug filosofia
+    secrets: inherit
+
+  curiosidades_short:
+    if: ${{ always() && (inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue') }}
+    needs: [filosofia_short]
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: batch-once --slug curiosidades
+    secrets: inherit
+
+  espacio_short:
+    if: ${{ always() && (inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue') }}
+    needs: [curiosidades_short]
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: batch-once --slug espacio
+    secrets: inherit
+
   # ─── LONG-FORM (dominicales) ───
 
   waitwhy_long:
