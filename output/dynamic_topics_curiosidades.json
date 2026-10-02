@@ -1,0 +1,89 @@
+{
+  "generated_at": "2026-10-02T20:29:40.660019+00:00",
+  "topics": [
+    {
+      "key": "oxigeno_doble",
+      "titulo": "¿Qué pasaría si la Tierra duplicara su oxígeno de golpe?",
+      "hook": "Si el nivel de oxígeno en la atmósfera se duplicara hoy, no respirarías mejor, empezarías a quemarte por dentro.",
+      "angle": "Explica la toxicidad del oxígeno puro a alta presión (efecto Paul Bert) y cómo los incendios forestales serían inextinguibles debido a la física de la combustión.",
+      "visual": "forest fire glowing intense blue, giant prehistoric dragonflies flying, laboratory beaker bubbling violently, astronaut looking at a green stormy sky"
+    },
+    {
+      "key": "sin_campo_magnetico",
+      "titulo": "¿Qué pasaría si el núcleo de la Tierra se enfriara hoy?",
+      "hook": "En el momento exacto en que el núcleo terrestre se detenga, tu teléfono móvil seguirá funcionando, pero tu piel empezará a freírse.",
+      "angle": "La pérdida del campo magnético terrestre (dinamo terrestre) y cómo el viento solar despojaría a la atmósfera de su protección en meses.",
+      "visual": "aurora borealis fading away, solar wind striking planet Earth, molten iron swirling in planetary core, desolate rocky landscape under red sun"
+    },
+    {
+      "key": "oceanos_hielo",
+      "titulo": "¿Qué pasaría si el agua de los océanos se congelara a temperatura ambiente?",
+      "hook": "Imagina despertar mañana y ver que las olas del mar se han convertido en cubitos de hielo gigantes en pleno verano.",
+      "angle": "Análisis de los enlaces de hidrógeno en las moléculas de agua y por qué el agua es líquida en un rango tan estrecho de temperatura.",
+      "visual": "massive ocean wave frozen in midair, snowy beach with palm trees, molecular structure of ice crystals, satellite view of frozen blue planet"
+    },
+    {
+      "key": "gravedad_cero_segundo",
+      "titulo": "¿Qué pasaría si la gravedad desapareciera durante solo un segundo?",
+      "hook": "Un solo segundo sin gravedad terrestre bastaría para lanzar todos los edificios, autos y personas hacia la estratosfera.",
+      "angle": "La Tierra rota a más de 1600 km/h en el ecuador; sin gravedad manteniendo la masa unida a esa velocidad, la inercia catapultaría todo al espacio.",
+      "visual": "city skyline lifting off the ground, dust particles floating upwards, car launching into clouds, Earth seen from orbit with debris ring"
+    },
+    {
+      "key": "luz_solar_verde",
+      "titulo": "¿Qué pasaría si el Sol emitiera luz verde en vez de blanca?",
+      "hook": "Si el Sol cambiara de color y brillara en verde esmeralda, las plantas del planeta morirían asfixiadas en cuestión de días.",
+      "angle": "La fotosíntesis y el pico de emisión de radiación estelar; las plantas absorben azul y rojo pero reflejan el verde porque es el color que más emite el Sol actual.",
+      "visual": "sun shining with emerald green light, dark purple leaves on plants, botanist looking at dying crops under strange light, spectrum analysis prism"
+    },
+    {
+      "key": "anillo_saturno",
+      "titulo": "¿Qué pasaría si la Tierra tuviera los anillos de Saturno?",
+      "hook": "Si nuestra atmósfera estuviera enmarcada por los brillantes anillos de Saturno, la noche nunca volvería a ser completamente oscura.",
+      "angle": "El límite de Roche, la refracción de la luz solar nocturna y el impacto inminente de sombras perpetuas sobre los polos del planeta.",
+      "visual": "night sky dominated by huge icy rings, city skyline under silvery moonlight reflection, space debris orbiting Earth, glowing horizon at midnight"
+    },
+    {
+      "key": "gravedad_doble",
+      "titulo": "¿Qué pasaría si la Tierra duplicara su masa de repente?",
+      "hook": "Si la Tierra duplicara su peso de la noche a la mañana, tus huesos se romperían con el simple hecho de intentar levantarte de la cama.",
+      "angle": "El aumento de la aceleración gravitacional de 9.8 a 19.6 m/s² y las consecuencias biomecánicas inmediatas en la estructura ósea humana y la arquitectura.",
+      "visual": "person struggling to stand up on cracked pavement, skyscraper buckling under extreme load, digital scale showing double weight, blueprint fracturing"
+    },
+    {
+      "key": "friccion_cero",
+      "titulo": "¿Qué pasaría si la fricción desapareciera por un instante?",
+      "hook": "Si la fricción desapareciera por completo durante cinco segundos, saldrías disparado de tu silla atravesando la pared.",
+      "angle": "Las leyes de Newton de la inercia, la imposibilidad de caminar, frenar vehículos o sostener objetos sin la fuerza de fricción microscópica.",
+      "visual": "cars sliding out of control on a highway, pen slipping out of hand and floating, person sliding endlessly across a room, atomic bonds slipping"
+    },
+    {
+      "key": "noche_eterna_polvo",
+      "titulo": "¿Qué pasaría si una nube de ceniza oscureciera el Sol un año entero?",
+      "hook": "Si un invierno volcánico global bloqueara el Sol durante doce meses, el suelo se congelaría tanto que rompería el asfalto de las ciudades.",
+      "angle": "El colapso de la cadena trófica basada en la fotosíntesis, el invierno nuclear y la caída drástica de la temperatura global en pocas semanas.",
+      "visual": "frozen city street covered in thick grey ash, dead trees in perpetual twilight, thermometer plunging below zero, volumetric rays trying to pierce dark clouds"
+    },
+    {
+      "key": "estrella_cercana",
+      "titulo": "¿Qué pasaría si otra estrella pasara rozando nuestro sistema solar?",
+      "hook": "Una estrella errante se dirige hacia nuestro vecindario cósmico; antes de chocar, alterará las mareas y lanzará asteroides hacia nosotros.",
+      "angle": "Dinámica orbital, perturbaciones gravitacionales en la Nube de Oort y cómo los cometas empezarían a llover hacia el sistema solar interior.",
+      "visual": "huge glowing star approaching in the night sky, comets streaking past the moon, planets shifting in eccentric orbits, gravitational wave distortion"
+    },
+    {
+      "key": "velocidad_sonido_rapida",
+      "titulo": "¿Qué pasaría si el sonido viajara diez veces más rápido?",
+      "hook": "Si el sonido viajara a través del aire a la velocidad de un jet, escucharías el trueno antes de ver caer el rayo.",
+      "angle": "La relación entre la velocidad de propagación de las ondas mecánicas en un medio elástico (el aire) y la termodinámica de la presión atmosférica.",
+      "visual": "lightning bolt striking close with sonic boom shockwave, person hearing echo instantly, sound wave ripples visualized in air, vibrating glass shattering"
+    },
+    {
+      "key": "orbita_marte",
+      "titulo": "¿Qué pasaría si intercambiáramos la órbita de la Tierra con la de Marte?",
+      "hook": "Si despertaras hoy en la órbita de Marte, los océanos del planeta se convertirían en vastas extensiones de hielo sólido.",
+      "angle": "La constante solar y la ley del inverso del cuadrado; cómo la distancia de 1.5 unidades astronómicas reduce la energía térmica recibida del Sol.",
+      "visual": "Earth covered in ice sheets orbiting far from the sun, frozen reddish continents, astronaut looking at a tiny distant sun, frost forming on satellite camera"
+    }
+  ]
+}
