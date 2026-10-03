@@ -1529,7 +1529,7 @@ def stoic_once_cmd():
     from .stoic import pipeline
     result = pipeline.run_once()
     print(json.dumps(result, indent=2, ensure_ascii=False))
-    if result.get("status") not in ("ok", "skip_dedup", "no_topic", "no_channel"):
+    if result.get("status") not in ("ok", "skip_dedup", "no_topic", "no_channel", "skip_daily_cap"):
         raise SystemExit(1)
 
 
@@ -1545,7 +1545,32 @@ def batch_once_cmd(slug: str):
         raise SystemExit(1)
     result = simple_channel.run_once(cfg)
     print(json.dumps(result, indent=2, ensure_ascii=False))
-    if result.get("status") not in ("ok", "skip_dedup", "no_topic", "no_channel"):
+    if result.get("status") not in ("ok", "skip_dedup", "no_topic", "no_channel", "skip_daily_cap"):
+        raise SystemExit(1)
+
+
+@cli.command(name="batch-longform")
+@click.option("--slug", required=True, help="Canal de la tanda con long-form (ej. sesgos)")
+def batch_longform_cmd(slug: str):
+    """Genera + (si hay canal) sube 1 long-form de un canal narrado de la tanda."""
+    from . import simple_channel, channels_batch
+    cfg = channels_batch.by_slug(slug)
+    if not cfg:
+        print(json.dumps({"status": "unknown_slug", "slug": slug}))
+        raise SystemExit(1)
+    result = simple_channel.run_longform(cfg)
+    print(json.dumps(result, indent=2, ensure_ascii=False))
+    if result.get("status") not in ("ok", "skip_dedup", "no_topic", "no_channel", "skip_daily_cap", "disabled", "skip_not_longform_day"):
+        raise SystemExit(1)
+
+
+@cli.command(name="stoic-longform")
+def stoic_longform_cmd():
+    """Genera + (si hay canal YT_STOIC) sube 1 long-form estoico (~10 min)."""
+    from .stoic import pipeline
+    result = pipeline.run_longform()
+    print(json.dumps(result, indent=2, ensure_ascii=False))
+    if result.get("status") not in ("ok", "skip_dedup", "no_topic", "no_channel", "skip_daily_cap", "skip_not_longform_day"):
         raise SystemExit(1)
 
 

@@ -228,6 +228,25 @@ jobs:
       command: geoquiz-once
     secrets: inherit
 
+  # Long-form de Stoic + Mente Racional: enganchados a la cadena de SHORTS (corre
+  # 4-5×/día vía cron-job.org, fiable). La puerta por día de la semana en el código
+  # (run_longform) hace que solo generen 1×/semana en su día fijo. No-op sin canal.
+  stoic_long:
+    if: ${{ always() && (inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue') }}
+    needs: [geoquiz_short]
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: stoic-longform
+    secrets: inherit
+
+  sesgos_long:
+    if: ${{ always() && (inputs.only == '' || inputs.only == null || inputs.only == 'all' || inputs.only == 'shorts' || inputs.only == 'blue') }}
+    needs: [stoic_long]
+    uses: ./.github/workflows/_videogen-job.yml
+    with:
+      command: batch-longform --slug sesgos
+    secrets: inherit
+
   # ─── LONG-FORM (dominicales) ───
 
   waitwhy_long:
@@ -276,6 +295,7 @@ jobs:
     with:
       command: ai-tools-longform
     secrets: inherit
+
 
   # ─── ENGAGEMENT (piggyback en el catchup 4×/día, evita cron-job.org extra) ───
   # Los cron GH internos no disparan fiablemente (memoria

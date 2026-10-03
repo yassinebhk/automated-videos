@@ -50,6 +50,20 @@ def _mark_used(key: str) -> None:
     LEDGER_PATH.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
+SHORTS_PER_DAY = 1  # tope Shorts/día (el catchup dispara 4-5× → esto capa)
+
+
+def _today_count(longform: bool = False) -> int:
+    today = datetime.now(timezone.utc).date().isoformat()
+    n = 0
+    for k, ts in _load_ledger().items():
+        if str(k).endswith("_LONG") != longform:
+            continue
+        if isinstance(ts, str) and ts[:10] == today:
+            n += 1
+    return n
+
+
 def _recently_used(key: str) -> bool:
     entry = _load_ledger().get(key)
     if not entry:
@@ -155,6 +169,10 @@ def run_once() -> dict[str, Any]:
         print("  stoic: sin YT_STOIC_* y sin flag de test → no-op (canal pendiente de crear)")
         return {"status": "no_channel"}
 
+    if has_creds and _today_count() >= SHORTS_PER_DAY:
+        print(f"  stoic: tope diario de Shorts ({SHORTS_PER_DAY}) alcanzado — skip")
+        return {"status": "skip_daily_cap"}
+
     topic = _pick_topic()
     if not topic:
         return {"status": "no_topic"}
@@ -226,6 +244,88 @@ def run_once() -> dict[str, Any]:
         import traceback
         traceback.print_exc()
         _notify(f"❌ {DISPLAY_NAME} falló: {type(e).__name__}: {str(e)[:200]}", urgent=True)
+        return {"status": "gen_fail", "error": str(e), "topic_key": topic["key"]}
+    finally:
+        _clear_env()
+
+
+LONG_TARGET_MINUTES = 10
+LONG_DAYS = (6,)  # domingo (weekday: lun=0..dom=6) → ~1 long-form/semana
+
+
+def _build_long_prompt(t: dict) -> str:
+    return (
+        f"[LONG-FORM · Channel {DISPLAY_NAME} · faceless EN · Stoic philosophy] "
+        f"Theme: {t.get('stressor','')} — Stoic lens: {t.get('stoic','the Stoics')} / "
+        f"{t.get('principle','')}. "
+        f"Expand into a ~{LONG_TARGET_MINUTES} min deep-dive with 4-6 chapters: a strong hook, "
+        f"what the Stoics actually taught about this, how it applies to modern life, concrete "
+        f"practices, and a closing reflection. Calm, grounded, mentor tone. "
+        f"VERACITY: teach the principle in your own words; do NOT fabricate or misattribute "
+        f"quotes; non-YMYL. SEO long-form title. Closing CTA: subscribe for daily Stoic discipline."
+    )
+
+
+def run_longform() -> dict[str, Any]:
+    """Genera + (si hay canal) sube 1 long-form estoico (~10 min). 1×/semana (lo marca
+    el disparo); tope 1/día. Pre-cableado: sin secrets no-op."""
+    from .. import service
+    has_creds = bool(os.environ.get(YT_PREFIX + "_REFRESH_TOKEN"))
+    allow_test = os.environ.get("STOIC_GENERATE_WITHOUT_CHANNEL", "").lower() in ("1", "true", "yes")
+    if not has_creds and not allow_test:
+        print("  stoic-long: sin YT_STOIC_* → no-op (canal pendiente)")
+        return {"status": "no_channel"}
+    # Puerta por día: Stoic genera long-form los DOMINGOS (~1×/semana) aunque la
+    # cadena de shorts lo invoque 4-5×/día. (test ignora la puerta.)
+    if has_creds and datetime.now(timezone.utc).weekday() not in LONG_DAYS:
+        print(f"  stoic-long: hoy no es día de long-form ({LONG_DAYS}) — skip")
+        return {"status": "skip_not_longform_day"}
+    if has_creds and _today_count(longform=True) >= 1:
+        print("  stoic-long: ya hay long-form hoy — skip")
+        return {"status": "skip_daily_cap"}
+
+    all_t = topics.all_topics()
+    fresh = [t for t in all_t if not _recently_used(t["key"] + "_LONG")]
+    if not fresh:
+        fresh = all_t
+    try:
+        from .. import dedup_common
+        recents = dedup_common.recent_titles_from_history(PLATFORM_KEY, days=180)
+        cand = [t for t in fresh if not dedup_common.title_is_repeat(t.get("titulo") or "", recents)]
+        if cand:
+            fresh = cand
+    except Exception:
+        pass
+    if not fresh:
+        return {"status": "no_topic"}
+    topic = random.choice(fresh)
+
+    prompt = _build_long_prompt(topic)
+    print(f"  stoic-long: topic={topic['key']}")
+    _set_env()
+    try:
+        slug = service.generate_long(prompt, target_minutes=LONG_TARGET_MINUTES,
+                                     langs=("en",), progress=lambda m: print(f"  {m}"))
+        if not has_creds:
+            _mark_used(topic["key"] + "_LONG")
+            _notify(f"🏛️ <b>{DISPLAY_NAME} · long-form</b> (pre-cableado) · generado sin canal\n"
+                    f"slug <code>{slug}</code>")
+            return {"status": "ok", "slug": slug, "url": "", "yt_status": "skip_no_channel", "kind": "long"}
+        links = service.publish_long(slug, ("en",), privacy="public",
+                                     progress=lambda m: print(f"  {m}"), notify=False)
+        _mark_used(topic["key"] + "_LONG")
+        url = links.get("en", "?")
+        _notify(f"✅ <b>{DISPLAY_NAME} · long-form</b>\n{url}\nslug <code>{slug}</code>")
+        return {"status": "ok", "slug": slug, "url": url, "topic_key": topic["key"], "kind": "long"}
+    except Exception as e:
+        from ..upload_youtube import DedupSkip
+        if isinstance(e, DedupSkip):
+            print(f"  stoic-long: skip dedup — {e}")
+            _notify(f"⏭️ <b>{DISPLAY_NAME} · long-form</b>: salté un duplicado.")
+            return {"status": "skip_dedup", "error": str(e), "topic_key": topic["key"]}
+        import traceback
+        traceback.print_exc()
+        _notify(f"❌ {DISPLAY_NAME} long-form falló: {type(e).__name__}: {str(e)[:200]}")
         return {"status": "gen_fail", "error": str(e), "topic_key": topic["key"]}
     finally:
         _clear_env()

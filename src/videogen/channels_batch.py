@@ -73,6 +73,7 @@ SESGOS = SimpleChannelConfig(
     category_id="27", emoji="🧠", cross_teaser="🧠 Sesgo cognitivo",
     to_tiktok=True, to_ig=True,  # user 03/10: shorts también a IG + TikTok
     ig_hashtags=["psicologia", "sesgoscognitivos", "mente", "aprende", "curiosidades", "shorts"],
+    longform=True, shorts_per_day=1,  # user 03/10: + long-form 1×/sem, cap 1 short/día
     theme_desc=("A Spanish faceless channel explaining ONE cognitive bias / mental model per "
                 "video, grounded in real behavioral science (Kahneman, Tversky, Ariely, etc.)."),
     veracity_rules=("- Each bias MUST trace to named, real research (e.g. Kahneman & Tversky). "

@@ -41,6 +41,10 @@ class SimpleChannelConfig:
     to_tiktok: bool = False        # enviar el Short a Telegram para subir a TikTok
     to_ig: bool = False            # subir Reel a IG propio (IG_<SUFIJO>_TOKEN; skip si no está)
     ig_hashtags: list = field(default_factory=list)
+    shorts_per_day: int = 1        # tope de Shorts/día (el catchup dispara 4-5×; esto capa)
+    longform: bool = False         # genera long-form (run_longform) 1×/semana
+    long_target_minutes: int = 9   # duración objetivo del long-form
+    long_days: tuple = (5,)        # días (weekday: lun=0..dom=6) en que genera long-form
     category_id: str = "27"        # YouTube category (27=Education, 24=Entertainment)
     cooldown_days: int = 120
     emoji: str = "🎬"
@@ -82,6 +86,19 @@ def _recently_used(cfg: SimpleChannelConfig, key: str) -> bool:
         return (datetime.now(timezone.utc) - datetime.fromisoformat(entry)) < timedelta(days=cfg.cooldown_days)
     except Exception:
         return False
+
+
+def _today_count(cfg: SimpleChannelConfig, longform: bool = False) -> int:
+    """Nº de vídeos ya subidos HOY (UTC). longform=True cuenta solo claves _LONG."""
+    today = datetime.now(timezone.utc).date().isoformat()
+    n = 0
+    for k, ts in _load_ledger(cfg).items():
+        is_long = str(k).endswith("_LONG")
+        if is_long != longform:
+            continue
+        if isinstance(ts, str) and ts[:10] == today:
+            n += 1
+    return n
 
 
 # ───────────────────────────── topics (seed + dinámicos) ─────────────────────────────
@@ -262,6 +279,11 @@ def run_once(cfg: SimpleChannelConfig) -> dict[str, Any]:
         print(f"  {cfg.slug}: sin {cfg.prefix}_* y sin flag test → no-op (canal pendiente)")
         return {"status": "no_channel"}
 
+    # Tope diario de Shorts (el catchup dispara 4-5×/día → sin esto subiría 4-5).
+    if has_creds and _today_count(cfg) >= cfg.shorts_per_day:
+        print(f"  {cfg.slug}: tope diario de Shorts ({cfg.shorts_per_day}) alcanzado — skip")
+        return {"status": "skip_daily_cap"}
+
     topic = _pick_topic(cfg)
     if not topic:
         return {"status": "no_topic"}
@@ -333,6 +355,98 @@ def run_once(cfg: SimpleChannelConfig) -> dict[str, Any]:
         import traceback
         traceback.print_exc()
         _notify(f"❌ {cfg.display_name} falló: {type(e).__name__}: {str(e)[:200]}", urgent=True)
+        return {"status": "gen_fail", "error": str(e), "topic_key": topic["key"]}
+    finally:
+        if prev_sp is not None:
+            os.environ["SCRIPT_SYSTEM_PROMPT_FILE"] = prev_sp
+        else:
+            os.environ.pop("SCRIPT_SYSTEM_PROMPT_FILE", None)
+        if prev_px is not None:
+            os.environ["YT_CHANNEL_PREFIX"] = prev_px
+        else:
+            os.environ.pop("YT_CHANNEL_PREFIX", None)
+
+
+def _build_long_prompt(cfg: SimpleChannelConfig, t: dict) -> str:
+    tone = f" Tone: {cfg.tone}." if cfg.tone else ""
+    return (
+        f"[LONG-FORM · Channel {cfg.display_name} · faceless {cfg.lang}]{tone} "
+        f"Topic: {t.get('titulo','')}. "
+        f"Expand into a ~{cfg.long_target_minutes} min deep-dive with 4-6 chapters: "
+        f"a strong hook → context → the core content ({t.get('angle','')}) → concrete "
+        f"examples → practical takeaways. "
+        f"VERACITY: only verifiable facts + citable sources shown on screen; no fabrication; "
+        f"non-YMYL. SEO long-form title (no clickbait lies). Closing CTA to subscribe."
+    )
+
+
+def run_longform(cfg: SimpleChannelConfig) -> dict[str, Any]:
+    """Genera + (si hay canal) sube 1 long-form (~N min). Pre-cableado: sin secrets no-op.
+    Cadencia semanal la marca el disparo (sección longform del catchup); tope 1/día."""
+    from . import service
+
+    has_creds = bool(os.environ.get(cfg.prefix + "_REFRESH_TOKEN"))
+    allow_test = (os.environ.get(f"{cfg.prefix}_GENERATE_WITHOUT_CHANNEL", "").lower() in ("1", "true", "yes")
+                  or os.environ.get("BATCH_GENERATE_WITHOUT_CHANNEL", "").lower() in ("1", "true", "yes"))
+    if not cfg.longform:
+        return {"status": "disabled"}
+    if not has_creds and not allow_test:
+        print(f"  {cfg.slug}-long: sin {cfg.prefix}_* → no-op (canal pendiente)")
+        return {"status": "no_channel"}
+    # Puerta por día de la semana: solo genera en su(s) día(s) clave → ~1×/semana
+    # aunque la cadena de shorts lo invoque 4-5×/día. (test ignora la puerta.)
+    if has_creds and cfg.long_days and datetime.now(timezone.utc).weekday() not in cfg.long_days:
+        print(f"  {cfg.slug}-long: hoy no es día de long-form ({cfg.long_days}) — skip")
+        return {"status": "skip_not_longform_day"}
+    if has_creds and _today_count(cfg, longform=True) >= 1:
+        print(f"  {cfg.slug}-long: ya hay long-form hoy — skip")
+        return {"status": "skip_daily_cap"}
+
+    all_t = all_topics(cfg)
+    fresh = [t for t in all_t if not _recently_used(cfg, t["key"] + "_LONG")]
+    if not fresh:
+        fresh = all_t
+    try:
+        from . import dedup_common
+        recents = dedup_common.recent_titles_from_history(cfg.platform_key, days=180)
+        cand = [t for t in fresh if not dedup_common.title_is_repeat(t.get("titulo") or "", recents)]
+        if cand:
+            fresh = cand
+    except Exception:
+        pass
+    if not fresh:
+        return {"status": "no_topic"}
+    topic = random.choice(fresh)
+
+    prompt = _build_long_prompt(cfg, topic)
+    print(f"  {cfg.slug}-long: topic={topic['key']}")
+    prev_sp = os.environ.get("SCRIPT_SYSTEM_PROMPT_FILE")
+    prev_px = os.environ.get("YT_CHANNEL_PREFIX")
+    os.environ["SCRIPT_SYSTEM_PROMPT_FILE"] = cfg.system_prompt_file
+    os.environ["YT_CHANNEL_PREFIX"] = cfg.prefix
+    try:
+        slug = service.generate_long(prompt, target_minutes=cfg.long_target_minutes,
+                                     langs=(cfg.lang,), progress=lambda m: print(f"  {m}"))
+        if not has_creds:
+            _mark_used(cfg, topic["key"] + "_LONG")
+            _notify(f"{cfg.emoji} <b>{cfg.display_name} · long-form</b> (pre-cableado) · generado sin canal\n"
+                    f"slug <code>{slug}</code>")
+            return {"status": "ok", "slug": slug, "url": "", "yt_status": "skip_no_channel", "kind": "long"}
+        links = service.publish_long(slug, (cfg.lang,), privacy="public",
+                                     progress=lambda m: print(f"  {m}"), notify=False)
+        _mark_used(cfg, topic["key"] + "_LONG")
+        url = links.get(cfg.lang, "?")
+        _notify(f"✅ <b>{cfg.display_name} · long-form</b>\n{url}\nslug <code>{slug}</code>")
+        return {"status": "ok", "slug": slug, "url": url, "topic_key": topic["key"], "kind": "long"}
+    except Exception as e:
+        from .upload_youtube import DedupSkip
+        if isinstance(e, DedupSkip):
+            print(f"  {cfg.slug}-long: skip dedup — {e}")
+            _notify(f"⏭️ <b>{cfg.display_name} · long-form</b>: salté un duplicado.")
+            return {"status": "skip_dedup", "error": str(e), "topic_key": topic["key"]}
+        import traceback
+        traceback.print_exc()
+        _notify(f"❌ {cfg.display_name} long-form falló: {type(e).__name__}: {str(e)[:200]}")
         return {"status": "gen_fail", "error": str(e), "topic_key": topic["key"]}
     finally:
         if prev_sp is not None:
