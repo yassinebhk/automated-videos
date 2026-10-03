@@ -71,6 +71,8 @@ SESGOS = SimpleChannelConfig(
     platform_key="youtube_sesgos", lang="es", system_prompt_file="batch_es_system.md",
     tone="didáctico, claro y cercano; como un amigo listo que te revela cómo te engaña tu mente",
     category_id="27", emoji="🧠", cross_teaser="🧠 Sesgo cognitivo",
+    to_tiktok=True, to_ig=True,  # user 03/10: shorts también a IG + TikTok
+    ig_hashtags=["psicologia", "sesgoscognitivos", "mente", "aprende", "curiosidades", "shorts"],
     theme_desc=("A Spanish faceless channel explaining ONE cognitive bias / mental model per "
                 "video, grounded in real behavioral science (Kahneman, Tversky, Ariely, etc.)."),
     veracity_rules=("- Each bias MUST trace to named, real research (e.g. Kahneman & Tversky). "

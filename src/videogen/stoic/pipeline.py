@@ -184,6 +184,22 @@ def run_once() -> dict[str, Any]:
         url = links.get("en", "?")
         _notify(f"✅ <b>{DISPLAY_NAME}</b> · {url}\n<i>{title[:60]}</i>")
 
+        # TikTok (→ Telegram) + IG propio (petición user 03/10). IG usa IG_STOIC_TOKEN
+        # (cuenta propia, no contamina @waitwhy_); si no está, skip limpio.
+        try:
+            from ..config import UPLOADED_DIR, PENDING_DIR
+            _mp4 = next((b / slug / "video_en_vertical.mp4" for b in (UPLOADED_DIR, PENDING_DIR)
+                         if (b / slug / "video_en_vertical.mp4").exists()), None)
+            if _mp4:
+                from ..notify_batch import send_video_for_tiktok
+                send_video_for_tiktok(str(_mp4), DISPLAY_NAME, title, url)
+                from .. import social_reels
+                social_reels.post_ig_reel(str(_mp4), title, url, slug, prefix=YT_PREFIX,
+                                          hashtags=["stoicism", "philosophy", "mindset",
+                                                    "discipline", "motivation", "shorts"])
+        except Exception as e:
+            print(f"  stoic: ig/tt fail — {e}")
+
         # Crosspost SOLO a RRSS propias del canal (sin contaminar otras marcas).
         # Bluesky estoico necesita su propio handle (BSKY_STOIC_*); si no está, se omite.
         try:

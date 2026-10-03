@@ -38,6 +38,9 @@ class SimpleChannelConfig:
     theme_desc: str                # descripción para el refresher Gemini
     veracity_rules: str            # reglas duras para el refresher
     tone: str = ""                 # registro/tono específico del canal (inyectado en el prompt)
+    to_tiktok: bool = False        # enviar el Short a Telegram para subir a TikTok
+    to_ig: bool = False            # subir Reel a IG propio (IG_<SUFIJO>_TOKEN; skip si no está)
+    ig_hashtags: list = field(default_factory=list)
     category_id: str = "27"        # YouTube category (27=Education, 24=Entertainment)
     cooldown_days: int = 120
     emoji: str = "🎬"
@@ -286,6 +289,25 @@ def run_once(cfg: SimpleChannelConfig) -> dict[str, Any]:
         _mark_used(cfg, topic["key"])
         url = links.get(cfg.lang, "?")
         _notify(f"✅ <b>{cfg.display_name}</b> · {url}\n<i>{title[:60]}</i>")
+
+        # TikTok (→ Telegram) + IG propio, solo si el canal los tiene activados (cfg).
+        # IG usa IG_<SUFIJO>_TOKEN propio (no contamina otras marcas); skip si no está.
+        if cfg.to_tiktok or cfg.to_ig:
+            try:
+                from .config import UPLOADED_DIR, PENDING_DIR
+                _name = f"video_{cfg.lang}_vertical.mp4"
+                _mp4 = next((b / slug / _name for b in (UPLOADED_DIR, PENDING_DIR)
+                             if (b / slug / _name).exists()), None)
+                if _mp4:
+                    if cfg.to_tiktok:
+                        from .notify_batch import send_video_for_tiktok
+                        send_video_for_tiktok(str(_mp4), cfg.display_name, title, url)
+                    if cfg.to_ig:
+                        from . import social_reels
+                        social_reels.post_ig_reel(str(_mp4), title, url, slug, prefix=cfg.prefix,
+                                                  hashtags=cfg.ig_hashtags or None)
+            except Exception as e:
+                print(f"  {cfg.slug}: ig/tt fail — {e}")
 
         # Crosspost SOLO a Bluesky propio del canal (no contaminar otras marcas).
         try:

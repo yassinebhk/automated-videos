@@ -107,6 +107,14 @@ def send_video_for_tiktok(mp4_path: str | Path, channel_display: str,
     Telegram sendVideo acepta hasta 50MB por bot API. Shorts <60s con
     bitrate razonable = 5-15MB → suele caber. Si excede, skip con aviso.
     """
+    # Canales DESACTIVADOS para TikTok (user 03/10: quitar los 2 de menor engagement
+    # → MenteEnCalma y TaxHack, y meter en su lugar Stoic Mind + Mente Racional).
+    # Override con env TIKTOK_DISABLED_CHANNELS (coma-sep, match por substring).
+    _disabled = os.environ.get("TIKTOK_DISABLED_CHANNELS", "MenteEnCalma,TaxHack")
+    _cd = (channel_display or "").lower()
+    if any(d.strip() and d.strip().lower() in _cd for d in _disabled.split(",")):
+        print(f"  TT: {channel_display} desactivado para TikTok (skip)")
+        return False
     tok = os.environ.get("TELEGRAM_BOT_TOKEN")
     chat = os.environ.get("TELEGRAM_CHAT_ID")
     if not (tok and chat):
