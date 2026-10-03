@@ -58,6 +58,15 @@ CHANNELS: list[dict] = [
     dict(key="trabajos",   name="CuriosLaboral ES",  pk=None,               handle="@CuriosLaboral_ES",cat="Curiosidades laborales",  status="paused", lang="ES", group="extra"),
     dict(key="criminopatia", name="Criminopatía",    pk=None,               handle="@Criminopatia_ES", cat="Criminología",            status="paused", lang="ES", group="extra"),
     dict(key="rankings_en", name="Global Rankings",  pk=None,               handle=None,               cat="Rankings (EN)",           status="paused", lang="EN", group="extra"),
+    # Tanda 02/10 — nuevos canales (3 ya activos y subiendo; 4 pre-cableados pendientes
+    # de crear el canal YT). Ver [[tanda-canales-02-10]].
+    dict(key="stoic",       name="Stoic Mind",        pk="youtube_stoic",       handle=None, cat="Estoicismo (EN)",          status="active", lang="EN", group="nuevos"),
+    dict(key="sesgos",      name="Mente Racional",    pk="youtube_sesgos",      handle=None, cat="Sesgos cognitivos",        status="active", lang="ES", group="nuevos"),
+    dict(key="curiosidades", name="¿Qué Pasaría Si?", pk="youtube_curiosidades", handle=None, cat="Curiosidades / ciencia",  status="active", lang="ES", group="nuevos"),
+    dict(key="misterios",   name="Enigmas sin Resolver", pk="youtube_misterios", handle=None, cat="Misterios documentados", status="paused", lang="ES", group="nuevos"),
+    dict(key="filosofia",   name="Abismo",            pk="youtube_filosofia",   handle=None, cat="Filosofía profunda",       status="paused", lang="ES", group="nuevos"),
+    dict(key="espacio",     name="Cosmos",            pk="youtube_espacio",     handle=None, cat="Astronomía",               status="paused", lang="ES", group="nuevos"),
+    dict(key="geoquiz",     name="GeoQuiz",           pk="youtube_geoquiz",     handle=None, cat="Geografía / quiz",         status="paused", lang="EN", group="nuevos"),
 ]
 
 # IG whitelist (otra sesión 21/09): solo canales afines a true crime ES suben a
